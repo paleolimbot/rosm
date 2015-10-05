@@ -127,4 +127,4 @@ tile.url.darkmatter <- function(xtile, ytile, zoom) {
   paste0(paste("http://a.basemaps.cartocdn.com/dark_all",
                zoom, xtile, ytile, sep="/"), ".png")
 }
-osm.plot(ns, type="darkmatter")
+osm.plot(nsbox, type="darkmatter")

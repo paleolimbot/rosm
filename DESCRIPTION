@@ -1,10 +1,13 @@
 Package: rosm
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1
+Title: Plot Open Street Map and Other Tiles
+Version: 0.1.0
 Date: 2015-10-11
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Dewey Dunnington <dewey@fishandwhistle.net>
+Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
+Description: Plot Open Street Map, Mapquest, and other tiles based on the
+  slippy tile system.
+License: GPL-2
 LazyData: TRUE
+Imports: jpeg, png, sp, rgdal
+Suggests: prettymapr

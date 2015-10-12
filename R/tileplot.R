@@ -1,16 +1,7 @@
 #plot slippy tiles
 
-tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
-  for(i in 1:nrow(tiles)) {
-    x <- tiles[i,1]
-    y <- tiles[i,2]
-    fname <- tile.cachename(x, y, zoom, type, cachedir)
-    box <- tile.bbox(x, y, zoom, epsg)
-    tile.plotfile(fname, box)
-  }
-}
-
-tile.plotfile <- function(fname, box) {
+tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
+  fname <- tile.cachename(x, y, zoom, type, cachedir)
   parts <- strsplit(fname, "\\.")[[1]]
   ext <- parts[length(parts)]
   if(ext == "jpg" || ext =="jpeg") {
@@ -20,12 +11,107 @@ tile.plotfile <- function(fname, box) {
   } else {
     stop("Extension not recognized: ", ext)
   }
+}
+
+tile.plotarray <- function(image, box) {
   rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
 }
 
+tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+  for(i in 1:nrow(tiles)) {
+    x <- tiles[i,1]
+    y <- tiles[i,2]
+    box <- tile.bbox(x, y, zoom, epsg)
+    image <- tile.loadimage(x, y, zoom, type, cachedir)
+    tile.plotarray(image, box)
+  }
+}
 
+tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+  tiles <- tiles[order(tiles$Var1, tiles$Var2),]
+  xs <- unique(tiles[,1])
+  ys <- unique(tiles[,2])
+
+  wholeimg <- NULL
+  for(x in xs) {
+    colimg <- NULL
+    for(y in ys) {
+      if(is.null(colimg)) {
+        colimg <- tile.loadimage(x, y, zoom, type, cachedir)
+      } else {
+        colimg <- abind::abind(colimg, tile.loadimage(x, y, zoom, type, cachedir),
+                              along=1) #rbind
+      }
+    }
+
+    if(is.null(wholeimg)) {
+      wholeimg <- colimg
+    } else {
+      wholeimg <- abind::abind(wholeimg, colimg, along=2)
+    }
+  }
+
+  #calc bounding box of whole image
+  nw <- tile.nw(min(xs), min(ys), zoom, epsg)
+  se <- tile.nw(max(xs)+1, max(ys)+1, zoom, epsg)
+  bbox <- matrix(c(nw[1], se[2], se[1], nw[2]), ncol=2,
+                byrow=FALSE, dimnames=list(c("x", "y"), c("min", "max")))
+
+  #plot image
+  tile.plotarray(wholeimg, bbox)
+}
+
+
+#' Get List of Valid Types
+#'
+#' @return A character vector of valid \code{type} parameters.
+#'
+#' @export
+#'
+#' @examples
+#' osm.types()
+#'
+osm.types <- function() {
+  c("hikebike","hillshade","hotstyle","lovinacycle",
+     "lovinahike","mapquestosm","mapquestsat","opencycle",
+     "openpiste","osm","osmgrayscale",
+     "osmtransport","stamenbw","stamenwatercolor",
+     "thunderforestlandscape","thunderforestoutdoors")
+}
+
+#' Plot Open Street Map Tiles
+#'
+#' Plot open street map tiles.
+#'
+#' @param bbox
+#' @param zoomin
+#' @param zoom
+#' @param type
+#' @param forcedownload
+#' @param stoponlargerequest
+#' @param fusetiles
+#' @param cachedir
+#' @param res
+#' @param epsg
+#' @param ...
+#'
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' library(prettymapr)
+#' ns <- searchbbox("nova scotia")
+#' osm.plot(ns)
+#' osm.plot(ns, zoomin=1)
+#' osm.plot(ns, type="mapquestsat")
+#' prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
+#' }
 osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
-                     stoponlargerequest=TRUE, cachedir=NULL, res=150, epsg=4326, ...) {
+                     stoponlargerequest=TRUE, fusetiles=TRUE, cachedir=NULL, res=150,
+                     epsg=3857, ...) {
+
+  bbox <- .projectbbox(bbox, epsg)
+
   coords <- sp::coordinates(t(bbox))
   spoints = sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", epsg)))
   plotargs <- list(...)
@@ -51,6 +137,11 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
                                                   "Run with stoponlargerequest=FALSE or ",
                                                   "zoomin=-1, to continue")
   tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir)
-  tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+
+  if(fusetiles) {
+    tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+  } else {
+    tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+  }
 
 }

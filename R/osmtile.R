@@ -95,18 +95,23 @@ tile.url <- function(xtile, ytile, zoom, type) {
   do.call(paste0("tile.url.", type), list(xtile, ytile, zoom))
 }
 
+tile.ext <- function(type) {
+  parts <- strsplit(tile.url(0,0,0, type), "\\.")[[1]]
+  parts[length(parts)]
+}
+
 tile.maxzoom <- function(type) {
   if(existsFunction(paste0("tile.maxzoom.", type))) {
     do.call(paste0("tile.maxzoom.", type), list())
   } else {
-    return(20)
+    return(19)
   }
 }
 
 tile.cachename <- function(xtile, ytile, zoom, type, cachedir=NULL) {
   folder <- tile.cachedir(type, cachedir)
-  ext <- ".png" #maybe only for osm
-  file.path(folder, paste0(zoom, "_", xtile, "_", ytile, ext))
+  ext <- tile.ext(type)
+  file.path(folder, paste0(zoom, "_", xtile, "_", ytile, ".", ext))
 }
 
 tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir=NULL) {

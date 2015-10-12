@@ -15,7 +15,7 @@ tile.url.mapquestosm <- function(xtile, ytile, zoom) {
                "http://otile3.mqcdn.com/tiles/1.0.0/osm",
                "http://otile4.mqcdn.com/tiles/1.0.0/osm")
   return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
+                     zoom, xtile, ytile, sep="/"),".jpg", sep=""))
 }
 
 tile.maxzoom.mapquestsat <- function() {return(8)}
@@ -25,7 +25,7 @@ tile.url.mapquestsat <- function(xtile, ytile, zoom) {
                "http://otile3.mqcdn.com/tiles/1.0.0/sat",
                "http://otile4.mqcdn.com/tiles/1.0.0/sat")
   return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
+                     zoom, xtile, ytile, sep="/"),".jpg", sep=""))
 }
 
 tile.url.opencycle <- function(xtile, ytile, zoom) {
@@ -44,11 +44,6 @@ tile.url.hotstyle <- function(xtile, ytile, zoom) {
 
 tile.url.openpiste <- function(xtile, ytile, zoom) {
   return(paste(paste("http://tiles.openpistemap.org/nocontours",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-
-tile.url.opensea <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://tiles.openseamap.org/seamark",
                      zoom, xtile, ytile, sep="/"),".png", sep=""))
 }
 
@@ -86,7 +81,7 @@ tile.url.stamenbw <- function(xtile, ytile, zoom) {
 
 tile.url.stamenwatercolor <- function(xtile, ytile, zoom) {
   return(paste(paste("http://a.tile.stamen.com/watercolor",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
+                     zoom, xtile, ytile, sep="/"),".jpg", sep=""))
 }
 
 tile.url.osmtransport <- function(xtile, ytile, zoom) {

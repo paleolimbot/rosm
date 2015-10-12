@@ -4,10 +4,23 @@ tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   for(i in 1:nrow(tiles)) {
     x <- tiles[i,1]
     y <- tiles[i,2]
-    image <- png::readPNG(tile.cachename(x, y, zoom, type, cachedir))
+    fname <- tile.cachename(x, y, zoom, type, cachedir)
     box <- tile.bbox(x, y, zoom, epsg)
-    rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
+    tile.plotfile(fname, box)
   }
+}
+
+tile.plotfile <- function(fname, box) {
+  parts <- strsplit(fname, "\\.")[[1]]
+  ext <- parts[length(parts)]
+  if(ext == "jpg" || ext =="jpeg") {
+    image <- jpeg::readJPEG(fname)
+  } else if(ext == "png") {
+    image <- png::readPNG(fname)
+  } else {
+    stop("Extension not recognized: ", ext)
+  }
+  rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
 }
 
 
@@ -41,9 +54,3 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
   tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
 
 }
-
-types <- c(" hikebike " ," hillshade " ," hotstyle " ," lovinacycle " ,
-           " lovinahike " ," mapquestosm " ," mapquestsat " ," opencycle " ,
-           " openpiste " ," opensea " ," osm " ," osmgrayscale " ,
-           " osmtransport " ," stamenbw " ," stamenwatercolor " ,
-           " thunderforestlandscape " ," thunderforestoutdoors ")

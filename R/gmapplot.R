@@ -43,7 +43,7 @@ google.getimage <- function(maptype, lon, lat, zoom, wdpx,
 #' @export
 #'
 
-gmap.plot <- function(bbox, zoomin=0, maptype="satellite", forcedownload=FALSE,
+gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
                            cachedir=NULL, res=150, project=TRUE, key=NULL, ...) {
 
   if(project) {
@@ -73,9 +73,6 @@ gmap.plot <- function(bbox, zoomin=0, maptype="satellite", forcedownload=FALSE,
   midlatlon <- .tolatlon(midx, midy, 3857)
 
   zoom <- tile.autozoom(res, epsg)
-  zoom <- zoom + zoomin
-
-
   #y / x
   aspect <- (bboxgoog[2,2] - bboxgoog[2,1]) / (bboxgoog[1,2] - bboxgoog[1,1])
 
@@ -84,8 +81,18 @@ gmap.plot <- function(bbox, zoomin=0, maptype="satellite", forcedownload=FALSE,
   widthpx <- (anglewidth / 360.0) * totpixels
   heightpx <- widthpx * aspect
 
+  #calc scale factor based on res parameter
+  widthin <- graphics::grconvertX(ext[2], from="user", to="inches") -
+    graphics::grconvertX(ext[1], from="user", to="inches")
+  actualres <- widthpx / widthin
+  if(actualres < res) {
+    scale <- 2
+  } else {
+    scale <- 1
+  }
+
   image <- google.getimage(maptype, midlatlon[1], midlatlon[2], zoom, round(widthpx),
-                           round(heightpx), scale=2, key=key, cachedir=cachedir,
+                           round(heightpx), scale=scale, key=key, cachedir=cachedir,
                            forcedownload=forcedownload)
   tile.plotarray(image, fullareabbox)
 }

@@ -2,16 +2,6 @@
 #modified from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#R
 
 
-
-tile.cachedir <- function(type, cachedir=NULL) {
-  if(is.null(cachedir)) {
-    cachedir <- "rosm.cache"
-  }
-  folder <- file.path(cachedir, type)
-  created <- dir.create(folder, showWarnings=FALSE, recursive=TRUE)
-  folder
-}
-
 tiles.bybbox <- function(bbox, zoom, epsg=4326) {
   nwlatlon <- .tolatlon(bbox[1,1], bbox[2,2], epsg)
   selatlon <- .tolatlon(bbox[1,2], bbox[2,1], epsg)
@@ -19,21 +9,6 @@ tiles.bybbox <- function(bbox, zoom, epsg=4326) {
   nw <- tile.xy(nwlatlon[1], nwlatlon[2], zoom)
   se <- tile.xy(selatlon[1], selatlon[2], zoom)
   expand.grid(nw[1]:se[1], nw[2]:se[2])
-}
-
-tile.autozoom <- function(res=150, epsg=4326) {
-  ext <- par("usr")
-  midy <- mean(c(ext[3], ext[4]))
-  rightmid <- .tolatlon(ext[2], midy, epsg)
-  leftmid <- .tolatlon(ext[1], midy, epsg)
-  anglewidth <- rightmid[1] - leftmid[1]
-
-  widthin <- graphics::grconvertX(ext[2], from="user", to="inches") -
-    graphics::grconvertX(ext[1], from="user", to="inches")
-  widthpx <- widthin * res
-
-  zoom = log2((360.0 / anglewidth) * (widthpx / 256.0))
-  as.integer(floor(zoom))
 }
 
 tile.xy <-function(x, y, zoom, epsg=4326) {

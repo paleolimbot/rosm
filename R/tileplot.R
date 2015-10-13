@@ -13,10 +13,6 @@ tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
   }
 }
 
-tile.plotarray <- function(image, box) {
-  rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
-}
-
 tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   for(i in 1:nrow(tiles)) {
     x <- tiles[i,1]

@@ -21,3 +21,10 @@
   newpoints <- sp::spTransform(spoints, sp::CRS(paste0("+init=epsg:", toepsg)))
   t(sp::coordinates(newpoints))
 }
+
+.revprojectbbox <- function(bbox, fromepsg) {
+  coords <- sp::coordinates(t(bbox))
+  spoints = sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", fromepsg)))
+  newpoints <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
+  t(sp::coordinates(newpoints))
+}

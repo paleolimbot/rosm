@@ -104,7 +104,13 @@ osm.types <- function() {
 #' }
 osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
                      stoponlargerequest=TRUE, fusetiles=TRUE, cachedir=NULL, res=150,
-                     epsg=3857, ...) {
+                     project=TRUE, ...) {
+
+  if(project) {
+    epsg <- 3857
+  } else {
+    epsg <- 4326
+  }
 
   bbox <- .projectbbox(bbox, epsg)
 

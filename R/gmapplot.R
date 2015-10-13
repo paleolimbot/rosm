@@ -16,7 +16,7 @@ google.getimage <- function(maptype, lon, lat, zoom, wdpx,
   tofile <- file.path(folder, filename)
 
   if(!file.exists(tofile) || forcedownload) {
-    message("Downloading to ", tofile, " from ", url)
+    message("Downloading to ", tofile)
     download.file(url, tofile, quiet=TRUE)
   }
 
@@ -43,9 +43,14 @@ google.getimage <- function(maptype, lon, lat, zoom, wdpx,
 #' @export
 #'
 
-gmap.plot <- function(bbox, zoomin=0, zoom=NULL, maptype="satellite", forcedownload=FALSE,
-                           cachedir=NULL, res=150, epsg=3857, key=NULL, ...) {
+gmap.plot <- function(bbox, zoomin=0, maptype="satellite", forcedownload=FALSE,
+                           cachedir=NULL, res=150, project=TRUE, key=NULL, ...) {
 
+  if(project) {
+    epsg <- 3857
+  } else {
+    epsg <- 4326
+  }
   #setup plot
   bboxplot <- .projectbbox(bbox, epsg)
   coords <- sp::coordinates(t(bboxplot))
@@ -67,9 +72,7 @@ gmap.plot <- function(bbox, zoomin=0, zoom=NULL, maptype="satellite", forcedownl
   midy <- (bboxgoog[2]+bboxgoog[4])/2
   midlatlon <- .tolatlon(midx, midy, 3857)
 
-  if(is.null(zoom)) {
-    zoom <- tile.autozoom(res, epsg)
-  }
+  zoom <- tile.autozoom(res, epsg)
   zoom <- zoom + zoomin
 
 

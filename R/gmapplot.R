@@ -68,6 +68,9 @@ gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
   fullareabboxll <- .revprojectbbox(fullareabbox, epsg)
 
   bboxgoog <- .projectbbox(fullareabboxll, 3857)
+  if((bboxgoog[1,2] - bboxgoog[1,1]) < 0) {
+    bboxgoog[1,2] <- bboxgoog[1,2]+ 20037508*2
+  }
   midx <- (bboxgoog[1]+bboxgoog[3])/2
   midy <- (bboxgoog[2]+bboxgoog[4])/2
   midlatlon <- .tolatlon(midx, midy, 3857)
@@ -75,8 +78,15 @@ gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
   zoom <- tile.autozoom(res, epsg)
   #y / x
   aspect <- (bboxgoog[2,2] - bboxgoog[2,1]) / (bboxgoog[1,2] - bboxgoog[1,1])
+  if(aspect < 0) {
+    aspect <- (bboxgoog[2,2] - bboxgoog[2,1]) / (bboxgoog[1,2] - bboxgoog[1,1])
+  }
 
-  anglewidth <- fullareabboxll[3] - fullareabboxll[1]
+
+  anglewidth <- fullareabboxll[1,2] - fullareabboxll[1,1]
+  if(anglewidth < 0) {
+    anglewidth <- anglewidth+360
+  }
   totpixels <- 2^zoom*256
   widthpx <- (anglewidth / 360.0) * totpixels
   heightpx <- widthpx * aspect

@@ -19,6 +19,9 @@ tile.autozoom <- function(res=150, epsg=4326) {
   rightmid <- .tolatlon(ext[2], midy, epsg)
   leftmid <- .tolatlon(ext[1], midy, epsg)
   anglewidth <- rightmid[1] - leftmid[1]
+  if(anglewidth < 0) {
+    anglewidth <- anglewidth+360
+  }
 
   widthin <- graphics::grconvertX(ext[2], from="user", to="inches") -
     graphics::grconvertX(ext[1], from="user", to="inches")

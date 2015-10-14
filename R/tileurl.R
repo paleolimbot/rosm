@@ -62,6 +62,7 @@ tile.url.hikebike <- function(xtile, ytile, zoom) {
                      zoom, xtile, ytile, sep="/"),".png", sep=""))
 }
 
+tile.maxzoom.hillshade <- function() {return(14)}
 tile.url.hillshade <- function(xtile, ytile, zoom) {
   return(paste(paste("http://c.tiles.wmflabs.org/hillshading",
                      zoom, xtile, ytile, sep="/"),".png", sep=""))

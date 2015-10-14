@@ -67,21 +67,17 @@ gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
   fullareabbox <- matrix(c(ext[1], ext[3], ext[2], ext[4]), ncol=2, byrow=FALSE)
   fullareabboxll <- .revprojectbbox(fullareabbox, epsg)
 
-  bboxgoog <- .projectbbox(fullareabboxll, 3857)
+  bboxgoog <- sm.projectbbox(fullareabboxll)
   if((bboxgoog[1,2] - bboxgoog[1,1]) < 0) {
-    bboxgoog[1,2] <- bboxgoog[1,2]+ 20037508*2
+    bboxgoog[1,2] <- bboxgoog[1,2]+360
   }
   midx <- (bboxgoog[1]+bboxgoog[3])/2
   midy <- (bboxgoog[2]+bboxgoog[4])/2
-  midlatlon <- .tolatlon(midx, midy, 3857)
+  midlatlon <- sm.tolatlon(midx, midy)
 
   zoom <- tile.autozoom(res, epsg)
   #y / x
   aspect <- (bboxgoog[2,2] - bboxgoog[2,1]) / (bboxgoog[1,2] - bboxgoog[1,1])
-  if(aspect < 0) {
-    aspect <- (bboxgoog[2,2] - bboxgoog[2,1]) / (bboxgoog[1,2] - bboxgoog[1,1])
-  }
-
 
   anglewidth <- fullareabboxll[1,2] - fullareabboxll[1,1]
   if(anglewidth < 0) {
@@ -100,6 +96,9 @@ gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
   } else {
     scale <- 1
   }
+
+  cat("aspect:", aspect, " widthpx:", widthpx, " heightpx:", heightpx, " zoom:", zoom,
+      " center:", midlatlon[1], " ", midlatlon[2])
 
   image <- google.getimage(maptype, midlatlon[1], midlatlon[2], zoom, round(widthpx),
                            round(heightpx), scale=scale, key=key, cachedir=cachedir,

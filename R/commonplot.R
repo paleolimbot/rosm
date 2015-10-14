@@ -22,11 +22,12 @@ tile.autozoom <- function(res=150, epsg=4326) {
   if(anglewidth < 0) {
     anglewidth <- anglewidth+360
   }
-
+  #PROBLEMS WITH WIDE EXTENTS LIKE THE WORLD
   widthin <- graphics::grconvertX(ext[2], from="user", to="inches") -
     graphics::grconvertX(ext[1], from="user", to="inches")
   widthpx <- widthin * res
 
   zoom = log2((360.0 / anglewidth) * (widthpx / 256.0))
+
   as.integer(floor(zoom))
 }

@@ -24,19 +24,19 @@ prettymap({
            type="hillshade", add=T, project = F)
 })
 
-
-#this doesn't load properly
-prettymap({
-gmap.plot(prettymapr::searchbbox("2772 greenfield rd gaspereau NS", source="google"), project=T)
-rd <- canvec.load(nts("21h1"), "road")
-plot(spTransform(rd, CRS("+init=epsg:3857")), add=T, lwd=4)
-})
-
-#this doesn't seem to load properly
-prettymap({
-gmap.plot(prettymapr::searchbbox("blomidon, NS", source="google"), project=F)
-  plot(canvec.load(nts("21h1"), "waterbody"), add=T, lwd=2)
-})
+# ##GMAPS ABANDONED THIS VERSION
+# #this doesn't load properly
+# prettymap({
+# gmap.plot(prettymapr::searchbbox("2772 greenfield rd gaspereau NS", source="google"), project=T)
+# rd <- canvec.load(nts("21h1"), "road")
+# plot(spTransform(rd, CRS("+init=epsg:3857")), add=T, lwd=4)
+# })
+#
+# #this doesn't seem to load properly
+# prettymap({
+# gmap.plot(prettymapr::searchbbox("blomidon, NS", source="google"), project=F)
+#   plot(canvec.load(nts("21h1"), "waterbody"), add=T, lwd=2)
+# })
 
 #test on small scale canadian locations to check alignment
 smalllocs <- c("wolfville NS", "blomidon, NS",
@@ -44,25 +44,25 @@ smalllocs <- c("wolfville NS", "blomidon, NS",
           "cedar lake, algonquin park, ON", "alta lake BC")
 
 #osm
-type <- "stamenwatercolor"
+type <- "thunderforestoutdoors"
 
 for(loc in smalllocs) {
   cat(loc, "\n")
   box <- prettymapr::searchbbox(loc, source="google")
   cat(box, "\n")
-  prettymap({osm.plot(box, type=type, project=F, fusetiles = F)
+  prettymap({osm.plot(box, type=type, project=F)
              title(paste(loc, type))})
 }
 
-#gmap
-for(loc in smalllocs) {
-  cat(loc, "\n")
-  box <- prettymapr::searchbbox(loc, source="google")
-  cat(box, "\n")
-  prettymap({gmap.plot(box, project=F)
-            rcanvec::canvec.qplot(bbox=box, layers="waterbody", add=T)
-            title(loc)})
-}
+# #gmap
+# for(loc in smalllocs) {
+#   cat(loc, "\n")
+#   box <- prettymapr::searchbbox(loc, source="google")
+#   cat(box, "\n")
+#   prettymap({gmap.plot(box, project=F)
+#             rcanvec::canvec.qplot(bbox=box, layers="waterbody", add=T)
+#             title(loc)})
+# }
 
 #bmaps
 bingtype <- "AerialWithLabels"
@@ -92,7 +92,7 @@ canada <- spTransform(canada, CRS("+init=epsg:3857"))
 usa <- spTransform(usa, CRS("+init=epsg:3857"))
 
 #osm
-type <- "stamenwatercolor"
+type <- "osm"
 for(loc in biglocs) {
   cat(loc, "\n")
   box <- prettymapr::searchbbox(loc, source="google")
@@ -104,17 +104,17 @@ for(loc in biglocs) {
      title(paste(loc, type))})
 }
 
-#gmap
-for(loc in biglocs) {
-  cat(loc, "\n")
-  box <- prettymapr::searchbbox(loc, source="google")
-  cat(box, "\n")
-  prettymapr::prettymap({gmap.plot(box, project=T, asp=1)
-    title(loc)})
-}
+# #gmap
+# for(loc in biglocs) {
+#   cat(loc, "\n")
+#   box <- prettymapr::searchbbox(loc, source="google")
+#   cat(box, "\n")
+#   prettymapr::prettymap({gmap.plot(box, project=T, asp=1)
+#     title(loc)})
+# }
 
 #bingmaps
-bingtype <- "Aerial"
+bingtype <- "Road"
 for(loc in biglocs) {
   cat(loc, "\n")
   box <- prettymapr::searchbbox(loc, source="google")

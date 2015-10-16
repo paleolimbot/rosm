@@ -24,7 +24,6 @@ bmaps.restquery <- function(bingtype, key=NULL) {
     key <- "Aut49nhp5_Twwf_5RHF6wSGk7sEzpcSA__niIXCHowQZLMeC-m8cdy7EmZd2r7Gs"
   }
   urlstring <- paste0("http://dev.virtualearth.net/REST/v1/Imagery/Metadata/", bingtype, "?key=", key)
-  message("Querying Bing REST API")
   connect <- url(urlstring)
   lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
   close(connect)
@@ -32,11 +31,12 @@ bmaps.restquery <- function(bingtype, key=NULL) {
   if(class(lines) == "try-error") stop("  Bing REST query failed for type: ", bingtype)
 
   result <- rjson::fromJSON(paste(lines, collapse = ""))
+  message(result$copyright)
   result$resourceSets[[1]]$resources[[1]]
 }
 
 bmaps.tileurlfromrest <- function(imageUrl, tilex, tiley, zoom) {
-  gsub("{subdomain}", sample(c("t1", "t2", "t3", "t4"), 1),
+  gsub("{subdomain}", sample(c("t0", "t1", "t2", "t3"), 1),
        gsub("{quadkey}", bmaps.quadkey(tilex, tiley, zoom), imageUrl, fixed=TRUE), fixed=TRUE)
 }
 
@@ -90,5 +90,32 @@ bmaps.plot <- function(bbox, bingtype="Aerial", key=NULL, ...) {
   afterg <- strsplit(rest$imageUrl, "?g=", fixed=TRUE)[[1]][2]
   .bingtoken <<- strsplit(afterg, "&", fixed=TRUE)[[1]][1]
   osm.plot(bbox=bbox, type=type, ...)
+  .bingtoken <<- NULL
+  extraargs <- list(...)
+  bmaps.attribute(res=extraargs$res, cachedir=extraargs$cachedir)
 }
 
+
+bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL) {
+  if(is.null(res)) {
+    res <- 80
+  }
+  #http://dev.virtualearth.net/Branding/logo_powered_by.png
+  bingfile <- file.path(tile.cachedir("bing"), "bing.png")
+  if(!file.exists(bingfile)) {
+    download.file("http://dev.virtualearth.net/Branding/logo_powered_by.png",
+                  bingfile, quiet=TRUE)
+  }
+  binglogo <- png::readPNG(bingfile)
+  ext <- par("usr")
+  rightin <- graphics::grconvertX(ext[2], from="user", to="inches")
+  bottomin <- graphics::grconvertY(ext[3], from="user", to="inches")
+  widthin <- dim(binglogo)[2]/res
+  heightin <- dim(binglogo)[1]/res
+  leftusr <- graphics::grconvertX(rightin-padin[1]-widthin, from="inches", to="user")
+  bottomusr <- graphics::grconvertY(bottomin+padin[2], from="inches", to="user")
+  topusr <- graphics::grconvertY(bottomin+padin[2]+heightin, from="inches", to="user")
+  rightusr <- graphics::grconvertX(rightin-padin[1], from="inches", to="user")
+
+  rasterImage(binglogo, leftusr, bottomusr, rightusr, topusr)
+}

@@ -85,10 +85,10 @@ bmaps.types <- function() {
 bmaps.plot <- function(bbox, bingtype="Aerial", key=NULL, ...) {
   if(!(bingtype %in% bmaps.types())) stop("bingtype must be one of Aerial, AerialWithLabels, or Road")
   type <- paste("bing", bingtype, sep="_")
+
   rest <- bmaps.restquery(bingtype, key)
   afterg <- strsplit(rest$imageUrl, "?g=", fixed=TRUE)[[1]][2]
   .bingtoken <<- strsplit(afterg, "&", fixed=TRUE)[[1]][1]
   osm.plot(bbox=bbox, type=type, ...)
-  .bingtoken <<- NULL
 }
 

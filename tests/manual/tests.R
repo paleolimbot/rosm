@@ -50,7 +50,7 @@ for(loc in smalllocs) {
   cat(loc, "\n")
   box <- prettymapr::searchbbox(loc, source="google")
   cat(box, "\n")
-  prettymap({osm.plot(box, type=type, project=F)
+  prettymap({osm.plot(box, type=type, project=F, fusetiles = F)
              title(paste(loc, type))})
 }
 
@@ -75,7 +75,8 @@ for(loc in smalllocs) {
 }
 
 #plot the whole world (still doesn't work)
-osm.plot(makebbox(89.9, 179.9, -89.9, -179.9))
+osm.plot(makebbox(89.9, 179.9, -89.9, -179.9), zoom=0)
+prettymap(osm.plot(makebbox(89.9, 179.9, -89.9, -179.9)))
 
 #plot wrap around situations
 osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-92, 0)), zoomin=1)

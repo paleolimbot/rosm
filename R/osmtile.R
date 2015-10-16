@@ -101,11 +101,15 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
     cachename <- tile.cachename(xtile, ytile, zoom, type, cachedir)
     if(!file.exists(cachename) || forcedownload) {
       url <- tile.url(xtile, ytile, zoom, type)
-      message("Downloading from ", url)
+      message("Downloading ", i, " of ", nrow(tiles))
       tryCatch(download.file(url, cachename, quiet = TRUE),
                error=function(err) {
                  message("Error downloading tile ", xtile, ",", ytile, " (zoom: ",
                          zoom, "): ", err)
+               }, warning=function(warn) {
+                 message("Error downloading tile (tile likely does not exist ",
+                         "or no internet connection) ", xtile, ",", ytile, " (zoom: ",
+                         zoom, "): ", warn)
                })
     }
   }

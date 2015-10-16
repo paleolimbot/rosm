@@ -9,13 +9,18 @@ tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
   fname <- tile.cachename(x, y, zoom, type, cachedir)
   parts <- strsplit(fname, "\\.")[[1]]
   ext <- parts[length(parts)]
-  if(ext == "jpg" || ext =="jpeg") {
-    image <- jpeg::readJPEG(fname)
-  } else if(ext == "png") {
-    image <- png::readPNG(fname)
-  } else {
-    stop("Extension not recognized: ", ext)
-  }
+  tryCatch({
+    if(ext == "jpg" || ext =="jpeg") {
+      return(jpeg::readJPEG(fname))
+    } else if(ext == "png") {
+      return(png::readPNG(fname))
+    } else {
+      stop("Extension not recognized: ", ext)
+    }
+  }, error=function(err) {
+    message("Error loading ", fname, ": ", err)
+  })
+  NULL
 }
 
 tile.applywrap <- function(tiles, zoom) {
@@ -40,7 +45,7 @@ tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
     y <- tiles[i,2]
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir)
-    tile.plotarray(image, box)
+    if(!is.null(image)) tile.plotarray(image, box)
   }
 }
 
@@ -58,9 +63,11 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
     for(y in ys) {
       if(is.null(colimg)) {
         colimg <- tile.loadimage(x, y, zoom, type, cachedir)
+        if(is.null(colimg)) stop("Unloadable tile cannot be fused. Use fusetiles=FALSE to view.")
       } else {
-        colimg <- abind::abind(colimg, tile.loadimage(x, y, zoom, type, cachedir),
-                              along=1) #rbind
+        img <- tile.loadimage(x, y, zoom, type, cachedir)
+        if(is.null(img)) stop("Unloadable tile cannot be fused. Use fusetiles=FALSE to view.")
+        colimg <- abind::abind(colimg, img, along=1) #rbind
       }
     }
 
@@ -157,6 +164,9 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
   zoom <- zoom+zoomin
   maxzoom <- tile.maxzoom(type)
   zoom <- min(zoom, maxzoom)
+
+  #global min zoom set to 1
+  zoom <- max(1, zoom)
 
   #adjust bbox to final plot extents
   bbox <- t(matrix(par('usr'), ncol=2, byrow=FALSE))

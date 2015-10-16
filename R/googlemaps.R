@@ -43,26 +43,6 @@ google.getimage <- function(maptype, lon, lat, zoom, wdpx,
   png::readPNG(tofile)
 }
 
-
-
-#' Plot Google Maps
-#'
-#' Plot google maps.
-#'
-#' @param bbox
-#' @param zoomin
-#' @param zoom
-#' @param maptype
-#' @param forcedownload
-#' @param cachedir
-#' @param res
-#' @param epsg
-#' @param key
-#' @param ...
-#'
-#' @export
-#'
-
 gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
                            cachedir=NULL, res=150, project=TRUE, key=NULL, ...) {
 

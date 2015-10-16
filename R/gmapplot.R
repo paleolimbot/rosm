@@ -1,5 +1,25 @@
 #google static API plotting
 
+gmap.bbox <- function(lon, lat, zoom, wdthpx, htpx) {
+  pixels <- 2^zoom*256
+  centerX <- (lon+180)/360.0*pixels
+  centerY <- (180-sm.lat2y(lat))/360.0*pixels
+
+  swX <- centerX-wdthpx/2
+  swlon <- swX/pixels*360-180
+  neX <- centerX+wdthpx/2
+  nelon <- neX/pixels*360-180
+
+  swY <- centerY-htpx/2
+  swlat <- -sm.y2lat(swY/pixels*360-180)
+  neY <- centerY+htpx/2
+  nelat <- -sm.y2lat(neY/pixels*360-180)
+
+  matrix(c(swlon, swlat, nelon, nelat), ncol=2, byrow=FALSE)
+}
+
+
+
 google.getimage <- function(maptype, lon, lat, zoom, wdpx,
                             htpx, scale=1, key=NULL, cachedir=NULL, forcedownload=FALSE) {
   if(is.null(key)) {
@@ -98,10 +118,13 @@ gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
   }
 
   cat("aspect:", aspect, " widthpx:", widthpx, " heightpx:", heightpx, " zoom:", zoom,
-      " center:", midlatlon[1], " ", midlatlon[2])
+      " center:", midlatlon[1], " ", midlatlon[2], "\n")
+  cat("bbox query:", bboxgoog, "\n")
+  bboximgll <- gmap.bbox(midlatlon[1], midlatlon[2], zoom, widthpx, heightpx)
+  cat("bbox return: ", sm.projectbbox(bboximgll), "\nbbox reg:", bboximgll, "\n")
 
   image <- google.getimage(maptype, midlatlon[1], midlatlon[2], zoom, round(widthpx),
                            round(heightpx), scale=scale, key=key, cachedir=cachedir,
                            forcedownload=forcedownload)
-  tile.plotarray(image, fullareabbox)
+  tile.plotarray(image, .projectbbox(bboximgll, epsg))
 }

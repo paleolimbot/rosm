@@ -27,9 +27,9 @@ prettymap({
 
 #this doesn't load properly
 prettymap({
-gmap.plot(prettymapr::searchbbox("2772 greenfield rd gaspereau NS", source="google"), project=FALSE)
+gmap.plot(prettymapr::searchbbox("2772 greenfield rd gaspereau NS", source="google"), project=T)
 rd <- canvec.load(nts("21h1"), "road")
-plot(rd, add=T, lwd=4)
+plot(spTransform(rd, CRS("+init=epsg:3857")), add=T, lwd=4)
 })
 
 #this doesn't seem to load properly

@@ -1,6 +1,11 @@
 #plot slippy tiles
 
 tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
+  if(x < 0) {
+    #negative tiles from wrap situation
+    x <- x+2^zoom
+  }
+
   fname <- tile.cachename(x, y, zoom, type, cachedir)
   parts <- strsplit(fname, "\\.")[[1]]
   ext <- parts[length(parts)]
@@ -13,7 +18,23 @@ tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
   }
 }
 
+tile.applywrap <- function(tiles, zoom) {
+  if(!all(min(tiles[,1]):max(tiles[,1]) %in% tiles[,1])) {
+    #wrapping around the backside of the earth, make end tiles negative
+    warning("Attempting to plot wrap around tiles (~lat=-180), things may get funky.")
+    n <- -1
+    while(length(tiles[,1][tiles[,1]==2^zoom+n]) > 0) {
+      tiles[,1][tiles[,1]==2^zoom+n] <- (tiles[,1][tiles[,1]==2^zoom+n]) - 2^zoom
+      n <- n-1
+    }
+  }
+  tiles
+}
+
 tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+
+  tiles <- tile.applywrap(tiles, zoom)
+
   for(i in 1:nrow(tiles)) {
     x <- tiles[i,1]
     y <- tiles[i,2]
@@ -24,6 +45,9 @@ tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
 }
 
 tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+
+  tiles <- tile.applywrap(tiles, zoom)
+
   tiles <- tiles[order(tiles$Var1, tiles$Var2),]
   xs <- unique(tiles[,1])
   ys <- unique(tiles[,2])
@@ -48,8 +72,10 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   }
 
   #calc bounding box of whole image
+
   nw <- tile.nw(min(xs), min(ys), zoom, epsg)
   se <- tile.nw(max(xs)+1, max(ys)+1, zoom, epsg)
+
   bbox <- matrix(c(nw[1], se[2], se[1], nw[2]), ncol=2,
                 byrow=FALSE, dimnames=list(c("x", "y"), c("min", "max")))
 
@@ -116,6 +142,7 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
 
   coords <- sp::coordinates(t(bbox))
   spoints = sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", epsg)))
+
   plotargs <- list(...)
   if(is.null(plotargs$xlim))
     xlim <- bbox[1,]

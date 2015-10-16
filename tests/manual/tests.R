@@ -4,7 +4,7 @@ library(prettymapr)
 library(maptools)
 library(sp)
 
-nsbox <- prettymapr::searchbbox("nova scotia")
+nsbox <- prettymapr::searchbbox("nova scotia", source="google")
 types <- c("hikebike","hillshade","hotstyle","lovinacycle",
            "lovinahike","mapquestosm","mapquestsat","opencycle",
            "openpiste","osm","osmgrayscale",
@@ -46,9 +46,6 @@ smalllocs <- c("wolfville NS", "blomidon, NS",
 #osm
 type <- "stamenwatercolor"
 
-#plot the whole world
-osm.plot(makebbox(89.9, 179.9, -89.9, -179.9))
-
 for(loc in smalllocs) {
   cat(loc, "\n")
   box <- prettymapr::searchbbox(loc, source="google")
@@ -76,6 +73,15 @@ for(loc in smalllocs) {
   prettymapr::prettymap({bmaps.plot(box, bingtype)
     title(loc)})
 }
+
+#plot the whole world (still doesn't work)
+osm.plot(makebbox(89.9, 179.9, -89.9, -179.9))
+
+#plot wrap around situations
+osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-92, 0)), zoomin=1)
+osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0)), zoomin=1, project=F)
+osm.plot(prettymapr::searchbbox("alaska", source="google"))
+bmaps.plot(prettymapr::searchbbox("alaska", source="google"))
 
 biglocs <- c("nova scotia", "united states", "canada", "alberta")
 data("wrld_simpl")

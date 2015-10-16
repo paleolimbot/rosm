@@ -19,7 +19,13 @@
   coords <- sp::coordinates(t(bbox))
   spoints = sp::SpatialPoints(coords, proj4string = sp::CRS("+init=epsg:4326"))
   newpoints <- sp::spTransform(spoints, sp::CRS(paste0("+init=epsg:", toepsg)))
-  t(sp::coordinates(newpoints))
+  newbbox <- t(sp::coordinates(newpoints))
+
+  if(newbbox[1,1] > newbbox[1,2]) { #if min>max
+    maxx <- .fromlatlon(180, bbox[2, 1], toepsg)[1]
+    newbbox[1,1] <- newbbox[1,1]-maxx*2
+  }
+  newbbox
 }
 
 .revprojectbbox <- function(bbox, fromepsg) {

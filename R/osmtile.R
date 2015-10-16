@@ -6,9 +6,24 @@ tiles.bybbox <- function(bbox, zoom, epsg=4326) {
   nwlatlon <- .tolatlon(bbox[1,1], bbox[2,2], epsg)
   selatlon <- .tolatlon(bbox[1,2], bbox[2,1], epsg)
 
+  if(nwlatlon[1] > selatlon[1]) {
+    #wrapping around backside of earth
+    backsidebbox <- matrix(c(nwlatlon[1], selatlon[2], 180, nwlatlon[2]), ncol=2, byrow=FALSE)
+    backsidetiles <- tiles.bybbox(backsidebbox, zoom, 4326)
+    nwlatlon[1] <- -180
+  } else {
+    backsidetiles <- NULL
+  }
+
   nw <- tile.xy(nwlatlon[1], nwlatlon[2], zoom)
   se <- tile.xy(selatlon[1], selatlon[2], zoom)
-  expand.grid(nw[1]:se[1], nw[2]:se[2])
+  tiles <- expand.grid(nw[1]:se[1], nw[2]:se[2])
+
+  if(is.null(backsidetiles)) {
+    tiles
+  } else {
+    rbind(backsidetiles, tiles)
+  }
 }
 
 tile.xy <-function(x, y, zoom, epsg=4326) {
@@ -37,7 +52,15 @@ tile.nw <- function(xtile, ytile, zoom, epsg=4326) {
   lat_rad <- atan(sinh(pi * (1 - 2 * ytile / n)))
   lat_deg <- lat_rad*180/pi
 
-  .fromlatlon(lon_deg, lat_deg, epsg)
+  projected <- .fromlatlon(lon_deg, lat_deg, epsg)
+  #added to support wrap around tiles
+  if(lon_deg < -180 && projected[1] > 0) {
+    #wrap around situation
+
+    maxx <- .fromlatlon(180, lat_deg, epsg)[1]
+    projected[1] <- projected[1]-maxx*2
+  }
+  projected
 }
 
 tile.bbox <- function(xtile, ytile, zoom, epsg=4326) {

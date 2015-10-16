@@ -54,8 +54,7 @@ for(loc in smalllocs) {
   box <- prettymapr::searchbbox(loc, source="google")
   cat(box, "\n")
   prettymap({osm.plot(box, type=type, project=F)
-    rcanvec::canvec.qplot(bbox=box, layers="waterbody", add=T)
-    title(paste(loc, type))})
+             title(paste(loc, type))})
 }
 
 #gmap
@@ -66,6 +65,16 @@ for(loc in smalllocs) {
   prettymap({gmap.plot(box, project=F)
             rcanvec::canvec.qplot(bbox=box, layers="waterbody", add=T)
             title(loc)})
+}
+
+#bmaps
+bingtype <- "AerialWithLabels"
+for(loc in smalllocs) {
+  cat(loc, "\n")
+  box <- prettymapr::searchbbox(loc, source="google")
+  cat(box, "\n")
+  prettymapr::prettymap({bmaps.plot(box, bingtype)
+    title(loc)})
 }
 
 biglocs <- c("nova scotia", "united states", "canada", "alberta")
@@ -94,5 +103,15 @@ for(loc in biglocs) {
   box <- prettymapr::searchbbox(loc, source="google")
   cat(box, "\n")
   prettymapr::prettymap({gmap.plot(box, project=T, asp=1)
+    title(loc)})
+}
+
+#bingmaps
+bingtype <- "Aerial"
+for(loc in biglocs) {
+  cat(loc, "\n")
+  box <- prettymapr::searchbbox(loc, source="google")
+  cat(box, "\n")
+  prettymapr::prettymap({bmaps.plot(box, bingtype)
     title(loc)})
 }

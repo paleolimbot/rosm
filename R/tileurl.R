@@ -108,10 +108,3 @@ tile.url.thunderforestoutdoors <- function(xtile, ytile, zoom) {
   return(paste(paste(sample(servers, 1),
                      zoom, xtile, ytile, sep="/"),".png", sep=""))
 }
-
-tile.url.bingaerial <- function(xtile, ytile, zoom) {
-  #http://ecn.t2.tiles.virtualearth.net/tiles/a331.jpeg?g=587
-  servers = c("t1", "t2", "t3", "t4")
-  paste0("http://ecn.", sample(servers, 1), ".tiles.virtualearth.net/tiles/a",
-         bmaps.quadkey(xtile, ytile, zoom), ".jpeg?g=", sample(0:1111, 1))
-}

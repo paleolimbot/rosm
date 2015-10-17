@@ -118,7 +118,7 @@ bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL) {
   #http://dev.virtualearth.net/Branding/logo_powered_by.png
   bingfile <- file.path(tile.cachedir("bing"), "bing.png")
   if(!file.exists(bingfile)) {
-    download.file("http://dev.virtualearth.net/Branding/logo_powered_by.png",
+    utils::download.file("http://dev.virtualearth.net/Branding/logo_powered_by.png",
                   bingfile, quiet=TRUE)
   }
   binglogo <- png::readPNG(bingfile)
@@ -132,5 +132,5 @@ bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL) {
   topusr <- graphics::grconvertY(bottomin+padin[2]+heightin, from="inches", to="user")
   rightusr <- graphics::grconvertX(rightin-padin[1], from="inches", to="user")
 
-  rasterImage(binglogo, leftusr, bottomusr, rightusr, topusr)
+  graphics::rasterImage(binglogo, leftusr, bottomusr, rightusr, topusr)
 }

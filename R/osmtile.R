@@ -81,7 +81,7 @@ tile.ext <- function(type) {
 }
 
 tile.maxzoom <- function(type) {
-  if(existsFunction(paste0("tile.maxzoom.", type))) {
+  if(methods::existsFunction(paste0("tile.maxzoom.", type))) {
     do.call(paste0("tile.maxzoom.", type), list())
   } else {
     return(19)

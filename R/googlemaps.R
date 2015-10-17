@@ -37,7 +37,7 @@ google.getimage <- function(maptype, lon, lat, zoom, wdpx,
 
   if(!file.exists(tofile) || forcedownload) {
     message("Downloading to ", tofile)
-    download.file(url, tofile, quiet=TRUE)
+    utils::download.file(url, tofile, quiet=TRUE)
   }
 
   png::readPNG(tofile)
@@ -63,7 +63,7 @@ gmap.plot <- function(bbox, maptype="satellite", forcedownload=FALSE,
   sp::plot(spoints, pch=".", xlim=xlim, ylim=ylim, ...)
 
   #get extents
-  ext <- par("usr")
+  ext <- graphics::par("usr")
   fullareabbox <- matrix(c(ext[1], ext[3], ext[2], ext[4]), ncol=2, byrow=FALSE)
   fullareabboxll <- .revprojectbbox(fullareabbox, epsg)
 

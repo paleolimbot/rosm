@@ -102,7 +102,7 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
     if(!file.exists(cachename) || forcedownload) {
       url <- tile.url(xtile, ytile, zoom, type)
       message("Downloading ", i, " of ", nrow(tiles))
-      tryCatch(download.file(url, cachename, quiet = TRUE),
+      tryCatch(utils::download.file(url, cachename, quiet = TRUE),
                error=function(err) {
                  message("Error downloading tile ", xtile, ",", ytile, " (zoom: ",
                          zoom, "): ", err)

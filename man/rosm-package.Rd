@@ -6,23 +6,12 @@
 Plot Raster Map Tiles From Open Street Map and Other Sources
 }
 \description{
-Download and plot Open Street Map, Mapquest, Bing and other tiles in
-a way that works with plotting from the sp package. Use to create high-resolution
-basemaps and add hillshade to vector based maps.
-}
-\details{
-\tabular{ll}{
-Package: \tab rosm\cr
-Type: \tab Package\cr
-Version: \tab 0.1.0\cr
-Date: \tab 2015-10-17\cr
-License: \tab GPL-2\cr
-}
 This package provides access to Open Street Map, Mapquest, and Bing Maps tiles
 to create high resolution basemaps and use hillshade tiles to add texture to other maps.
-Uses the {sp} package to plot using base graphics. Plot Open Street Map derivative
+Uses the sp package to plot using base graphics. Plot Open Street Map derivative
 tiles using \link{osm.plot}, and plot Bing maps (Aerial, Labeled Aerial, Road) using
-\link{bmaps.plot}.
+\link{bmaps.plot}. 16 OSM and 3 Bing sources are included, with the ability to define
+custom tile sources based on OSM tilex, tiley, and zoom.
 }
 \author{
 Dewey Dunnington <dewey@fishandwhistle.net>

@@ -48,7 +48,7 @@ bmaps.plot(nsbox, type="Road")
 
 #use {prettymapr} to add scalebar and north arrow
 prettymap(osm.plot(nsbox))
-prettymap()
+prettymap(bmaps.plot(nsbox, type="Road"))
 
 #increase res argument to plot to file
 pdf(height=8, width=10.5)

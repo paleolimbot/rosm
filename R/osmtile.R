@@ -88,6 +88,12 @@ tile.maxzoom <- function(type) {
   }
 }
 
+tile.attribute <- function(type) {
+  if(methods::existsFunction(paste0("tile.attribute.", type))) {
+    do.call(paste0("tile.attribute.", type), list())
+  }
+}
+
 tile.cachename <- function(xtile, ytile, zoom, type, cachedir=NULL) {
   folder <- tile.cachedir(type, cachedir)
   ext <- tile.ext(type)

@@ -45,7 +45,7 @@ tile.url.bing <- function(typecode, ext, xtile, ytile, zoom) {
   .bingtoken <- NULL ; rm(.bingtoken) #CMD check trick
   if(!exists(".bingtoken")) stop("use bmaps.plot() to plot Bing maps")
   if(is.null(.bingtoken)) stop("use bmaps.plot() to plot Bing maps")
-  servers = c("t1", "t2", "t3", "t4")
+  servers = c("t0", "t1", "t2", "t3")
   paste0("http://ecn.", sample(servers, 1), ".tiles.virtualearth.net/tiles/",
          typecode, bmaps.quadkey(xtile, ytile, zoom), ext, "?g=", .bingtoken)
 }

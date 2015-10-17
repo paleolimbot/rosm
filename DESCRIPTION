@@ -9,5 +9,5 @@ Description: Plot Open Street Map, Mapquest, and other tiles based on the
   slippy tile system.
 License: GPL-2
 LazyData: TRUE
-Imports: abind, jpeg, png, sp, rgdal
+Imports: abind, jpeg, png, sp, rgdal, digest, rjson
 Suggests: prettymapr

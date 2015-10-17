@@ -2,6 +2,5 @@
 
 export(bmaps.plot)
 export(bmaps.types)
-export(gmap.plot)
 export(osm.plot)
 export(osm.types)

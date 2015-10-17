@@ -10,11 +10,11 @@ tile.cachedir <- function(type, cachedir=NULL) {
 }
 
 tile.plotarray <- function(image, box) {
-  rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
+  graphics::rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
 }
 
 tile.autozoom <- function(res=150, epsg=4326) {
-  ext <- par("usr")
+  ext <- graphics::par("usr")
   midy <- mean(c(ext[3], ext[4]))
   rightmid <- .tolatlon(ext[2], midy, epsg)
   centermid <- .tolatlon(mean(c(ext[1], ext[2])), midy, epsg)

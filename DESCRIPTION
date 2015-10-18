@@ -2,7 +2,7 @@ Package: rosm
 Type: Package
 Title: Plot Raster Map Tiles from Open Street Map and Other Sources
 Version: 0.1.1
-Date: 2015-10-16
+Date: 2015-10-18
 Author: Dewey Dunnington <dewey@fishandwhistle.net>
 Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
 Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,

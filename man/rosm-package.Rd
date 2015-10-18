@@ -6,9 +6,10 @@
 Plot Raster Map Tiles From Open Street Map and Other Sources
 }
 \description{
-This package provides access to Open Street Map, Mapquest, and Bing Maps tiles
+This package provides access and plots \href{http://www.openstreetmap.org/}{Open Street Map},
+\href{http://www.mapquest.com/}{Mapquest}, and \href{http://www.bing.com/maps}{Bing Maps} tiles
 to create high resolution basemaps and use hillshade tiles to add texture to other maps.
-Uses the sp package to plot using base graphics. Plot Open Street Map derivative
+Uses the 'sp' package to plot using base graphics. Plot Open Street Map derivative
 tiles using \link{osm.plot}, and plot Bing maps (Aerial, Labeled Aerial, Road) using
 \link{bmaps.plot}. 16 OSM and 3 Bing sources are included, with the ability to define
 custom tile sources based on OSM tilex, tiley, and zoom.

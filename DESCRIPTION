@@ -1,13 +1,15 @@
 Package: rosm
 Type: Package
-Title: Plot Raster Map Tiles From Open Street Map and Other Sources
-Version: 0.1.0
+Title: Plot Raster Map Tiles from Open Street Map and Other Sources
+Version: 0.1.1
 Date: 2015-10-16
 Author: Dewey Dunnington <dewey@fishandwhistle.net>
 Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
-Description: Download and plot Open Street Map, Mapquest, Bing and other tiles in
-  a way that works with plotting from the sp package. Use to create high-resolution
-  basemaps and add hillshade to vector based maps.
+Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
+  Mapquest <http://www.mapquest.com/>, Bing Maps <http://www.bing.com/maps>
+  and other tiled map sources in a way that works seamlessly with plotting
+  from the 'sp' package. Use to create high-resolution basemaps and add hillshade
+  to vector based maps.
 License: GPL-2
 LazyData: TRUE
 Imports: abind, jpeg, png, sp, rgdal, digest, rjson, methods

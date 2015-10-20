@@ -17,7 +17,7 @@
 }
 
 .projectbbox <- function(bbox, toepsg) {
-  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", epsg))) #hack to make sure rgdal stays in Imports:
+  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", toepsg))) #hack to make sure rgdal stays in Imports:
   coords <- sp::coordinates(t(bbox))
   spoints = sp::SpatialPoints(coords, proj4string = sp::CRS("+init=epsg:4326"))
   newpoints <- sp::spTransform(spoints, sp::CRS(paste0("+init=epsg:", toepsg)))
@@ -31,7 +31,7 @@
 }
 
 .revprojectbbox <- function(bbox, fromepsg) {
-  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", epsg))) #hack to make sure rgdal stays in Imports:
+  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", fromepsg))) #hack to make sure rgdal stays in Imports:
   coords <- sp::coordinates(t(bbox))
   spoints = sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", fromepsg)))
   newpoints <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))

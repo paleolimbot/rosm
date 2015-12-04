@@ -3,6 +3,9 @@ library(rcanvec)
 library(prettymapr)
 library(maptools)
 library(sp)
+library(cartography)
+library(raster)
+
 
 nsbox <- prettymapr::searchbbox("nova scotia", source="google")
 types <- c("hikebike","hillshade","hotstyle","lovinacycle",
@@ -128,3 +131,19 @@ tile.url.darkmatter <- function(xtile, ytile, zoom) {
                zoom, xtile, ytile, sep="/"), ".png")
 }
 osm.plot(nsbox, type="darkmatter")
+
+
+#osm.raster
+data(nuts2006)
+for(country in unique(nuts0.spdf$id)) {
+  message("Testing country ", country)
+  spdf <- nuts0.spdf[nuts0.spdf$id==country,]
+  spdf2 <- spTransform(spdf, CRSobj = CRS("+init=epsg:4326"))
+  x <- osm.raster(bbox(spdf2), type="thunderforestlandscape")
+  x2 <- osm.proj(x, spdf@proj4string, crop.bbox=bbox(spdf))
+  osm.proj.plot(x2)
+  title(country)
+}
+
+
+

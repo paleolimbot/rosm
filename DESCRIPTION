@@ -1,7 +1,7 @@
 Package: rosm
 Type: Package
 Title: Plot Raster Map Tiles from Open Street Map and Other Sources
-Version: 0.1.2
+Version: 0.1.3
 Date: 2015-10-18
 Author: Dewey Dunnington <dewey@fishandwhistle.net>
 Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
@@ -13,6 +13,6 @@ Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
 License: GPL-2
 LazyData: TRUE
 Imports: abind, jpeg, png, sp, rgdal, digest, rjson, methods
-Suggests: prettymapr, rcanvec
+Suggests: prettymapr, rcanvec, cartography, raster
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm

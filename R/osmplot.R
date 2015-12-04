@@ -36,20 +36,32 @@ tile.applywrap <- function(tiles, zoom) {
   tiles
 }
 
-tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
 
   tiles <- tile.applywrap(tiles, zoom)
+  outlist <- list()
 
   for(i in 1:nrow(tiles)) {
     x <- tiles[i,1]
     y <- tiles[i,2]
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir)
-    if(!is.null(image)) tile.plotarray(image, box)
+
+    if(!is.null(image)) {
+      if(plot) {
+        tile.plotarray(image, box)
+      } else {
+        outlist[[length(outlist)+1]] <- list(img=image, bbox=box)
+      }
+    }
+  }
+
+  if(!plot) {
+    outlist
   }
 }
 
-tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
 
   tiles <- tile.applywrap(tiles, zoom)
 
@@ -86,8 +98,13 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   bbox <- matrix(c(nw[1], se[2], se[1], nw[2]), ncol=2,
                 byrow=FALSE, dimnames=list(c("x", "y"), c("min", "max")))
 
-  #plot image
-  tile.plotarray(wholeimg, bbox)
+  if(plot) {
+    #plot image
+    tile.plotarray(wholeimg, bbox)
+  } else {
+    #return image and bounds
+    list(img=wholeimg, bbox=bbox)
+  }
 }
 
 
@@ -201,9 +218,9 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
   tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir)
 
   if(fusetiles) {
-    tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+    tile.fuse(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, plot=TRUE)
   } else {
-    tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+    tile.each(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, plot=TRUE)
   }
 
   tile.attribute(type)

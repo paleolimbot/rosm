@@ -52,6 +52,11 @@ x <- osm.raster(spdf, type="thunderforestlandscape")
 
 ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 x <- osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE)
+#plot using plotRGB
+plotRGB(x)
+#write to disk using writeRaster
+#datatype argument optional, but "INT1U" ensures GIS programs know it is RGB
+writeRaster(x, "test.tif", datatype="INT1U")
 }
 }
 

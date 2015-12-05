@@ -1,39 +1,72 @@
 #projection functions
 
-.tolatlon <- function(x, y, epsg) {
-  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", epsg))) #hack to make sure rgdal stays in Imports:
+.tolatlon <- function(x, y, epsg=NULL, projection=NULL) {
+  if(is.null(epsg) && is.null(projection)) {
+    stop("epsg and projection both null...nothing to project")
+  } else if(!is.null(epsg) && !is.null(projection)) {
+    stop("epsg and projection both specified...ambiguous call")
+  }
+
+  if(is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", epsg))
+  }
+
   coords <- sp::coordinates(matrix(c(x,y), byrow=TRUE, ncol=2))
-  spoints <- sp::SpatialPoints(coords, sp::CRS(paste0("+init=epsg:", epsg)))
+  spoints <- sp::SpatialPoints(coords, projection)
   spnew <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
   c(sp::coordinates(spnew)[1], sp::coordinates(spnew)[2])
 }
 
-.fromlatlon <- function(lon, lat, epsg) {
-  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", epsg))) #hack to make sure rgdal stays in Imports:
+.fromlatlon <- function(lon, lat, epsg=NULL, projection=NULL) {
+  if(is.null(epsg) && is.null(projection)) {
+    stop("epsg and projection both null...nothing to project")
+  } else if(!is.null(epsg) && !is.null(projection)) {
+    stop("epsg and projection both specified...ambiguous call")
+  }
+
+  if(is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", epsg))
+  }
+
   coords <- sp::coordinates(matrix(c(lon,lat), byrow=TRUE, ncol=2))
   spoints <- sp::SpatialPoints(coords, sp::CRS("+init=epsg:4326"))
-  spnew <- sp::spTransform(spoints, sp::CRS(paste0("+init=epsg:", epsg)))
+  spnew <- sp::spTransform(spoints, projection)
   c(sp::coordinates(spnew)[1], sp::coordinates(spnew)[2])
 }
 
-.projectbbox <- function(bbox, toepsg) {
-  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", toepsg))) #hack to make sure rgdal stays in Imports:
+.projectbbox <- function(bbox, toepsg=NULL, projection=NULL) {
+  if(is.null(toepsg) && is.null(projection)) {
+    stop("toepsg and projection both null...nothing to project")
+  } else if(!is.null(toepsg) && !is.null(projection)) {
+    stop("toepsg and projection both specified...ambiguous call")
+  }
+
+  if(is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", toepsg))
+  }
   coords <- sp::coordinates(t(bbox))
   spoints = sp::SpatialPoints(coords, proj4string = sp::CRS("+init=epsg:4326"))
-  newpoints <- sp::spTransform(spoints, sp::CRS(paste0("+init=epsg:", toepsg)))
+  newpoints <- sp::spTransform(spoints, projection)
   newbbox <- t(sp::coordinates(newpoints))
 
   if(newbbox[1,1] > newbbox[1,2]) { #if min>max
-    maxx <- .fromlatlon(180, bbox[2, 1], toepsg)[1]
+    maxx <- .fromlatlon(180, bbox[2, 1], projection=projection)[1]
     newbbox[1,1] <- newbbox[1,1]-maxx*2
   }
   newbbox
 }
 
-.revprojectbbox <- function(bbox, fromepsg) {
-  rgdal::CRSargs(sp::CRS(paste0("+init=epsg:", fromepsg))) #hack to make sure rgdal stays in Imports:
+.revprojectbbox <- function(bbox, fromepsg=NULL, projection=NULL) {
+  if(is.null(fromepsg) && is.null(projection)) {
+    stop("fromepsg and projection both null...nothing to project")
+  } else if(!is.null(fromepsg) && !is.null(projection)) {
+    stop("fromepsg and projection both specified...ambiguous call")
+  }
+  if(is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", fromepsg))
+  }
   coords <- sp::coordinates(t(bbox))
-  spoints = sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", fromepsg)))
+  spoints = sp::SpatialPoints(coords, proj4string = projection)
   newpoints <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
   t(sp::coordinates(newpoints))
 }

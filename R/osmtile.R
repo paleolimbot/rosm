@@ -28,21 +28,13 @@ tiles.bybbox <- function(bbox, zoom, epsg=4326) {
 
 tile.xy <-function(x, y, zoom, epsg=4326) {
   latlon <- .tolatlon(x, y, epsg)
-  if(latlon[1] >= 180) {
-    latlon[1] <- 179.9999
-  } else if(latlon[1] < -180) {
-    latlon[1] <- -180
-  }
-  if(latlon[2] > 85.0511) {
-    latlon[2] <- 85.0511
-  } else if(latlon[2] <= -85.0511) {
-    latlon[2] <- -85.05109
-  }
 
   lat_rad <- latlon[2] * pi /180
   n <- 2.0 ^ zoom
   xtile <- floor((latlon[1] + 180.0) / 360.0 * n)
   ytile = floor((1.0 - log(tan(lat_rad) + (1 / cos(lat_rad))) / pi) / 2.0 * n)
+  xtile <- max(0, min(xtile, n-1)) #limit x, y tiles to valid tile numbers
+  ytile <- max(0, min(ytile, n-1))
   c(xtile, ytile)
 }
 

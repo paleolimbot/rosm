@@ -10,7 +10,7 @@ library(raster)
 nsbox <- prettymapr::searchbbox("nova scotia", source="google")
 types <- c("hikebike","hillshade","hotstyle","lovinacycle",
            "lovinahike","mapquestosm","mapquestsat","opencycle",
-           "openpiste","osm","osmgrayscale",
+           "osm","osmgrayscale", #openpiste doesn't work
            "osmtransport","stamenbw","stamenwatercolor",
            "thunderforestlandscape","thunderforestoutdoors")
 
@@ -87,6 +87,10 @@ osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0)), zoomin=1
 osm.plot(prettymapr::searchbbox("alaska", source="google"))
 bmaps.plot(prettymapr::searchbbox("alaska", source="google"))
 
+#wrap around for projected version of Alaska does not work
+x <- osm.raster(prettymapr::searchbbox("alaska", source="google"), projection=CRS("+init=epsg:3857"))
+osm.raster.plot(x)
+
 biglocs <- c("nova scotia", "united states", "canada", "alberta")
 data("wrld_simpl")
 canada <- wrld_simpl[wrld_simpl$NAME=="Canada",]
@@ -135,15 +139,37 @@ osm.plot(nsbox, type="darkmatter")
 
 #osm.raster
 data(nuts2006)
-for(country in unique(nuts0.spdf$id)) {
+for(country in c("PL", "PT", "RO", "SE", "SI", "SK")) {
   message("Testing country ", country)
   spdf <- nuts0.spdf[nuts0.spdf$id==country,]
-  spdf2 <- spTransform(spdf, CRSobj = CRS("+init=epsg:4326"))
-  x <- osm.raster(bbox(spdf2), type="thunderforestlandscape")
-  x2 <- osm.proj(x, spdf@proj4string, crop.bbox=bbox(spdf))
-  osm.proj.plot(x2)
-  title(country)
+  x <- osm.raster(spdf, type="thunderforestlandscape")
+  osm.raster.plot(x)
+  plot(spdf, add=T)
 }
 
+ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+x <- osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE)
+osm.raster.plot(x)
 
+x <- osm.raster(ns)
+osm.raster.plot(x)
+
+x <- osm.raster(ns, crop=TRUE)
+osm.raster.plot(x)
+
+data("wrld_simpl")
+canada <- wrld_simpl[wrld_simpl$NAME=="Canada",]
+usa <- wrld_simpl[wrld_simpl$NAME=="United States",]
+canadamerc <- spTransform(canada, CRS("+init=epsg:3857"))
+usamerc <- spTransform(usa, CRS("+init=epsg:3857"))
+
+#does not perform wrap-around properly for these two
+x <- osm.raster(usa)
+osm.raster.plot(x)
+plot(usa, add=T)
+
+usabbox <- searchbbox("alaska", source="google")
+x <- osm.raster(usabbox, projection=CRS("+init=epsg:3857"))
+osm.raster.plot(x)
+plot(usa, add=T)
 

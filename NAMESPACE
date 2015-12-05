@@ -3,7 +3,6 @@
 export(bmaps.plot)
 export(bmaps.types)
 export(osm.plot)
-export(osm.proj)
-export(osm.proj.plot)
 export(osm.raster)
+export(osm.raster.plot)
 export(osm.types)

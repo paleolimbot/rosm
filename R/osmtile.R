@@ -6,6 +6,10 @@ tiles.bybbox <- function(bbox, zoom, epsg=4326) {
   nwlatlon <- .tolatlon(bbox[1,1], bbox[2,2], epsg)
   selatlon <- .tolatlon(bbox[1,2], bbox[2,1], epsg)
 
+  if(nwlatlon[1] < -180) { #fixes wraparound problem with project=F
+    nwlatlon[1] <- nwlatlon[1] + 360
+  }
+
   if(nwlatlon[1] > selatlon[1]) {
     #wrapping around backside of earth
     backsidebbox <- matrix(c(nwlatlon[1], selatlon[2], 180, nwlatlon[2]), ncol=2, byrow=FALSE)

@@ -12,18 +12,17 @@ to create high resolution basemaps and use hillshade tiles to add texture to oth
 Uses the '\href{http://cran.r-project.org/package=sp}{sp}' package to plot using base graphics. Plot Open Street Map derivative
 tiles using \link{osm.plot}, and plot Bing maps (Aerial, Labeled Aerial, Road) using
 \link{bmaps.plot}. 16 OSM and 3 Bing sources are included, with the ability to define
-custom tile sources based on OSM tilex, tiley, and zoom.
+custom tile sources based on OSM tilex, tiley, and zoom. Use \link{osm.raster} to get
+tiles in a \code{RasterStack} or write to disk (requires
+the '\href{http://cran.r-project.org/package=raster}{raster}' package.)
 
 This package provides a simpler interface than the
-'\href{http://cran.r-project.org/package=OpenStreetMap}{OpenStreetMap}' and
-'\href{http://cran.r-project.org/package=cartography}{cartography}' packages, but lacks the
-ability to reproject images and contains fewer built-in tile sources. See the
+'\href{http://cran.r-project.org/package=OpenStreetMap}{OpenStreetMap}' package. See the
 \href{https://cran.r-project.org/web/packages/cartography/vignettes/cartography.html}{cartography
-package vingette} for more details.
+package vingette} for more details also for reprojecting Open Street Map tiles.
 }
 \author{
 Dewey Dunnington <dewey@fishandwhistle.net>
-Timothée Giraud (contributor)
 }
 \references{
    \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
@@ -59,9 +58,9 @@ dev.off()
 library(raster)
 x <- osm.raster(nsbox)
 x <- osm.raster(nsbox, projection=CRS("+init=epsg:26920")) #reproject to UTM 20
-plotRGB(x, interpolate=TRUE) #plot reprojected image
-#datatype argument optional, but "INT1U" ensures GIS programs know it is RGB
-writeRaster(x, filename="ns.tif", datatype="INT1U")
+plotRGB(x) #plot reprojected image
+#write to disk by passing a filename= argument
+osm.raster(nsbox, projection=CRS("+init=epsg:26920"), filename="ns2.tif")
 
 
 #canvec.qplot and hillshade using the add=TRUE argument

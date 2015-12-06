@@ -3,7 +3,9 @@ Type: Package
 Title: Plot Raster Map Tiles from Open Street Map and Other Sources
 Version: 0.1.3
 Date: 2015-10-18
-Author: Dewey Dunnington <dewey@fishandwhistle.net>
+Authors@R: c(person("Dewey", "Dunnington", role = c("aut", "cre"),
+				email = "dewey@fishandwhistle.net"),
+			person("Timothée", "Giraud", role = "ctb"))
 Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
 Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
   Mapquest <http://www.mapquest.com/>, Bing Maps <http://www.bing.com/maps>

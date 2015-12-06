@@ -23,6 +23,7 @@ package vingette} for more details.
 }
 \author{
 Dewey Dunnington <dewey@fishandwhistle.net>
+Timothée Giraud (contributor)
 }
 \references{
    \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
@@ -53,6 +54,15 @@ prettymap(osm.plot(nsbox, type="mapquestsat", res=300, stoponlargerequest=FALSE)
           scale.label.col="white", arrow.text.col = "white",
           scale.linecol = "white", arrow.border = "white")
 dev.off()
+
+#use osm.raster() to export a RasterStack of tiles
+library(raster)
+x <- osm.raster(nsbox)
+x <- osm.raster(nsbox, projection=CRS("+init=epsg:26920")) #reproject to UTM 20
+plotRGB(x, interpolate=TRUE) #plot reprojected image
+#datatype argument optional, but "INT1U" ensures GIS programs know it is RGB
+writeRaster(x, filename="ns.tif", datatype="INT1U")
+
 
 #canvec.qplot and hillshade using the add=TRUE argument
 prettymap({

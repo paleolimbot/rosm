@@ -82,9 +82,10 @@ for(loc in smalllocs) {
 # prettymap(osm.plot(makebbox(89.9, 179.9, -89.9, -179.9)))
 
 #plot wrap around situations
-osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-92, 0)), zoomin=1)
+osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0)), zoomin=1)
 osm.plot(zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0)), zoomin=1, project=F)
 osm.plot(prettymapr::searchbbox("alaska", source="google"))
+osm.plot(prettymapr::searchbbox("alaska", source="google"), project=F)
 bmaps.plot(prettymapr::searchbbox("alaska", source="google"))
 
 #wrap around for projected version of Alaska does not work
@@ -163,13 +164,12 @@ usa <- wrld_simpl[wrld_simpl$NAME=="United States",]
 canadamerc <- spTransform(canada, CRS("+init=epsg:3857"))
 usamerc <- spTransform(usa, CRS("+init=epsg:3857"))
 
-#does not perform wrap-around properly for these two
-x <- osm.raster(usa)
-osm.raster.plot(x)
-plot(usa, add=T)
+#does not perform wrap-around properly for alaska when projection is set to true
 
 usabbox <- searchbbox("alaska", source="google")
-x <- osm.raster(usabbox, projection=CRS("+init=epsg:3857"))
+x <- osm.raster(usabbox, projection=CRS("+init=epsg:3338"), crop=T) #alaska albers, crops at -180
+x <- osm.raster(usabbox) #works
+x <- osm.raster(usabbox, crop=TRUE) #crops at -180
 osm.raster.plot(x)
-plot(usa, add=T)
+plot(usamerc, add=T)
 

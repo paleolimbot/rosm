@@ -33,29 +33,52 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #'                  this argument will be ignored.
 #' @param crop \code{TRUE} if results should be cropped to the specified bounding box (see \code{x}),
 #'              \code{FALSE} otherwise.
+#' @param filename A filename to which the raster should be written (see \code{raster::writeRaster()}). Use a ".tif"
+#'                extension to write as a GeoTIFF.
+#' @param ... Arguments passed on to \code{raster::writeRaster()} if \code{filename} is specified.
 #' @return A projected RasterStack of the fused tiles.
 #' @examples
 #' \donttest{
 #' library(cartography)
 #' library(raster)
 #' library(prettymapr)
-#' data(nuts2006)
-#' spdf <- nuts0.spdf[nuts0.spdf$id=="DE",]
-#' x <- osm.raster(spdf, type="thunderforestlandscape")
 #'
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 #' x <- osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE)
-#' #plot using plotRGB
+#' #plot using plotRGB (from the raster package)
 #' plotRGB(x)
-#' #write to disk using writeRaster
-#' #datatype argument optional, but "INT1U" ensures GIS programs know it is RGB
-#' writeRaster(x, "test.tif", datatype="INT1U")
+#'
+#' #use a Spatial* object as the first argument to automatically set the bounding
+#' #box and projection
+#' data(nuts2006)
+#' spdf <- nuts0.spdf[nuts0.spdf$id=="DE",]
+#' x <- osm.raster(spdf, type="thunderforestlandscape")
+#' plotRGB(x)
+#'
+#' #write to disk by passing a filename argument (use .tif extension to write GeoTIFF)
+#' osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE, filename="ns.tif")
+#'
+#' #can also write Raster* objects using osm.raster
+#' osm.raster(x, filename="germany.tif")
+#'
 #' }
 #' @export
 osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
-                       projection=NULL, crop=FALSE) {
+                       projection=NULL, crop=FALSE, filename=NULL, ...) {
   if(!("raster" %in% rownames(installed.packages()))) {
     stop("package 'raster' must be installed for call to osm.raster()")
+  }
+
+  if(!is.null(filename)) {
+    if(methods::is(x, "Raster")) {
+      return(invisible(raster::writeRaster(x, filename=filename, datatype="INT1U", ...)))
+    } else {
+      return(invisible(raster::writeRaster(osm.raster(x=x, zoomin=zoomin, zoom=zoom,
+                                       type=type, forcedownload=forcedownload,
+                                       cachedir=cachedir, projection=projection,
+                                       crop=crop, filename=NULL),
+                filename=filename, datatype="INT1U", ...)))
+    }
   }
 
   if(methods::is(x, "Spatial")) {
@@ -88,19 +111,20 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
   box <- fused[[2]]
   nbrow <- dim(arr)[1]
   nbcol <- dim(arr)[2]
-  rstack <- raster::stack(raster::raster(matrix(arr[,,1], nrow = nbrow, ncol = nbcol),
-                       xmn = box[1,1], xmx = box[1,2],
-                       ymn = box[2,1], ymx = box[2,2],
-                       crs = "+init=epsg:3857"),
-                raster::raster(matrix(arr[,,2], nrow = nbrow, ncol = nbcol),
-                       xmn = box[1,1], xmx = box[1,2],
-                       ymn = box[2,1], ymx = box[2,2],
-                       crs = "+init=epsg:3857"),
-                raster::raster(matrix(arr[,,3], nrow = nbrow, ncol = nbcol),
-                       xmn = box[1,1], xmx = box[1,2],
-                       ymn = box[2,1], ymx = box[2,2],
-                       crs = "+init=epsg:3857")) * 255 #more obvious that this is RGB
-
+  bands <- dim(arr)[3]
+  .makeraster <- function(i) {
+    raster::raster(matrix(arr[,,i]*255, nrow = nbrow, ncol = nbcol),
+                   xmn = box[1,1], xmx = box[1,2],
+                   ymn = box[2,1], ymx = box[2,2],
+                   crs = "+init=epsg:3857")
+  }
+  if(bands==3) {
+    rstack <- raster::stack(.makeraster(1), .makeraster(2), .makeraster(3))
+  } else if(bands==4) {
+    rstack <- raster::stack(.makeraster(1), .makeraster(2), .makeraster(3), .makeraster(4))
+  } else {
+    stop("Invalid number of bands in image: ", bands)
+  }
 
   if(!is.null(projection)) {
     if(crop) {

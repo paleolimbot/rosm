@@ -90,7 +90,7 @@ bmaps.plot(prettymapr::searchbbox("alaska", source="google"))
 
 #wrap around for projected version of Alaska does not work
 x <- osm.raster(prettymapr::searchbbox("alaska", source="google"), projection=CRS("+init=epsg:3857"))
-osm.raster.plot(x)
+plotRGB(x)
 
 biglocs <- c("nova scotia", "united states", "canada", "alberta")
 data("wrld_simpl")
@@ -144,19 +144,19 @@ for(country in c("PL", "PT", "RO", "SE", "SI", "SK")) {
   message("Testing country ", country)
   spdf <- nuts0.spdf[nuts0.spdf$id==country,]
   x <- osm.raster(spdf, type="thunderforestlandscape")
-  osm.raster.plot(x)
+  plotRGB(x)
   plot(spdf, add=T)
 }
 
 ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 x <- osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE)
-osm.raster.plot(x)
+plotRGB(x)
 
 x <- osm.raster(ns)
-osm.raster.plot(x)
+plotRGB(x)
 
 x <- osm.raster(ns, crop=TRUE)
-osm.raster.plot(x)
+plotRGB(x)
 
 data("wrld_simpl")
 canada <- wrld_simpl[wrld_simpl$NAME=="Canada",]
@@ -170,6 +170,10 @@ usabbox <- searchbbox("alaska", source="google")
 x <- osm.raster(usabbox, projection=CRS("+init=epsg:3338"), crop=T) #alaska albers, crops at -180
 x <- osm.raster(usabbox) #works
 x <- osm.raster(usabbox, crop=TRUE) #crops at -180
-osm.raster.plot(x)
+plotRGB(x)
 plot(usamerc, add=T)
+
+#write to disk check
+osm.raster(x, filename="test.tif")
+osm.raster(usabbox, projection=CRS("+init=epsg:3338"), crop=T, filename="test.tif", overwrite=TRUE)
 

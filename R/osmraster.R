@@ -65,7 +65,7 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #' @export
 osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
                        projection=NULL, crop=FALSE, filename=NULL, ...) {
-  if(!("raster" %in% rownames(installed.packages()))) {
+  if(!("raster" %in% rownames(utils::installed.packages()))) {
     stop("package 'raster' must be installed for call to osm.raster()")
   }
 

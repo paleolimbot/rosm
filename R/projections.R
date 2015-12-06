@@ -1,6 +1,7 @@
 #projection functions
 
 .tolatlon <- function(x, y, epsg=NULL, projection=NULL) {
+  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) #hack to load rgdal namespace
   if(is.null(epsg) && is.null(projection)) {
     stop("epsg and projection both null...nothing to project")
   } else if(!is.null(epsg) && !is.null(projection)) {
@@ -18,6 +19,7 @@
 }
 
 .fromlatlon <- function(lon, lat, epsg=NULL, projection=NULL) {
+  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) #hack to load rgdal namespace
   if(is.null(epsg) && is.null(projection)) {
     stop("epsg and projection both null...nothing to project")
   } else if(!is.null(epsg) && !is.null(projection)) {
@@ -35,6 +37,7 @@
 }
 
 .projectbbox <- function(bbox, toepsg=NULL, projection=NULL) {
+  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) #hack to load rgdal namespace
   if(is.null(toepsg) && is.null(projection)) {
     stop("toepsg and projection both null...nothing to project")
   } else if(!is.null(toepsg) && !is.null(projection)) {
@@ -57,6 +60,7 @@
 }
 
 .revprojectbbox <- function(bbox, fromepsg=NULL, projection=NULL) {
+  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) #hack to load rgdal namespace
   if(is.null(fromepsg) && is.null(projection)) {
     stop("fromepsg and projection both null...nothing to project")
   } else if(!is.null(fromepsg) && !is.null(projection)) {

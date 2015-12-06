@@ -15,11 +15,6 @@ tiles using \link{osm.plot}, and plot Bing maps (Aerial, Labeled Aerial, Road) u
 custom tile sources based on OSM tilex, tiley, and zoom. Use \link{osm.raster} to get
 tiles in a \code{RasterStack} or write to disk (requires
 the '\href{http://cran.r-project.org/package=raster}{raster}' package.)
-
-This package provides a simpler interface than the
-'\href{http://cran.r-project.org/package=OpenStreetMap}{OpenStreetMap}' package. See the
-\href{https://cran.r-project.org/web/packages/cartography/vignettes/cartography.html}{cartography
-package vingette} for more details also for reprojecting Open Street Map tiles.
 }
 \author{
 Dewey Dunnington <dewey@fishandwhistle.net>

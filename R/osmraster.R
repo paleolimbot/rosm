@@ -167,9 +167,6 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
 # }
 
 osm.proj <- function(osm.raster, projection, crop.bbox=NULL) {
-  if(!("raster" %in% rownames(installed.packages()))) {
-    stop("package 'raster' must be installed for call to osm.proj()")
-  }
 
   rstackproj <- raster::projectRaster(osm.raster, crs = projection)
   rstackproj@data@values[rstackproj@data@values > 255 ] <- 255

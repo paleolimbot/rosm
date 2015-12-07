@@ -3,3 +3,4 @@
 .RData
 rosm.cache
 rcanvec.cache
+.DS_Store

@@ -61,6 +61,14 @@ tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
   }
 }
 
+tile.arbind <- function(...) {
+  abind::abind(..., along=1)
+}
+
+tile.acbind <- function(...) {
+  abind::abind(..., along=2)
+}
+
 tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
 
   tiles <- tile.applywrap(tiles, zoom)
@@ -69,26 +77,14 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
   xs <- unique(tiles[,1])
   ys <- unique(tiles[,2])
 
-  wholeimg <- NULL
-  for(x in xs) {
-    colimg <- NULL
-    for(y in ys) {
-      if(is.null(colimg)) {
-        colimg <- tile.loadimage(x, y, zoom, type, cachedir)
-        if(is.null(colimg)) stop("Unloadable tile cannot be fused. Use fusetiles=FALSE to view.")
-      } else {
-        img <- tile.loadimage(x, y, zoom, type, cachedir)
-        if(is.null(img)) stop("Unloadable tile cannot be fused. Use fusetiles=FALSE to view.")
-        colimg <- abind::abind(colimg, img, along=1) #rbind
-      }
-    }
-
-    if(is.null(wholeimg)) {
-      wholeimg <- colimg
-    } else {
-      wholeimg <- abind::abind(wholeimg, colimg, along=2)
-    }
-  }
+  `%do%` <- foreach::`%do%` #dopar actually decreases performance
+  wholeimg <- foreach::foreach(x=xs, .combine=tile.acbind, .multicombine = TRUE) %do% {
+                foreach::foreach(y=ys, .combine=tile.arbind, .multicombine = TRUE) %do% {
+                  img <- tile.loadimage(x, y, zoom, type, cachedir)
+                  if(is.null(img)) stop("Cannot fuse unloadable tile: ", x, ",", y)
+                  img
+                }
+              }
 
   #calc bounding box of whole image
 

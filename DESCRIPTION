@@ -15,7 +15,7 @@ Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
   to vector based maps.
 License: GPL-2
 LazyData: TRUE
-Imports: abind, jpeg, png, sp, rgdal, digest, rjson, methods
-Suggests: prettymapr, rcanvec, cartography, raster, foreach
+Imports: abind, jpeg, png, sp, rgdal, digest, rjson, methods, foreach
+Suggests: prettymapr, rcanvec, cartography, raster
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm

@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>ROSM by paleolimbot</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>ROSM</h1>
+        <p>Plot Open Street Map and Other Tiles in R</p>
+
+        <p class="view"><a href="https://github.com/paleolimbot/rosm">View the Project on GitHub <small>paleolimbot/rosm</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/paleolimbot/rosm/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/paleolimbot/rosm/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/paleolimbot/rosm">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="rosm-open-street-map-tiles-in-r" class="anchor" href="#rosm-open-street-map-tiles-in-r" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ROSM: Open Street Map tiles in R</h1>
+
+<p><a href="http://cran.rstudio.com/web/packages/rcanvec/index.html"><img src="http://cranlogs.r-pkg.org/badges/rosm" alt=""></a></p>
+
+<p>Download and plot Open Street Map <a href="http://www.openstreetmap.org/">http://www.openstreetmap.org/</a>, Mapquest <a href="http://www.mapquest.com/">http://www.mapquest.com/</a>, Bing Maps <a href="http://www.bing.com/maps">http://www.bing.com/maps</a> and other tiled map sources in a way that works seamlessly with plotting from the 'sp' package. Use to create high-resolution basemaps and add hillshade to vector based maps.</p>
+
+<p>The gist of it:</p>
+
+<div class="highlight highlight-source-r"><pre>install.packages(<span class="pl-s"><span class="pl-pds">"</span>rosm<span class="pl-pds">"</span></span>) 
+install.packages(<span class="pl-s"><span class="pl-pds">"</span>prettymapr<span class="pl-pds">"</span></span>) <span class="pl-c">#if these are not installed already</span>
+
+library(<span class="pl-smi">rosm</span>)
+library(<span class="pl-smi">prettymapr</span>)
+osm.plot(searchbbox(<span class="pl-s"><span class="pl-pds">"</span>wolfville, ns<span class="pl-pds">"</span></span>))
+bmaps.plot(searchbbox(<span class="pl-s"><span class="pl-pds">"</span>wolfville, ns<span class="pl-pds">"</span></span>))
+
+<span class="pl-c">#or use prettymapr to remove margins and add scale bar</span>
+prettymap(bmaps.plot(searchbbox(<span class="pl-s"><span class="pl-pds">"</span>wolfville, ns<span class="pl-pds">"</span></span>)))</pre></div>
+
+<p>Find more information on the <a href="https://cran.r-project.org/package=rosm">CRAN package page</a> or <a href="https://cran.r-project.org/web/packages/rosm/rosm.pdf">view the manual</a>.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/paleolimbot">paleolimbot</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-73397650-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>

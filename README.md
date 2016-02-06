@@ -1,6 +1,6 @@
 # ROSM: Open Street Map tiles in R
 
-[![](http://cranlogs.r-pkg.org/badges/rosm)](http://cran.rstudio.com/web/packages/rcanvec/index.html)
+[![](http://cranlogs.r-pkg.org/badges/rosm)](https://cran.r-project.org/package=rosm)
 
 Download and plot Open Street Map <http://www.openstreetmap.org/>, Mapquest <http://www.mapquest.com/>, Bing Maps <http://www.bing.com/maps> and other tiled map sources in a way that works seamlessly with plotting from the 'sp' package. Use to create high-resolution basemaps and add hillshade to vector based maps.
 

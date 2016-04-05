@@ -8,14 +8,28 @@ Authors@R: c(person("Dewey", "Dunnington", role = c("aut", "cre"),
 				email = "dewey@fishandwhistle.net"),
 			person("Timothée", "Giraud", role = "ctb"))
 Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
-Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
-  Mapquest <http://www.mapquest.com/>, Bing Maps <http://www.bing.com/maps>
-  and other tiled map sources in a way that works seamlessly with plotting
-  from the 'sp' package. Use to create high-resolution basemaps and add hillshade
-  to vector based maps.
+Description: Download and plot Open Street Map <http://www.openstreetmap.org/
+    >, Mapquest <http://www.mapquest.com/>, Bing Maps <http://www.bing.com/maps> and
+    other tiled map sources in a way that works seamlessly with plotting from the
+    'sp' package. Use to create high-resolution basemaps and add hillshade to vector
+    based maps.
 License: GPL-2
 LazyData: TRUE
-Imports: abind, jpeg, png, sp, rgdal, digest, rjson, methods, foreach
-Suggests: prettymapr, rcanvec, cartography, raster
+Imports:
+    abind,
+    jpeg,
+    png,
+    sp,
+    rgdal,
+    digest,
+    rjson,
+    methods,
+    foreach
+Suggests:
+    prettymapr,
+    rcanvec,
+    cartography,
+    raster
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm
+RoxygenNote: 5.0.1

@@ -78,6 +78,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
   ys <- unique(tiles[,2])
 
   `%do%` <- foreach::`%do%` #dopar actually decreases performance
+  x <- NULL; y<-NULL; rm(x); rm(y) #CMD trick
   wholeimg <- foreach::foreach(x=xs, .combine=tile.acbind, .multicombine = TRUE) %do% {
                 foreach::foreach(y=ys, .combine=tile.arbind, .multicombine = TRUE) %do% {
                   img <- tile.loadimage(x, y, zoom, type, cachedir)

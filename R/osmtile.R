@@ -97,13 +97,23 @@ tile.cachename <- function(xtile, ytile, zoom, type, cachedir=NULL) {
 }
 
 tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir=NULL) {
-  for(i in 1:nrow(tiles)) {
-    xtile <- tiles[i,1]
-    ytile <- tiles[i,2]
-    cachename <- tile.cachename(xtile, ytile, zoom, type, cachedir)
-    if(!file.exists(cachename) || forcedownload) {
+  if(!forcedownload) {
+    # check which tiles exist
+    texists <- sapply(1:nrow(tiles), function(i) {
+      cachename <- tile.cachename(tiles[i,1], tiles[i,2], zoom, type, cachedir)
+      return(file.exists(cachename))
+    })
+    tiles <- tiles[!texists,]
+  }
+
+  if(nrow(tiles) > 0) {
+    message("Fetching ", nrow(tiles), " missing tiles")
+    pb <- utils::txtProgressBar(min=0, max=nrow(tiles), width = 20, file = stderr())
+    for(i in 1:nrow(tiles)) {
+      xtile <- tiles[i,1]
+      ytile <- tiles[i,2]
+      cachename <- tile.cachename(xtile, ytile, zoom, type, cachedir)
       url <- tile.url(xtile, ytile, zoom, type)
-      message("Downloading ", i, " of ", nrow(tiles))
       tryCatch(utils::download.file(url, cachename, quiet = TRUE, mode="wb"),
                error=function(err) {
                  message("Error downloading tile ", xtile, ",", ytile, " (zoom: ",
@@ -113,6 +123,8 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
                          "or no internet connection) ", xtile, ",", ytile, " (zoom: ",
                          zoom, "): ", warn)
                })
+      utils::setTxtProgressBar(pb, i)
     }
+    message("...complete!")
   }
 }

@@ -1,0 +1,5 @@
+rosm.cache/
+.DS_Store
+.RData
+.Rhistory
+.Rproj.user/

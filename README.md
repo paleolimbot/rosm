@@ -36,13 +36,13 @@ Make sure you've got your bounding box right by trying `osm.plot()` or `bmaps.pl
 osm.plot(altalake)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
 ``` r
 bmaps.plot(altalake)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 ### Step 2: Choose your map type and zoom level
 
@@ -65,7 +65,7 @@ osm.types()
 osm.plot(altalake, type="stamenbw")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
 bmaps.types()
@@ -77,7 +77,7 @@ bmaps.types()
 bmaps.plot(altalake, type="AerialWithLabels")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 The next thing we'll adjust is the zoom level. The zoom level (level of detail) is calculated automatically, but it may be that you're looking for higher (or lower) resolution. To specify a resolution specifically, use `res=300` (where 300 is the resolution in dpi; useful when exporting figures), or `zoomin=1`, which will use the automatically specified zoom level and zoom in 1 more.
 
@@ -85,7 +85,7 @@ The next thing we'll adjust is the zoom level. The zoom level (level of detail) 
 bmaps.plot(altalake, zoomin=1) # res=300 will also work
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 ### Step 3: Add overlays
 
@@ -100,7 +100,7 @@ text(c(-122.9841, -122.9812), c(50.11055, 50.11765),
      labels=c("GC6", "GC2"), adj=c(-0.2, 0.5), cex=0.5)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 ### Step 4: Putting it all together
 
@@ -117,6 +117,6 @@ prettymap({
   })
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 There's tons of options for `prettymap()` that let you customize the north arrow, scale bar etc., which you can find in the [{prettymapr} manual](https://cran.r-project.org/web/packages/prettymapr/prettymapr.pdf).

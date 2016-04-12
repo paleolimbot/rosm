@@ -21,7 +21,7 @@ Dewey Dunnington <dewey@fishandwhistle.net>
 }
 \references{
    \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
-   \href{http://www.microsoft.com/maps/choose-your-bing-maps-API.aspx}{Bing Maps API documentation}
+   \href{https://www.microsoft.com/maps/choose-your-bing-maps-API.aspx}{Bing Maps API documentation}
 }
 \keyword{ package }
 \examples{

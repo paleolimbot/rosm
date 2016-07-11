@@ -79,9 +79,11 @@ geom_osm <- function(obj=NULL, zoomin=0, zoom=NULL, type="osm", forcedownload=FA
 #' A ggplot interface for OSM imagery
 #'
 #' An experimental function returning a \code{ggplot} object more or less equivalent to the
-#' \link{osm.plot} function.
+#' \link{osm.plot} function. This is considerably less efficient than using \link{osm.plot}
+#' but may be desirable if 'ggplot' is the plotting framework of choice.
 #'
-#' @param epsg The epsg code of the projection of the coordinates being plotted by other geoms
+#' @param epsg The epsg code of the projection of the coordinates being plotted by other geoms.
+#'   Note that if this is not a cylindrical projection, this will not be entirely accurate.
 #' @inheritParams osm.raster
 #' @seealso geom_osm, osm.raster
 #'
@@ -93,6 +95,7 @@ geom_osm <- function(obj=NULL, zoomin=0, zoom=NULL, type="osm", forcedownload=FA
 #' library(prettymapr)
 #' ns <- searchbbox("Nova Scotia")
 #' osm.ggplot(ns)
+#'
 #' }
 osm.ggplot <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
                        epsg=3857, ...) {

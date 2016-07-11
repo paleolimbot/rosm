@@ -35,6 +35,7 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #'              \code{FALSE} otherwise.
 #' @param filename A filename to which the raster should be written (see \code{raster::writeRaster()}). Use a ".tif"
 #'                extension to write as a GeoTIFF.
+#' @param .rawfused Return a list with the raw array form and the associated bounding box.
 #' @param ... Arguments passed on to \code{raster::writeRaster()} if \code{filename} is specified.
 #' @return A projected RasterStack of the fused tiles.
 #' @examples
@@ -64,8 +65,8 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #' }
 #' @export
 osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
-                       projection=NULL, crop=FALSE, filename=NULL, ...) {
-  if(!("raster" %in% rownames(utils::installed.packages()))) {
+                       projection=NULL, crop=FALSE, filename=NULL, .rawfused=FALSE, ...) {
+  if(!("raster" %in% rownames(utils::installed.packages())) && !.rawfused) {
     stop("package 'raster' must be installed for call to osm.raster()")
   }
 
@@ -107,6 +108,9 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
   tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir)
 
   fused <- tile.fuse(tiles, zoom, type=type, epsg=3857, cachedir=cachedir)
+  if(.rawfused) {
+    return(fused)
+  }
   arr <- fused[[1]]
   box <- fused[[2]]
   nbrow <- dim(arr)[1]

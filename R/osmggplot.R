@@ -43,6 +43,7 @@ StatOSM <- ggplot2::ggproto("StatOSM", ggplot2::Stat,
 #' @param obj An object like in \link{osm.raster}: a bounding box or Spatial* object.
 #' @param epsg The epsg code of the projection of the coordinates being plotted by other geoms
 #' @inheritParams osm.raster
+#' @param ... Agruments passed on to \code{geom_raster()}
 #'
 #' @return A \code{geom_raster} with colour data from the tiles.
 #' @export
@@ -77,11 +78,12 @@ geom_osm <- function(obj=NULL, zoomin=0, zoom=NULL, type="osm", forcedownload=FA
 
 #' A ggplot interface for OSM imagery
 #'
-#' An experimental function returning a
+#' An experimental function returning a \code{ggplot} object more or less equivalent to the
+#' \link{osm.plot} function.
 #'
 #' @param epsg The epsg code of the projection of the coordinates being plotted by other geoms
 #' @inheritParams osm.raster
-#' @seealso geom_osm
+#' @seealso geom_osm, osm.raster
 #'
 #' @return A \code{geom_raster} with colour data from the tiles.
 #' @export

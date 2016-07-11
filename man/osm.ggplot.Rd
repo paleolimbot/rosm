@@ -34,7 +34,8 @@ some tiles are corrupted.}
 A \code{geom_raster} with colour data from the tiles.
 }
 \description{
-An experimental function returning a
+An experimental function returning a \code{ggplot} object more or less equivalent to the
+\link{osm.plot} function.
 }
 \examples{
 \donttest{
@@ -44,6 +45,6 @@ osm.ggplot(ns)
 }
 }
 \seealso{
-geom_osm
+geom_osm, osm.raster
 }
 

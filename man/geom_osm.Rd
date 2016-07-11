@@ -26,7 +26,7 @@ some tiles are corrupted.}
 
 \item{epsg}{The epsg code of the projection of the coordinates being plotted by other geoms}
 
-\item{...}{Arguments passed on to \code{raster::writeRaster()} if \code{filename} is specified.}
+\item{...}{Agruments passed on to \code{geom_raster()}}
 }
 \value{
 A \code{geom_raster} with colour data from the tiles.

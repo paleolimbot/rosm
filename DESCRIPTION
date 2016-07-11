@@ -16,6 +16,7 @@ Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
 License: GPL-2
 LazyData: TRUE
 Imports:
+    ggplot2,
     abind,
     jpeg,
     png,

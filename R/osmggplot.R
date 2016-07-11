@@ -97,6 +97,9 @@ osm.ggplot <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
   if(!("ggplot2" %in% rownames(utils::installed.packages()))) {
     stop("package 'ggplot2' must be installed for call to geom_osm()")
   }
+  if(!("reshape2" %in% rownames(utils::installed.packages()))) {
+    stop("package 'reshape2' must be installed for call to geom_osm()")
+  }
   rgdal::CRSargs(sp::CRS("+init=epsg:3857")) #hack to load rgdal namespace
   projection <- sp::CRS(paste0("+init=epsg:", epsg))
   if(methods::is(x, "Spatial")) {

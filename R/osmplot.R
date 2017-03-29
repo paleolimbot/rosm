@@ -83,33 +83,11 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
 
   tiles <- tile.applywrap(tiles, zoom)
 
-  # check dimensions of all tiles before fusing
-  dims <- tile.apply(tiles, zoom, type, fun=function(x, y, zoom, type, epsg, cachedir) {
-    image <- tile.loadimage(x, y, zoom, type, cachedir)
-    if(!is.null(image)) {
-      dim(image)
-    } else {
-      c(0, 0, 0)
-    }
-  })
+  tile_dims <- check.dimensions(tiles, zoom, type, epsg, cachedir)
 
-  # check for missing tiles
-  missing_tiles <- vapply(dims, function(dim) identical(dim, c(0, 0, 0)),
-                          logical(1))
-  if(all(missing_tiles)) stop("Zero tiles were loaded for type ", type)
-
-  # find dimension of non-missing tiles (hopefully the same...)
-  tiledim <- do.call(rbind, dims[!missing_tiles])
-  tiledim <- tiledim[!duplicated(tiledim, MARGIN=1), , drop = FALSE]
-
-  if(nrow(tiledim) != 1) {
-    message("Not all loadable tiles have identical dimensions: ",
-            apply(tiledim, 1, function(dim) paste(dim, collapse = ", ")))
-  }
-
-  if(any(missing_tiles)) {
-    message(sum(missing_tiles), " could not be loaded for type ", type)
-    missing_tile <- array(0, tiledim[1, , drop = TRUE])
+  if(tile_dims$nmissing > 0) {
+    message(tile_dims$nmissing, " could not be loaded for type ", type)
+    missing_tile <- array(0, tile_dims$targetdim)
   } else {
     missing_tile <- NULL
   }
@@ -130,7 +108,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
                   } else if(is.null(img)) {
                     missing_tile
                   } else {
-                    img
+                    ensure.bands(img, tile_dims$targetdim, default_value = 1)
                   }
                 }
               }
@@ -146,6 +124,63 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   # return same structure as tile.each()
   structure(wholeimg, bbox=bbox, epsg=epsg,
             type=type, zoom=zoom)
+}
+
+# ensure array dimensions match a given dim value
+ensure.bands <- function(image, dimension, default_value=1) {
+  banddiff <- dimension[3] - dim(image)[3]
+  if(banddiff == 0) {
+    image
+  } else if (banddiff > 0) {
+    # add extra bands
+    abind::abind(image, array(default_value,
+                              c(dimension[1], dimension[2], banddiff)),
+                 along = 3)
+  } else if(banddiff < 0) {
+    # this shouldn't happen, but...
+    warning("Cropping image in ensure.bands")
+    # crop
+    image[ , , 1:dimension[3], drop = FALSE]
+  }
+}
+
+
+# checks the dimensions of all the tiles (used in tile.fuse)
+check.dimensions <- function(tiles, zoom, type, epsg, cachedir) {
+  # check dimensions of all tiles before fusing
+  dims <- tile.apply(tiles, zoom, type, fun=function(x, y, zoom, type, epsg, cachedir) {
+    image <- tile.loadimage(x, y, zoom, type, cachedir)
+    if(!is.null(image)) {
+      dim(image)
+    } else {
+      c(0, 0, 0)
+    }
+  })
+
+  # check for 3 dimensions
+  if(!all(vapply(dims, length, integer(1)) == 3)) stop("Incorrect dimensions in image")
+
+  # check for missing tiles
+  missing_tiles <- vapply(dims, function(dim) identical(dim, c(0, 0, 0)),
+                          logical(1))
+  if(all(missing_tiles)) stop("Zero tiles were loaded for type ", type)
+
+  # find dimension of non-missing tiles (hopefully the same...)
+  tiledim <- do.call(rbind, dims[!missing_tiles])
+
+  uniqueXs <- unique(tiledim[, 1, drop = TRUE])
+  uniqueYs <- unique(tiledim[, 2, drop = TRUE])
+  if(length(uniqueXs) > 1) stop("More than one image x dimension: ",
+                                paste(uniqueXs, collapse = ", "))
+  if(length(uniqueYs) > 1) stop("More than one image y dimension: ",
+                                paste(uniqueYs, collapse = ", "))
+
+  # assign target dim with the max of z dimensions (so a band can be added)
+  # if not all have the same bands
+  targetdim <- c(uniqueXs, uniqueYs, max(tiledim[, 3, drop = TRUE]))
+
+  # also return the number of missing tiles
+  list(targetdim=targetdim, nmissing=sum(missing_tiles))
 }
 
 tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {

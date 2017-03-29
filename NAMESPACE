@@ -2,6 +2,7 @@
 
 export(bmaps.plot)
 export(bmaps.types)
+export(osm.image)
 export(osm.lines)
 export(osm.plot)
 export(osm.points)

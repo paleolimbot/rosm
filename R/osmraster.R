@@ -64,55 +64,73 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #'
 #' }
 #' @export
-osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
-                       projection=NULL, crop=FALSE, filename=NULL, .rawfused=FALSE, ...) {
-  if(!("raster" %in% rownames(utils::installed.packages())) && !.rawfused) {
-    stop("package 'raster' must be installed for call to osm.raster()")
-  }
+#'
+osm.image <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
+                      progress = c("text", "none"), quiet = TRUE) {
 
-  if(!is.null(filename)) {
-    if(methods::is(x, "Raster")) {
-      return(invisible(raster::writeRaster(x, filename=filename, datatype="INT1U", ...)))
-    } else {
-      return(invisible(raster::writeRaster(osm.raster(x=x, zoomin=zoomin, zoom=zoom,
-                                       type=type, forcedownload=forcedownload,
-                                       cachedir=cachedir, projection=projection,
-                                       crop=crop, filename=NULL),
-                filename=filename, datatype="INT1U", ...)))
-    }
-  }
+  progress <- match.arg(progress)
 
-  if(methods::is(x, "Spatial")) {
-    crop.bbox <- sp::bbox(x)
-    if(!is.na(rgdal::CRSargs(x@proj4string))) {
-      projection <- x@proj4string
-      lookup.bbox <- sp::bbox(sp::spTransform(x, sp::CRS("+init=epsg:4326")))
-    }
-  } else if(!is.null(projection)) {
-    lookup.bbox <- x
-    crop.bbox <- .projectbbox(lookup.bbox, projection=projection)
-  } else {
-    lookup.bbox <- x
-    crop.bbox <- .projectbbox(lookup.bbox, projection=sp::CRS("+init=epsg:3857"))
-  }
+  # get lookup information from input
+  lookup.bbox <- extract_bbox(x)
 
+  # get zoom level
   if(is.null(zoom)) {
     zoom <- tile.raster.autozoom(lookup.bbox, epsg=4326)
   }
 
   zoom <- min(zoom+zoomin, tile.maxzoom(type))
-  zoom <- max(1, zoom) #global min zoom set to 1
-  message("Zoom: ", zoom)
+  zoom <- max(1, zoom) # global min zoom set to 1
+  if(progress != "none") message("Zoom: ", zoom)
 
+  # get tile list, download tiles
   tiles <- tiles.bybbox(lookup.bbox, zoom, epsg=4326)
-  tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir)
+  tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir,
+                progress = progress, quiet = quiet)
 
-  fused <- tile.fuse(tiles, zoom, type=type, epsg=3857, cachedir=cachedir)
-  if(.rawfused) {
-    return(fused)
+  # return fused image
+  tile.fuse(tiles, zoom, type=type, epsg=3857, cachedir=cachedir, quiet = quiet)
+}
+
+#' @rdname osm.image
+#' @export
+osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
+                       progress = c("text", "none"), quiet = TRUE,
+                       projection = NULL, crop = FALSE, filename = NULL, ...) {
+  requireNamespace("raster")
+
+  progress <- match.arg(progress)
+
+  # extract source projection
+  src_proj <- extract_projection(x)
+
+  # extract bounding box
+  lookup.bbox <- extract_bbox(x)
+
+  # fill in destination projection if not specified
+  if(is.null(projection)) {
+    if(is.na(src_proj)) {
+      # default is to project to google mercator
+      projection <- extract_projection(3857)
+    } else {
+      projection <- src_proj
+    }
+  } else {
+    projection <- extract_projection(projection)
   }
-  arr <- fused[[1]]
-  box <- fused[[2]]
+
+  # get cropping information, if desired
+  if(crop) {
+    crop.bbox <- extract_bbox(x, tolatlon = FALSE)
+    if(is.na(src_proj)) {
+      # default is to project to google mercator
+      crop.bbox <- .projectbbox(crop.bbox, toepsg = 3857)
+    }
+  }
+
+  arr <- osm.image(x, zoomin = zoomin, zoom = zoom, type = type,
+                   forcedownload = forcedownload, cachedir = cachedir,
+                   progress = progress, quiet = quiet)
+  box <- attr(arr, "bbox")
   nbrow <- dim(arr)[1]
   nbcol <- dim(arr)[2]
   bands <- dim(arr)[3]
@@ -145,6 +163,56 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
   }
 }
 
+# function to extract the bounding box given an input object
+# always returns the bbox in lat/lon
+extract_bbox <- function(x, tolatlon=TRUE) {
+  if(methods::is(x, "Spatial")) {
+    box <- sp::bbox(x)
+    if(tolatlon && !is.na(rgdal::CRSargs(x@proj4string))) {
+      requireNamespace("rgdal", quietly = TRUE)
+      box <- sp::bbox(sp::spTransform(x, sp::CRS("+init=epsg:4326")))
+    }
+    box
+  } else if(methods::is(x, "Raster")) {
+    box <- raster::as.matrix(x@extent)
+    if(tolatlon && !is.na(rgdal::CRSargs(x@crs))) {
+      requireNamespace("rgdal", quietly = TRUE)
+
+      # need a couple of points to get a decent approximation
+      coords <- expand.grid(x=box[1,], y=box[2,])
+      box <- sp::bbox(.tolatlon(coords[, 1], coords[, 2], projection = x@crs))
+    }
+    box
+  } else if("character" %in% class(x)) {
+    # should probably look up
+    stop("Character lookups not yet implemented")
+  } else if(is.matrix(x) && identical(dim(x), c(2L, 2L))) {
+    x
+  } else {
+    stop("Don't know how to guess a bounding box from type ", class(x))
+  }
+}
+
+# function to extract a projection from an object
+extract_projection <- function(x) {
+  if(methods::is(x, "CRS")) {
+    x
+  } else if(methods::is(x, "Spatial")) {
+    if(!is.na(rgdal::CRSargs(x@proj4string))) {
+      x@proj4string
+    } else {
+      NA
+    }
+  } else if(methods::is(x, "Raster")) {
+    x@crs
+  } else if(is.numeric(x) && (length(x) == 1)) {
+    requireNamespace("rgdal", quietly=TRUE)
+    intx <- as.integer(x)
+    sp::CRS(paste0("+init=epsg:", intx))
+  } else {
+    NA
+  }
+}
 
 # @title Project an OSM RasterStack
 # @name osm.proj

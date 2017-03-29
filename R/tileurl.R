@@ -13,33 +13,6 @@ tile.attribute.osm <- function() {
           "http://donate.openstreetmap.org/")
 }
 
-tile.url.mapquestosm <- function(xtile, ytile, zoom) {
-  servers <- c("http://otile1.mqcdn.com/tiles/1.0.0/osm",
-               "http://otile2.mqcdn.com/tiles/1.0.0/osm",
-               "http://otile3.mqcdn.com/tiles/1.0.0/osm",
-               "http://otile4.mqcdn.com/tiles/1.0.0/osm")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".jpg", sep=""))
-}
-tile.attribute.mapquestosm <- function() {
-  message("Support MapQuest's commitment to open source resources: ",
-          "http://www.mapquest.com/")
-}
-
-tile.maxzoom.mapquestsat <- function() {return(8)}
-tile.url.mapquestsat <- function(xtile, ytile, zoom) {
-  servers <- c("http://otile1.mqcdn.com/tiles/1.0.0/sat",
-               "http://otile2.mqcdn.com/tiles/1.0.0/sat",
-               "http://otile3.mqcdn.com/tiles/1.0.0/sat",
-               "http://otile4.mqcdn.com/tiles/1.0.0/sat")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".jpg", sep=""))
-}
-tile.attribute.mapquestsat <- function() {
-  message("Support MapQuest's commitment to open source resources: ",
-          "http://www.mapquest.com/")
-}
-
 tile.url.opencycle <- function(xtile, ytile, zoom) {
   servers <- c("http://a.tile.opencyclemap.org/cycle",
                "http://b.tile.opencyclemap.org/cycle")
@@ -62,16 +35,8 @@ tile.attribute.hotstyle <- function() {
           "http://donate.openstreetmap.org/")
 }
 
-tile.url.openpiste <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://tiles.openpistemap.org/nocontours",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.openpiste <- function() {
-  message("Visit the OpenPiste project at http://openpistemap.org/")
-}
-
 tile.url.lovinahike <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://tile.lonvia.de/hiking",
+  return(paste(paste("http://tile.waymarkedtrails.org/hiking",
                      zoom, xtile, ytile, sep="/"),".png", sep=""))
 }
 tile.attribute.loviniahike <- function() {
@@ -87,7 +52,8 @@ tile.attribute.loviniacycle <- function() {
 }
 
 tile.url.hikebike <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://toolserver.org/tiles/hikebike",
+  servers <- paste0("http://", c("a", "b", "c"), ".tiles.wmflabs.org/hikebike")
+  return(paste(paste(sample(servers, 1),
                      zoom, xtile, ytile, sep="/"),".png", sep=""))
 }
 tile.attribute.hikebike <- function() {
@@ -105,8 +71,8 @@ tile.attribute.hillshade <- function() {
 }
 
 tile.url.osmgrayscale <- function(xtile, ytile, zoom) {
-  servers <- c("http://a.www.toolserver.org/tiles/bw-mapnik",
-               "http://b.www.toolserver.org/tiles/bw-mapnik")
+  # a b and c cause SSL certificate errors
+  servers <- c("https://tiles.wmflabs.org/bw-mapnik")
   return(paste(paste(sample(servers, 1),
                      zoom, xtile, ytile, sep="/"),".png", sep=""))
 }

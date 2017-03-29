@@ -96,35 +96,44 @@ tile.cachename <- function(xtile, ytile, zoom, type, cachedir=NULL) {
   file.path(folder, paste0(zoom, "_", xtile, "_", ytile, ".", ext))
 }
 
-tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir=NULL) {
+tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir=NULL,
+                          progress="text", pause=0.2) {
   if(!forcedownload) {
     # check which tiles exist
-    texists <- sapply(1:nrow(tiles), function(i) {
+    texists <- vapply(1:nrow(tiles), function(i) {
       cachename <- tile.cachename(tiles[i,1], tiles[i,2], zoom, type, cachedir)
       return(file.exists(cachename))
-    })
-    tiles <- tiles[!texists,]
+    }, logical(1))
+    tiles <- tiles[!texists, , drop = FALSE]
   }
 
   if(nrow(tiles) > 0) {
-    message("Fetching ", nrow(tiles), " missing tiles")
-    pb <- utils::txtProgressBar(min=0, max=nrow(tiles), width = 20, file = stderr())
-    for(i in 1:nrow(tiles)) {
-      xtile <- tiles[i,1]
-      ytile <- tiles[i,2]
+    if(progress != "none") {
+      message("Fetching ", nrow(tiles), " missing tiles")
+      pb <- utils::txtProgressBar(min=0, max=nrow(tiles), width = 20, file = stderr())
+    }
+
+    tile.apply(tiles, zoom, type, fun=function(xtile, ytile, zoom, type, epsg, cachedir) {
       cachename <- tile.cachename(xtile, ytile, zoom, type, cachedir)
       url <- tile.url(xtile, ytile, zoom, type)
-      tryCatch(utils::download.file(url, cachename, quiet = TRUE, mode="wb"),
-               error=function(err) {
-                 message("Error downloading tile ", xtile, ",", ytile, " (zoom: ",
-                         zoom, "): ", err)
-               }, warning=function(warn) {
-                 message("Error downloading tile (tile likely does not exist ",
-                         "or no internet connection) ", xtile, ",", ytile, " (zoom: ",
-                         zoom, "): ", warn)
-               })
-      utils::setTxtProgressBar(pb, i)
-    }
-    message("...complete!")
+      # pause to avoid overwhelming servers
+      if(pause > 0) Sys.sleep(pause)
+
+      # try to download file (probably a better way to do this than download.file())
+      result <- try(suppressWarnings(utils::download.file(url, cachename, quiet = TRUE, mode="wb")),
+                    silent = TRUE)
+
+      # display errors only in progress mode
+      if((progress != "none") && (class(result) == "try-error")) {
+        message(sprintf("Failed to download tile %s:(%s, %s) for type %s / %s",
+                        zoom, xtile, ytile, type, result))
+      } else if((progress != "none") && !file.exists(cachename)) {
+        message(sprintf("Failed to download tile %s:(%s, %s) for type %s",
+                        zoom, xtile, ytile, type))
+      }
+
+    }, epsg=epsg, cachedir=cachedir, progress=progress)
+
+    if(progress != "none") message("...complete!")
   }
 }

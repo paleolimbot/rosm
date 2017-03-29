@@ -37,12 +37,13 @@ tile.applywrap <- function(tiles, zoom) {
 }
 
 # loops through the tiles applies a function (returning a list)
-tile.apply <- function(tiles, zoom, type, fun, epsg=4326, cachedir=NULL, ...) {
+tile.apply <- function(tiles, zoom, type, fun, epsg=4326, cachedir=NULL, ...,
+                       progress = "none") {
   plyr::alply(tiles, 1, function(tile) {
     x <- tile[[1]]
     y <- tile[[2]]
     fun(x, y, zoom=zoom, type=type, epsg=epsg, cachedir=cachedir, ...)
-  })
+  }, .progress = progress)
 }
 
 # loops through the tiles and plots or combines the results to a list
@@ -201,8 +202,7 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
 #'
 osm.types <- function() {
   c("hikebike","hillshade","hotstyle","lovinacycle",
-     "lovinahike","mapquestosm","mapquestsat","opencycle",
-     "openpiste","osm","osmgrayscale",
+     "lovinahike","opencycle","osm","osmgrayscale",
      "osmtransport","stamenbw","stamenwatercolor",
      "thunderforestlandscape","thunderforestoutdoors")
 }

@@ -2,7 +2,7 @@
 
 tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
   if(x < 0) {
-    #negative tiles from wrap situation
+    # negative tiles from wrap situation
     x <- x+2^zoom
   }
 
@@ -11,21 +11,21 @@ tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
   ext <- parts[length(parts)]
   tryCatch({
     if(ext == "jpg" || ext =="jpeg") {
-      return(jpeg::readJPEG(fname))
+      jpeg::readJPEG(fname)
     } else if(ext == "png") {
-      return(png::readPNG(fname))
+      png::readPNG(fname)
     } else {
       stop("Extension not recognized: ", ext)
     }
   }, error=function(err) {
     message("Error loading ", fname, ": ", err)
+    NULL
   })
-  NULL
 }
 
 tile.applywrap <- function(tiles, zoom) {
   if(!all(min(tiles[,1]):max(tiles[,1]) %in% tiles[,1])) {
-    #wrapping around the backside of the earth, make end tiles negative
+    # wrapping around the backside of the earth, make end tiles negative
     warning("Attempting to plot wrap around tiles (~lat=-180), things may get funky.")
     n <- -1
     while(length(tiles[,1][tiles[,1]==2^zoom+n]) > 0) {
@@ -36,54 +36,102 @@ tile.applywrap <- function(tiles, zoom) {
   tiles
 }
 
-tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
+# loops through the tiles applies a function (returning a list)
+tile.apply <- function(tiles, zoom, type, fun, epsg=4326, cachedir=NULL, ...) {
+  plyr::alply(tiles, 1, function(tile) {
+    x <- tile[[1]]
+    y <- tile[[2]]
+    fun(x, y, zoom=zoom, type=type, epsg=epsg, cachedir=cachedir, ...)
+  })
+}
 
-  tiles <- tile.applywrap(tiles, zoom)
-  outlist <- list()
-
-  for(i in 1:nrow(tiles)) {
-    x <- tiles[i,1]
-    y <- tiles[i,2]
+# loops through the tiles and plots or combines the results to a list
+tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+  tile.apply(tiles, zoom, type, function(x, y, zoom, type, epsg, cachedir) {
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir)
 
-    if(!is.null(image)) {
-      if(plot) {
-        tile.plotarray(image, box)
-      } else {
-        outlist[[length(outlist)+1]] <- list(img=image, bbox=box)
-      }
-    }
-  }
+    # if in plotting mode, plot the array
+    if(!is.null(image)) tile.plotarray(image, box)
 
-  if(!plot) {
-    outlist
-  }
+  }, epsg=epsg, cachedir=cachedir)
 }
 
+tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+  tile.apply(tiles, zoom, type, function(x, y, zoom, type, epsg, cachedir) {
+    box <- tile.bbox(x, y, zoom, epsg)
+    image <- tile.loadimage(x, y, zoom, type, cachedir)
+
+    # return structure as the image array, with attribute 'bbox'
+    # this is modeled after the @bbox slot in the sp package
+    structure(image, bbox=box, type=type,
+              epsg=epsg, zoom=zoom)
+  })
+}
+
+# shortcut to abind(..., along=1)
 tile.arbind <- function(...) {
   abind::abind(..., along=1)
 }
 
+# shortcut to abind(..., along=2)
 tile.acbind <- function(...) {
   abind::abind(..., along=2)
 }
 
-tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
+tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
 
   tiles <- tile.applywrap(tiles, zoom)
+
+  # check dimensions of all tiles before fusing
+  dims <- tile.apply(tiles, zoom, type, fun=function(x, y, zoom, type, epsg, cachedir) {
+    image <- tile.loadimage(x, y, zoom, type, cachedir)
+    if(!is.null(image)) {
+      dim(image)
+    } else {
+      c(0, 0, 0)
+    }
+  })
+
+  # check for missing tiles
+  missing_tiles <- vapply(dims, function(dim) identical(dim, c(0, 0, 0)),
+                          logical(1))
+  if(all(missing_tiles)) stop("Zero tiles were loaded for type ", type)
+
+  # find dimension of non-missing tiles (hopefully the same...)
+  tiledim <- do.call(rbind, dims[!missing_tiles])
+  tiledim <- tiledim[!duplicated(tiledim, MARGIN=1), , drop = FALSE]
+
+  if(nrow(tiledim) != 1) {
+    message("Not all loadable tiles have identical dimensions: ",
+            apply(tiledim, 1, function(dim) paste(dim, collapse = ", ")))
+  }
+
+  if(any(missing_tiles)) {
+    message(sum(missing_tiles), " could not be loaded for type ", type)
+    missing_tile <- array(0, tiledim[1, , drop = TRUE])
+  } else {
+    missing_tile <- NULL
+  }
 
   tiles <- tiles[order(tiles$Var1, tiles$Var2),]
   xs <- unique(tiles[,1])
   ys <- unique(tiles[,2])
 
-  `%do%` <- foreach::`%do%` #dopar actually decreases performance
+  # using foreach here is flexible, but probably creating one giant array and
+  # using `[<-` is the way to go, especially for potentially missing tiles
+  `%do%` <- foreach::`%do%`
   x <- NULL; y<-NULL; rm(x); rm(y) #CMD trick
   wholeimg <- foreach::foreach(x=xs, .combine=tile.acbind, .multicombine = TRUE) %do% {
                 foreach::foreach(y=ys, .combine=tile.arbind, .multicombine = TRUE) %do% {
                   img <- tile.loadimage(x, y, zoom, type, cachedir)
-                  if(is.null(img)) stop("Cannot fuse unloadable tile: ", x, ",", y)
-                  img
+                  if(is.null(img) && is.null(missing_tile)) {
+                    stop("Cannot fuse unloadable tile")
+                  } else if(is.null(img)) {
+                    missing_tile
+                  } else {
+                    img
+                  }
                 }
               }
 
@@ -95,13 +143,15 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, plot=FALSE) {
   bbox <- matrix(c(nw[1], se[2], se[1], nw[2]), ncol=2,
                 byrow=FALSE, dimnames=list(c("x", "y"), c("min", "max")))
 
-  if(plot) {
-    #plot image
-    tile.plotarray(wholeimg, bbox)
-  } else {
-    #return image and bounds
-    list(img=wholeimg, bbox=bbox)
-  }
+  # return same structure as tile.each()
+  structure(wholeimg, bbox=bbox, epsg=epsg,
+            type=type, zoom=zoom)
+}
+
+tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+  fused <- tile.fuse(tiles, zoom, type, epsg=epsg, cachedir=cachedir)
+  # plot image
+  tile.plotarray(fused, attr(fused, "bbox"))
 }
 
 
@@ -215,9 +265,9 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
   tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir)
 
   if(fusetiles) {
-    tile.fuse(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, plot=TRUE)
+    tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
   } else {
-    tile.each(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, plot=TRUE)
+    tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
   }
 
   tile.attribute(type)

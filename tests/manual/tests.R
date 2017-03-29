@@ -14,9 +14,33 @@ types <- c("hikebike","hillshade","hotstyle","lovinacycle",
            "osmtransport","stamenbw","stamenwatercolor",
            "thunderforestlandscape","thunderforestoutdoors")
 
+tiles <- data.frame(types = c("hikebike","hillshade","hotstyle","lovinacycle",
+                              "lovinahike","mapquestosm","mapquestsat","opencycle",
+                              "osm","osmgrayscale",
+                              "osmtransport","stamenbw","stamenwatercolor",
+                              "thunderforestlandscape","thunderforestoutdoors"), status = NA,
+                    stringsAsFactors = FALSE)
+
+nsbox <- prettymapr::searchbbox("nova scotia", source="google")
+for(i in 1:nrow(tiles)) {
+  status <- tryCatch(
+    {
+      rosm::osm.plot(nsbox, type = tiles[i,1])
+      status <- "OK"
+    },
+    error=function(cond) {
+      message(cond, '\n')
+      status <- "error"
+    }
+  )
+  tiles[i,"status"] <- status
+}
+
+tiles
+
 for(type in types) {
-  osm.plot(nsbox, type=type)
-  title(type)
+  try({osm.plot(nsbox, type=type)
+  title(type)})
 }
 
 #canvec.qplot and hillshade
@@ -176,4 +200,12 @@ plot(usamerc, add=T)
 #write to disk check
 osm.raster(x, filename="test.tif")
 osm.raster(usabbox, projection=CRS("+init=epsg:3338"), crop=T, filename="test.tif", overwrite=TRUE)
+
+
+
+
+library(ggmap)
+
+ggm <- get_map()
+
 

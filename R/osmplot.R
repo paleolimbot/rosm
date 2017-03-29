@@ -1,6 +1,6 @@
 #plot slippy tiles
 
-tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
+tile.loadimage <- function(x, y, zoom, type, cachedir=NULL, quiet = TRUE) {
   if(x < 0) {
     # negative tiles from wrap situation
     x <- x+2^zoom
@@ -18,7 +18,7 @@ tile.loadimage <- function(x, y, zoom, type, cachedir=NULL) {
       stop("Extension not recognized: ", ext)
     }
   }, error=function(err) {
-    message("Error loading ", fname, ": ", err)
+    if(!quiet) message("Error loading ", fname, ": ", err)
     NULL
   })
 }
@@ -47,10 +47,10 @@ tile.apply <- function(tiles, zoom, type, fun, epsg=4326, cachedir=NULL, ...,
 }
 
 # loops through the tiles and plots or combines the results to a list
-tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
   tile.apply(tiles, zoom, type, function(x, y, zoom, type, epsg, cachedir) {
     box <- tile.bbox(x, y, zoom, epsg)
-    image <- tile.loadimage(x, y, zoom, type, cachedir)
+    image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
 
     # if in plotting mode, plot the array
     if(!is.null(image)) tile.plotarray(image, box)
@@ -58,10 +58,10 @@ tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   }, epsg=epsg, cachedir=cachedir)
 }
 
-tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
   tile.apply(tiles, zoom, type, function(x, y, zoom, type, epsg, cachedir) {
     box <- tile.bbox(x, y, zoom, epsg)
-    image <- tile.loadimage(x, y, zoom, type, cachedir)
+    image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
 
     # return structure as the image array, with attribute 'bbox'
     # this is modeled after the @bbox slot in the sp package
@@ -80,7 +80,7 @@ tile.acbind <- function(...) {
   abind::abind(..., along=2)
 }
 
-tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
+tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
 
   tiles <- tile.applywrap(tiles, zoom)
 
@@ -103,7 +103,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
   x <- NULL; y<-NULL; rm(x); rm(y) #CMD trick
   wholeimg <- foreach::foreach(x=xs, .combine=tile.acbind, .multicombine = TRUE) %do% {
                 foreach::foreach(y=ys, .combine=tile.arbind, .multicombine = TRUE) %do% {
-                  img <- tile.loadimage(x, y, zoom, type, cachedir)
+                  img <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
                   if(is.null(img) && is.null(missing_tile)) {
                     stop("Cannot fuse unloadable tile")
                   } else if(is.null(img)) {
@@ -184,8 +184,8 @@ check.dimensions <- function(tiles, zoom, type, epsg, cachedir) {
   list(targetdim=targetdim, nmissing=sum(missing_tiles))
 }
 
-tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL) {
-  fused <- tile.fuse(tiles, zoom, type, epsg=epsg, cachedir=cachedir)
+tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
+  fused <- tile.fuse(tiles, zoom, type, epsg=epsg, cachedir=cachedir, quiet = quiet)
   # plot image
   tile.plotarray(fused, attr(fused, "bbox"))
 }
@@ -259,7 +259,9 @@ osm.types <- function() {
 #' }
 osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
                      stoponlargerequest=TRUE, fusetiles=TRUE, cachedir=NULL, res=150,
-                     project=TRUE, ...) {
+                     project=TRUE, progress=c("text", "none"), quiet = TRUE, ...) {
+
+  progress <- match.arg(progress)
 
   if(project) {
     epsg <- 3857
@@ -297,12 +299,13 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
   if((nrow(tiles)>32) && stoponlargerequest) stop("More than 32 tiles to be loaded. ",
                                                   "Run with stoponlargerequest=FALSE or ",
                                                   "zoomin=-1, to continue")
-  tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir)
+  tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir,
+                progress=progress)
 
   if(fusetiles) {
-    tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+    tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, quiet = quiet)
   } else {
-    tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir)
+    tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, quiet = quiet)
   }
 
   tile.attribute(type)

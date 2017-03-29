@@ -97,7 +97,7 @@ tile.cachename <- function(xtile, ytile, zoom, type, cachedir=NULL) {
 }
 
 tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir=NULL,
-                          progress="text", pause=0.2) {
+                          progress="text", quiet = TRUE, pause=0.1) {
   if(!forcedownload) {
     # check which tiles exist
     texists <- vapply(1:nrow(tiles), function(i) {
@@ -124,10 +124,10 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
                     silent = TRUE)
 
       # display errors only in progress mode
-      if((progress != "none") && (class(result) == "try-error")) {
+      if(!quiet && (class(result) == "try-error")) {
         message(sprintf("Failed to download tile %s:(%s, %s) for type %s / %s",
                         zoom, xtile, ytile, type, result))
-      } else if((progress != "none") && !file.exists(cachename)) {
+      } else if(!quiet && !file.exists(cachename)) {
         message(sprintf("Failed to download tile %s:(%s, %s) for type %s",
                         zoom, xtile, ytile, type))
       }

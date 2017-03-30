@@ -1,4 +1,4 @@
-#plot slippy tiles
+# plot slippy tiles
 
 tile.loadimage <- function(x, y, zoom, type, cachedir=NULL, quiet = TRUE) {
   if(x < 0) {
@@ -97,25 +97,22 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
   xs <- unique(tiles[,1])
   ys <- unique(tiles[,2])
 
-  # using foreach here is flexible, but probably creating one giant array and
-  # using `[<-` is the way to go, especially for potentially missing tiles
-  `%do%` <- foreach::`%do%`
-  x <- NULL; y<-NULL; rm(x); rm(y) #CMD trick
-  wholeimg <- foreach::foreach(x=xs, .combine=tile.acbind, .multicombine = TRUE) %do% {
-                foreach::foreach(y=ys, .combine=tile.arbind, .multicombine = TRUE) %do% {
-                  img <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
-                  if(is.null(img) && is.null(missing_tile)) {
-                    stop("Cannot fuse unloadable tile")
-                  } else if(is.null(img)) {
-                    missing_tile
-                  } else {
-                    ensure.bands(img, tile_dims$targetdim, default_value = 1)
-                  }
-                }
-              }
+  # bind all the tiles together. foreach was slightly faster
+  # but this is far simpler, and doesn't invoke another dependency
+  wholeimg <- do.call(tile.acbind, lapply(xs, function(x) {
+    do.call(tile.arbind, lapply(ys, function(y) {
+      img <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
+      if(is.null(img) && is.null(missing_tile)) {
+        stop("Cannot fuse unloadable tile")
+      } else if(is.null(img)) {
+        missing_tile
+      } else {
+        ensure.bands(img, tile_dims$targetdim, default_value = 1)
+      }
+    }))
+  }))
 
-  #calc bounding box of whole image
-
+  # calc bounding box of whole image
   nw <- tile.nw(min(xs), min(ys), zoom, epsg)
   se <- tile.nw(max(xs)+1, max(ys)+1, zoom, epsg)
 

@@ -23,13 +23,12 @@ Imports:
     rjson,
     methods,
     plyr,
-    foreach
+    prettymapr
 Suggests:
-    prettymapr,
     rcanvec,
     cartography,
     raster,
     reshape2
 URL: https://github.com/paleolimbot/rosm
-BugReports: https://github.com/paleolimbot/rosm
+BugReports: https://github.com/paleolimbot/rosm/issues
 RoxygenNote: 5.0.1

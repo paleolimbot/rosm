@@ -1,7 +1,36 @@
 
 # function to extract the bounding box given an input object
 # always returns the bbox in lat/lon
-extract_bbox <- function(x, tolatlon=TRUE) {
+
+#' Extract a bounding box from an object
+#'
+#' This function is used internally by \link{osm.plot}, \link{bmaps.plot}, and
+#' \link{osm.raster} to extract a bounding box from their first argument. This allows
+#' considerable flexibility when specifying a location to map, in particular with
+#' character input (a place name that will be geocoded), and other Spatial*/Raster*
+#' objects.
+#'
+#' @param x A \code{Spatial*} object, a \code{Raster*} object, a bounding box,
+#'   or a character string that will be passed to \code{searchbbox()} (prettymapr package). Multiple
+#'   strings will result in a bounding box that contains all of the geocoded
+#'   bounding boxes. The last resort is calling \code{sp::bbox()} on the \code{x}.
+#' @param tolatlon Should the bounding box be un-projected to lat/lon coordinates?
+#' @param ... Passed to \code{searchbbox()} if applicable
+#'
+#' @return A bounding box in the form of \code{sp::bbox()}
+#' @export
+#'
+#' @examples
+#' library(prettymapr)
+#' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+#' stopifnot(identical(ns, extrat_bbox(ns)))
+#'
+#' \donttest{
+#' # downloads data, takes a long time to test
+#' ns <- extract_bbox("nova scotia")
+#' }
+#'
+extract_bbox <- function(x, tolatlon=TRUE, ...) {
   if(methods::is(x, "Spatial")) {
     box <- sp::bbox(x)
     if(tolatlon && !is.na(rgdal::CRSargs(x@proj4string))) {
@@ -19,14 +48,18 @@ extract_bbox <- function(x, tolatlon=TRUE) {
       box <- sp::bbox(.tolatlon(coords[, 1], coords[, 2], projection = x@crs))
     }
     box
-  } else if("character" %in% class(x)) {
-    # should probably look up
-    stop("Character lookups not yet implemented")
-  } else if(is.matrix(x) && identical(dim(x), c(2L, 2L))) {
+  } else if(is.character(x)) {
+    # lookup using prettymapr::searchbbox()
+    prettymapr::searchbbox(x, messaging = FALSE, ...)
+  } else if(is.bbox(x)) {
     x
   } else {
-    stop("Don't know how to guess a bounding box from type ", class(x))
+    sp::bbox(x)
   }
+}
+
+is.bbox <- function(x) {
+  is.matrix(x) && identical(dim(x), c(2L, 2L)) && identical(rownames(x), c("x", "y"))
 }
 
 # function to extract a projection from an object

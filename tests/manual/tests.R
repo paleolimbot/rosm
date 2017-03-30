@@ -118,3 +118,5 @@ file.exists("test.tif")
 x <- raster("test.tif")
 osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=T,
            filename="test.tif", overwrite=TRUE)
+
+unlink("test.tif")

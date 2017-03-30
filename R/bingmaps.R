@@ -1,66 +1,53 @@
 
+# use an internal environment to cache REST information
+bing_rest_queries <- new.env(parent = emptyenv())
 
 bmaps.restquery <- function(bingtype, key=NULL) {
   # http://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=KEY
   # get a key at https://msdn.microsoft.com/en-us/library/ff428642.aspx
-  if(is.null(key)) {
-    key <- "Aut49nhp5_Twwf_5RHF6wSGk7sEzpcSA__niIXCHowQZLMeC-m8cdy7EmZd2r7Gs"
+
+  # use cached information first
+  if(bingtype %in% names(bing_rest_queries)) {
+    result <- bing_rest_queries[[bingtype]]
+  } else {
+
+    if(is.null(key)) {
+      key <- "Aut49nhp5_Twwf_5RHF6wSGk7sEzpcSA__niIXCHowQZLMeC-m8cdy7EmZd2r7Gs"
+    }
+    urlstring <- paste0("http://dev.virtualearth.net/REST/v1/Imagery/Metadata/", bingtype, "?key=", key)
+
+    connect <- url(urlstring)
+    lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
+    close(connect)
+
+    if(class(lines) == "try-error") stop("  Bing REST query failed for type: ", bingtype)
+
+    # convert to a list
+    result <- rjson::fromJSON(paste(lines, collapse = ""))
+    # cache the result
+    bing_rest_queries[[bingtype]] <- result
   }
-  urlstring <- paste0("http://dev.virtualearth.net/REST/v1/Imagery/Metadata/", bingtype, "?key=", key)
-  connect <- url(urlstring)
-  lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
-  close(connect)
-
-  if(class(lines) == "try-error") stop("  Bing REST query failed for type: ", bingtype)
-
-  result <- rjson::fromJSON(paste(lines, collapse = ""))
+  # display the copyright notice
   message(result$copyright)
+
+  # return only the relevant node
   result$resourceSets[[1]]$resources[[1]]
 }
 
-bmaps.tileurlfromrest <- function(imageUrl, tilex, tiley, zoom) {
-  gsub("{subdomain}", sample(c("t0", "t1", "t2", "t3"), 1),
-       gsub("{quadkey}", bmaps.quadkey(tilex, tiley, zoom), imageUrl, fixed=TRUE), fixed=TRUE)
-}
-
-tile.url.bing <- function(typecode, ext, xtile, ytile, zoom) {
-  #http://ecn.t2.tiles.virtualearth.net/tiles/a331.jpeg?g=587
-  .bingtoken <- NULL ; rm(.bingtoken) #CMD check trick
-  if(!exists(".bingtoken")) stop("use bmaps.plot() to plot Bing maps")
-  if(is.null(.bingtoken)) stop("use bmaps.plot() to plot Bing maps")
-  servers = c("t0", "t1", "t2", "t3")
-  paste0("http://ecn.", sample(servers, 1), ".tiles.virtualearth.net/tiles/",
-         typecode, bmaps.quadkey(xtile, ytile, zoom), ext, "?g=", .bingtoken)
-}
-
-bing_types <- list(
-  Aerial = create_tile_source(
-    get_tile_url = function(xtile, ytile, zoom) tile.url.bing("a", ".jpeg", xtile, ytile, zoom),
-    get_max_zoom = tile.maxzoom.default,
-    get_min_zoom = tile.minzoom.default,
+bmaps.sourcefromrest <- function(rest, name) {
+  force(rest); force(name)
+  create_tile_source(
+    get_tile_url = function(xtile, ytile, zoom, quadkey) {
+      gsub("{quadkey}", quadkey, gsub("{subdomain}", sample(rest$imageUrlSubdomains, 1),
+                                      rest$imageUrl, fixed = TRUE),
+           fixed = TRUE)
+    },
+    get_max_zoom = function() rest$zoomMax,
+    get_min_zoom = function() rest$zoomMin,
     get_attribution = function() NULL,
-    name = "bing_Aerial",
-    validate = FALSE
-  ),
-
-  AerialWithLabels = create_tile_source(
-    get_tile_url = function(xtile, ytile, zoom) tile.url.bing("h", ".jpeg", xtile, ytile, zoom),
-    get_max_zoom = tile.maxzoom.default,
-    get_min_zoom = tile.minzoom.default,
-    get_attribution = function() NULL,
-    name = "bing_AerialWithLabels",
-    validate = FALSE
-  ),
-
-  Road = create_tile_source(
-    get_tile_url = function(xtile, ytile, zoom) tile.url.bing("r", ".png", xtile, ytile, zoom),
-    get_max_zoom = tile.maxzoom.default,
-    get_min_zoom = tile.minzoom.default,
-    get_attribution = function() NULL,
-    name = "bing_Road",
-    validate = FALSE
+    name = name
   )
-)
+}
 
 #' List types of Bing Maps
 #'
@@ -72,7 +59,7 @@ bing_types <- list(
 #' bmaps.types()
 #'
 bmaps.types <- function() {
-  names(bing_types)
+  c("Aerial", "AerialWithLabels", "Road")
 }
 
 #' Plot Bing Maps
@@ -98,19 +85,17 @@ bmaps.types <- function() {
 bmaps.plot <- function(bbox, type="Aerial", key=NULL, ...) {
   if(!(type %in% bmaps.types())) stop("type must be one of Aerial, AerialWithLabels, or Road")
 
-  .bingtoken <- NULL ; rm(.bingtoken) #CMD check trick
-
+  # get REST information
   rest <- bmaps.restquery(type, key)
-  afterg <- strsplit(rest$imageUrl, "?g=", fixed=TRUE)[[1]][2]
-  .bingtoken <<- strsplit(afterg, "&", fixed=TRUE)[[1]][1]
-  osm.plot(bbox=bbox, type=bing_types[[type]], ...)
-  .bingtoken <<- NULL
+  # plot using OSM.plot
+  osm.plot(bbox=bbox, type=bmaps.sourcefromrest(rest, paste0("bing_", type)), ...)
+  # plot the little bing logo
   extraargs <- list(...)
   bmaps.attribute(res=extraargs$res, cachedir=extraargs$cachedir)
 }
 
 
-bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL) {
+bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL, scale = 0.7) {
   if(is.null(res)) {
     res <- 80
   }
@@ -124,8 +109,8 @@ bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL) {
   ext <- graphics::par("usr")
   rightin <- graphics::grconvertX(ext[2], from="user", to="inches")
   bottomin <- graphics::grconvertY(ext[3], from="user", to="inches")
-  widthin <- dim(binglogo)[2]/res
-  heightin <- dim(binglogo)[1]/res
+  widthin <- dim(binglogo)[2]/res * scale
+  heightin <- dim(binglogo)[1]/res * scale
   leftusr <- graphics::grconvertX(rightin-padin[1]-widthin, from="inches", to="user")
   bottomusr <- graphics::grconvertY(bottomin+padin[2], from="inches", to="user")
   topusr <- graphics::grconvertY(bottomin+padin[2]+heightin, from="inches", to="user")

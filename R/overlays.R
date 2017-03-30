@@ -13,6 +13,7 @@
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' library(rosm)
 #' library(prettymapr)
 #' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -20,7 +21,7 @@
 #'   osm.plot(searchbbox("nova scotia"))
 #'   osm.points(locs$lon, locs$lat, pch=18, cex=0.7)
 #' })
-#'
+#' }
 #'
 osm.points <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
   graphics::points(.projpts(x, y, epsg, toepsg), ...)
@@ -42,6 +43,7 @@ osm.points <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' library(rosm)
 #' library(prettymapr)
 #' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -49,7 +51,7 @@ osm.points <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #'   osm.plot(searchbbox("nova scotia"))
 #'   osm.segments(locs$lon[1:2], locs$lat[1:2], locs$lon[2:3], locs$lat[2:3])
 #' })
-#'
+#' }
 #'
 osm.segments <- function(x0, y0, x1=x0, y1=y0, epsg=4326, toepsg=3857, ...) {
   c0 <- .projpts(x0, y0, epsg, toepsg)
@@ -71,6 +73,7 @@ osm.segments <- function(x0, y0, x1=x0, y1=y0, epsg=4326, toepsg=3857, ...) {
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' library(rosm)
 #' library(prettymapr)
 #' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -78,6 +81,7 @@ osm.segments <- function(x0, y0, x1=x0, y1=y0, epsg=4326, toepsg=3857, ...) {
 #'   osm.plot(searchbbox("nova scotia"))
 #'   osm.lines(locs$lon, locs$lat, lwd=2)
 #' })
+#' }
 #'
 osm.lines <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
   graphics::lines(.projpts(x, y, epsg, toepsg), ...)
@@ -97,6 +101,7 @@ osm.lines <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' library(rosm)
 #' library(prettymapr)
 #' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -104,9 +109,29 @@ osm.lines <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #'   osm.plot(searchbbox("nova scotia"))
 #'   osm.polygon(locs$lon, locs$lat)
 #' })
+#' }
 #'
 osm.polygon <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
   graphics::polygon(.projpts(x, y, epsg, toepsg), ...)
+}
+
+
+#' Overlay text on an OSM plot
+#'
+#' Plot text on a plot created by \link{osm.plot}.
+#'
+#' @param x X coordinate vector or object as parsed by \code{xy.coords}
+#' @param y Y coordinate vector
+#' @param labels A character vector or expression specifying the text to be
+#'   written.
+#' @param epsg EPSG code of the supplied coordinates
+#' @param toepsg EPSG code of the projected coordinates to be ploted
+#' @param ... Args passed on to \code{text()}
+#'
+#' @export
+#'
+osm.text <- function(x, y=NULL, labels = seq_along(x), epsg=4326, toepsg=3857, ...) {
+  graphics::text(.projpts(x, y, epsg, toepsg), labels = labels, ...)
 }
 
 

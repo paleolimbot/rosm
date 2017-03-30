@@ -218,35 +218,42 @@ osm.types <- function() {
 }
 
 # base function to create specs
-create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom, get_attribution, ...) {
+create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
+                               get_attribution, ..., validate = TRUE) {
   # here, get_tile_url, get_max_zoom, and get_attribution are all functions
   # that get passed xtile, ytile, zoom, and quadkey (if quadkey is in the formals)
   # this is for backwards compatiblity with older tile.url.TYPE functions
 
-  # validate the functions. this also has the effect of evaluating them.
+  # force functions
+  force(get_tile_url); force(get_max_zoom); force(get_min_zoom)
+  force(get_attribution)
 
-  # check that get_tile_url returns a character vector of length 1
-  if("quadkey" %in% names(formals(get_tile_url))) {
-    url <- get_tile_url(0, 0, 0, quadkey="0")
-  } else {
-    url <- get_tile_url(0, 0, 0)
-  }
-  if(!is.character(url)) stop("get_tile_url must return type 'character'")
-  if(length(url) != 1) stop("get_tile_url must return a vector of length 1")
+  if(validate) {
+    # validate the functions
 
-  # check that maxzoom is an integer
-  maxzoom <- get_max_zoom()
-  if((maxzoom %% 1) != 0) stop("get_max_zoom must return an integer")
+    # check that get_tile_url returns a character vector of length 1
+    if("quadkey" %in% names(formals(get_tile_url))) {
+      url <- get_tile_url(0, 0, 0, quadkey="0")
+    } else {
+      url <- get_tile_url(0, 0, 0)
+    }
+    if(!is.character(url)) stop("get_tile_url must return type 'character'")
+    if(length(url) != 1) stop("get_tile_url must return a vector of length 1")
 
-  # check that minzoom is an integer
-  minzoom <- get_min_zoom()
-  if((minzoom %% 1) != 0) stop("get_min_zoom must return an integer")
+    # check that maxzoom is an integer
+    maxzoom <- get_max_zoom()
+    if((maxzoom %% 1) != 0) stop("get_max_zoom must return an integer")
 
-  # check that get_attribution returns a character vector of length 1
-  attribution <- get_attribution()
-  if(!is.null(attribution)) {
-    if(!is.character(attribution)) stop("get_attribution must return a character vector")
-    if(length(url) != 1) stop("get_attribution must return a vector of length 1")
+    # check that minzoom is an integer
+    minzoom <- get_min_zoom()
+    if((minzoom %% 1) != 0) stop("get_min_zoom must return an integer")
+
+    # check that get_attribution returns a character vector of length 1
+    attribution <- get_attribution()
+    if(!is.null(attribution)) {
+      if(!is.character(attribution)) stop("get_attribution must return a character vector")
+      if(length(url) != 1) stop("get_attribution must return a vector of length 1")
+    }
   }
 
   # return list of class "tile_source"

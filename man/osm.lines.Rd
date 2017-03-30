@@ -22,6 +22,7 @@ Plot lines on a plot created by \link{osm.plot}. This is a simple wrapper around
 \code{points()}.
 }
 \examples{
+\donttest{
 library(rosm)
 library(prettymapr)
 locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -29,6 +30,7 @@ prettymap({
   osm.plot(searchbbox("nova scotia"))
   osm.lines(locs$lon, locs$lat, lwd=2)
 })
+}
 
 }
 

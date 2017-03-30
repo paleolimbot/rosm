@@ -26,6 +26,7 @@ Plot segments on a plot created by \link{osm.plot}. This is a simple wrapper aro
 \code{segments()}.
 }
 \examples{
+\donttest{
 library(rosm)
 library(prettymapr)
 locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -33,7 +34,7 @@ prettymap({
   osm.plot(searchbbox("nova scotia"))
   osm.segments(locs$lon[1:2], locs$lat[1:2], locs$lon[2:3], locs$lat[2:3])
 })
-
+}
 
 }
 

@@ -22,6 +22,7 @@ Plot a polygon on a plot created by \link{osm.plot}. This is a simple wrapper ar
 \code{polygon()}.
 }
 \examples{
+\donttest{
 library(rosm)
 library(prettymapr)
 locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
@@ -29,6 +30,7 @@ prettymap({
   osm.plot(searchbbox("nova scotia"))
   osm.polygon(locs$lon, locs$lat)
 })
+}
 
 }
 

@@ -156,7 +156,7 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
                         zoom, xtile, ytile, type))
       }
 
-    }, epsg=epsg, cachedir=cachedir, progress=progress)
+    }, epsg=NULL, cachedir=cachedir, progress=progress)
 
     if(progress != "none") message("...complete!")
   }

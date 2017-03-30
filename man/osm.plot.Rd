@@ -42,6 +42,11 @@ faster (and more memory efficient) to use \code{fusetiles=FALSE}.}
 according to latitude for lat/lon coordinates, this makes little difference at high
 zoom and may make plotting overlays more convenient. Defaults to \code{TRUE}.}
 
+\item{progress}{A progress bar to use, or "none" to suppress progress updates}
+
+\item{quiet}{Pass \code{FALSE} to see more error messages, particularly if
+your tiles do not download/load properly.}
+
 \item{...}{Additional parameters to be passed on to the first call to \code{sp::plot}}
 }
 \description{
@@ -58,14 +63,8 @@ to keep lat/lon coordinates.
 library(prettymapr)
 ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 osm.plot(ns)
-osm.plot(ns, type="mapquestsat")
+osm.plot(ns, type="stamenbw")
 prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
-
-tile.url.darkmatter <- function(xtile, ytile, zoom) {
-  paste0(paste("http://a.basemaps.cartocdn.com/dark_all",
-                            zoom, xtile, ytile, sep="/"), ".png")
-}
-osm.plot(ns, type="darkmatter")
 }
 }
 

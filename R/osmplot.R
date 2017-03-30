@@ -222,6 +222,9 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = 
 #' \code{FALSE} if lat/lon should be maintained. Becuase \code{sp::plot} adjusts the aspect
 #' according to latitude for lat/lon coordinates, this makes little difference at high
 #' zoom and may make plotting overlays more convenient. Defaults to \code{TRUE}.
+#' @param progress A progress bar to use, or "none" to suppress progress updates
+#' @param quiet Pass \code{FALSE} to see more error messages, particularly if
+#'   your tiles do not download/load properly.
 #' @param ... Additional parameters to be passed on to the first call to \code{sp::plot}
 #'
 #' @export
@@ -231,14 +234,8 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = 
 #' library(prettymapr)
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 #' osm.plot(ns)
-#' osm.plot(ns, type="mapquestsat")
+#' osm.plot(ns, type="stamenbw")
 #' prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
-#'
-#' tile.url.darkmatter <- function(xtile, ytile, zoom) {
-#'   paste0(paste("http://a.basemaps.cartocdn.com/dark_all",
-#'                             zoom, xtile, ytile, sep="/"), ".png")
-#' }
-#' osm.plot(ns, type="darkmatter")
 #' }
 osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
                      stoponlargerequest=TRUE, fusetiles=TRUE, cachedir=NULL, res=150,

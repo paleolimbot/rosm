@@ -17,6 +17,16 @@ source_from_url_format(url_format, max_zoom = tile.maxzoom.default(),
 \item{x}{An object (usually a name or string format) with which to create a tile source}
 
 \item{...}{Arguments passed to other methods}
+
+\item{url_format}{A string in the form \code{https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png},
+where z, x, and y are the zoom, xtile, and ytile, respectively. Also valid is ${q}, which
+will be passed a quadkey.}
+
+\item{max_zoom}{An integer specifying the maximum zoom to use (default is 19)}
+
+\item{min_zoom}{An integer specifying the minimum zoom to use (default is 1)}
+
+\item{attribution}{An attribution string, required by some tile providers.}
 }
 \value{
 An object of class 'tile_source'
@@ -34,7 +44,22 @@ Passing a name from \link{osm.types} will return that tile source; passing a nam
 Old style function names in the form tile.url.TYPE are still supported but are deprecated.
 }
 \examples{
+# get builtin tile sources
 as.tile_source("osm")
+
+# get custom tile sources
+as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+
+# get registered tile sources
+register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+as.tile_source("dark")
+
+# create more complex tile sources using source_from_url_format
+source_from_url_format("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
+                       attribution = "Tiles by CartoDB")
+
+# test for tile sources
+is.tile_source(as.tile_source("osm"))
 
 }
 

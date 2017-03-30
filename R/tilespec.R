@@ -13,6 +13,12 @@
 #' Old style function names in the form tile.url.TYPE are still supported but are deprecated.
 #'
 #' @param x An object (usually a name or string format) with which to create a tile source
+#' @param url_format A string in the form \code{https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png},
+#'   where z, x, and y are the zoom, xtile, and ytile, respectively. Also valid is ${q}, which
+#'   will be passed a quadkey.
+#' @param max_zoom An integer specifying the maximum zoom to use (default is 19)
+#' @param min_zoom An integer specifying the minimum zoom to use (default is 1)
+#' @param attribution An attribution string, required by some tile providers.
 #' @param ... Arguments passed to other methods
 #'
 #' @return An object of class 'tile_source'
@@ -20,7 +26,22 @@
 #'
 #'
 #' @examples
+#' # get builtin tile sources
 #' as.tile_source("osm")
+#'
+#' # get custom tile sources
+#' as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#'
+#' # get registered tile sources
+#' register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#' as.tile_source("dark")
+#'
+#' # create more complex tile sources using source_from_url_format
+#' source_from_url_format("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
+#'                        attribution = "Tiles by CartoDB")
+#'
+#' # test for tile sources
+#' is.tile_source(as.tile_source("osm"))
 #'
 as.tile_source <- function(x, ...) {
   # first check if x is a tile source
@@ -131,16 +152,27 @@ source_from_global_functions <- function(type) {
 #'
 #' Use this function to register tile sources so they can be referred to by name in
 #' \link{osm.plot}. Tile sources will be registered for as long as the namespace
-#' is loaded. Use
+#' is loaded. Use \code{set_default_tile_source()} to set the default source.
 #'
 #' @param x The tile source (or coercible string) to use as the default tile source
 #' @param ... Passed to \link{as.tile_source} for set_default_tile_source, or a named
 #'   list of tile sources for register_tile_source
 #'
-#' @return
 #' @export
 #'
 #' @examples
+#' # set the default tile source
+#' set_default_tile_source("stamenbw")
+#'
+#' # register a custom tile source
+#' register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#'
+#' \donttest{
+#' library(prettymapr)
+#' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+#' prettymap(osm.plot(ns, "dark"))
+#' }
+#'
 register_tile_source <- function(...) {
   sources <- list(...)
   if(is.null(names(sources))) stop("register_source must be called with named arguments")

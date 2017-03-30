@@ -24,11 +24,25 @@ for(i in 1:nrow(tiles)) {
 knitr::kable(tiles)
 
 # test custom map types
+
+# this should throw a deprecation message but still work
 tile.url.darkmatter <- function(xtile, ytile, zoom) {
   paste0(paste("http://a.basemaps.cartocdn.com/dark_all",
                zoom, xtile, ytile, sep="/"), ".png")
 }
 osm.plot(nsbox, type="darkmatter")
+
+# using string formats
+ts <- as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+osm.plot(nsbox, type=ts)
+
+# test registration
+register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+osm.plot(nsbox, type="dark")
+
+# test setting of default
+set_default_tile_source("stamenbw")
+osm.plot(nsbox)
 
 # test bing map types
 tiles <- data.frame(types = bmaps.types(), status = NA,

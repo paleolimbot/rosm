@@ -26,7 +26,7 @@ as.tile_source <- function(x, ...) {
   # first check if x is a tile source
   if(is.tile_source(x)) return(x)
 
-  # order is registered -> built_in -> functions ->
+  # order is registered -> built_in -> functions -> string format
   if((length(x) == 1) && (x %in% names(registered_sources))) {
     src <- registered_sources[[x]]
     src$name <- x
@@ -148,6 +148,8 @@ register_tile_source <- function(...) {
 
   # lapply as.tile_source and copy to registered_sources
   list2env(lapply(sources, as.tile_source), registered_sources)
+
+  invisible(NULL)
 }
 
 #' @rdname register_tile_source
@@ -168,7 +170,7 @@ get_default_tile_source <- function() {
 }
 
 # use an environment to keep track of registered sources
-registered_sources <- new.env()
+registered_sources <- new.env(parent = emptyenv())
 
 #' Get List of Valid Tile Sources
 #'

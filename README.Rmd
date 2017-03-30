@@ -11,7 +11,7 @@ output:
 
 [![](http://cranlogs.r-pkg.org/badges/rosm)](https://cran.r-project.org/package=rosm)
 
-Download and plot [Open Street Map](http://www.openstreetmap.org/), [Bing Maps](http://www.bing.com/maps), and other tiled map sources in a way that works seamlessly with plotting from the 'sp' package. Use to create high-resolution basemaps and add hillshade to vector based maps.
+Download and plot [Open Street Map](http://www.openstreetmap.org/), [Bing Maps](http://www.bing.com/maps), and other tiled map sources in a way that works seamlessly with plotting from the 'sp' package. Use to create high-resolution basemaps and add hillshade to vector based maps. Note that rosm uses base plotting and not ggplot2: for mapping in ggplot2, use [ggspatial](https://github.com/paleolimbot/ggspatial) or [ggmap](https://github.com/dkahle/ggmap).
 
 ## Installation
 

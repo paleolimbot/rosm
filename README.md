@@ -52,14 +52,14 @@ bmaps.plot(altalake)
 osm.types()
 ```
 
-    ##  [1] "hikebike"               "hillshade"             
-    ##  [3] "hotstyle"               "lovinacycle"           
-    ##  [5] "lovinahike"             "mapquestosm"           
-    ##  [7] "mapquestsat"            "opencycle"             
-    ##  [9] "openpiste"              "osm"                   
-    ## [11] "osmgrayscale"           "osmtransport"          
-    ## [13] "stamenbw"               "stamenwatercolor"      
-    ## [15] "thunderforestlandscape" "thunderforestoutdoors"
+    ##  [1] "osm"                    "opencycle"             
+    ##  [3] "hotstyle"               "loviniahike"           
+    ##  [5] "loviniacycle"           "hikebike"              
+    ##  [7] "hillshade"              "osmgrayscale"          
+    ##  [9] "stamenbw"               "stamenwatercolor"      
+    ## [11] "osmtransport"           "thunderforestlandscape"
+    ## [13] "thunderforestoutdoors"  "cartodark"             
+    ## [15] "cartolight"
 
 ``` r
 osm.plot(altalake, type="stamenbw")

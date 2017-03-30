@@ -80,26 +80,3 @@
   newpoints <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
   t(sp::coordinates(newpoints))
 }
-
-
-sm.y2lat <- function(a) {
-  return(180.0/pi * (2 * atan(exp(a*pi/180)) - pi/2))
-}
-
-sm.lat2y <- function(a) {
-  return(180.0/pi * log(tan(pi/4+a*(pi/180)/2)))
-}
-
-sm.projectbbox <- function(bbox) {
-  bbox[2,] <- sm.lat2y(bbox[2,])
-  bbox
-}
-
-sm.revprojectbbox <- function(bbox) {
-  bbox[2,] <- sm.y2lat(bbox[2,])
-  bbox
-}
-
-sm.tolatlon <- function(x, y) {
-  c(x, sm.y2lat(y))
-}

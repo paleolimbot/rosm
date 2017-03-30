@@ -80,5 +80,15 @@ tile_sources <- list(
                    'http://b.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png',
                    'http://c.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png'),
     attribution = "More on Thunderforest at http://www.thunderforest.com/"
+  ),
+
+  cartodark = source_from_url_format(
+    url_format = "http://a.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png",
+    attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
+  ),
+
+  cartolight = source_from_url_format(
+    url_format = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
+    attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
   )
 )

@@ -23,7 +23,7 @@
 #' @examples
 #' library(prettymapr)
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
-#' stopifnot(identical(ns, extrat_bbox(ns)))
+#' stopifnot(identical(ns, extract_bbox(ns)))
 #'
 #' \donttest{
 #' # downloads data, takes a long time to test

@@ -1,22 +1,5 @@
 
 
-bmaps.quadkey <- function(tilex, tiley, zoom) {
-  nzoom <- 2^zoom
-  if(tilex < 0 || tilex >= nzoom) stop("xtile out of range: ", tilex)
-  if(tiley < 0 || tiley >= nzoom) stop("ytile out of range: ", tilex)
-  out <- ""
-  keymap <- matrix(0:3, byrow=TRUE, ncol=2)
-  decx <- tilex/nzoom
-  decy <- tiley/nzoom
-  for(i in 1:zoom) {
-    n <- 2^i
-    x <- floor(decx*2^i) - floor(decx*2^(i-1))*2
-    y <- floor(decy*2^i) - floor(decy*2^(i-1))*2
-    out <- paste0(out, keymap[y+1,x+1])
-  }
-  out
-}
-
 bmaps.restquery <- function(bingtype, key=NULL) {
   #http://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=KEY
   #get a key at https://msdn.microsoft.com/en-us/library/ff428642.aspx
@@ -116,7 +99,7 @@ bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL) {
     res <- 80
   }
   #http://dev.virtualearth.net/Branding/logo_powered_by.png
-  bingfile <- file.path(tile.cachedir("bing"), "bing.png")
+  bingfile <- file.path(tile.cachedir(list(name="bing")), "bing.png")
   if(!file.exists(bingfile)) {
     utils::download.file("http://dev.virtualearth.net/Branding/logo_powered_by.png",
                   bingfile, quiet=TRUE)

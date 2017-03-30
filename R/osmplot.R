@@ -66,7 +66,7 @@ tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
     # return structure as the image array, with attribute 'bbox'
     # this is modeled after the @bbox slot in the sp package
     structure(image, bbox=box, type=type,
-              epsg=epsg, zoom=zoom)
+              epsg=epsg, zoom=zoom, tiles = data.frame(x, y))
   })
 }
 
@@ -87,7 +87,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
   tile_dims <- check.dimensions(tiles, zoom, type, epsg, cachedir)
 
   if(tile_dims$nmissing > 0) {
-    message(tile_dims$nmissing, " could not be loaded for type ", type)
+    message(tile_dims$nmissing, " could not be loaded for type ", type$name)
     missing_tile <- array(0, tile_dims$targetdim)
   } else {
     missing_tile <- NULL
@@ -124,7 +124,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
 
   # return same structure as tile.each()
   structure(wholeimg, bbox=bbox, epsg=epsg,
-            type=type, zoom=zoom)
+            type=type, zoom=zoom, tiles = tiles)
 }
 
 # ensure array dimensions match a given dim value
@@ -164,7 +164,7 @@ check.dimensions <- function(tiles, zoom, type, epsg, cachedir) {
   # check for missing tiles
   missing_tiles <- vapply(dims, function(dim) identical(dim, c(0, 0, 0)),
                           logical(1))
-  if(all(missing_tiles)) stop("Zero tiles were loaded for type ", type)
+  if(all(missing_tiles)) stop("Zero tiles were loaded for type ", type$name)
 
   # find dimension of non-missing tiles (hopefully the same...)
   tiledim <- do.call(rbind, dims[!missing_tiles])
@@ -188,23 +188,6 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = 
   fused <- tile.fuse(tiles, zoom, type, epsg=epsg, cachedir=cachedir, quiet = quiet)
   # plot image
   tile.plotarray(fused, attr(fused, "bbox"))
-}
-
-
-#' Get List of Valid Types
-#'
-#' @return A character vector of valid \code{type} parameters.
-#'
-#' @export
-#'
-#' @examples
-#' osm.types()
-#'
-osm.types <- function() {
-  c("hikebike","hillshade","hotstyle","lovinacycle",
-     "lovinahike","opencycle","osm","osmgrayscale",
-     "osmtransport","stamenbw","stamenwatercolor",
-     "thunderforestlandscape","thunderforestoutdoors")
 }
 
 #' Plot Open Street Map Tiles
@@ -257,11 +240,18 @@ osm.types <- function() {
 #' }
 #' osm.plot(ns, type="darkmatter")
 #' }
-osm.plot <- function(bbox, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE,
+osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
                      stoponlargerequest=TRUE, fusetiles=TRUE, cachedir=NULL, res=150,
                      project=TRUE, progress=c("text", "none"), quiet = TRUE, ...) {
-
+  # validate progress arg
   progress <- match.arg(progress)
+
+  # verify tile source
+  if(is.null(type)) {
+    type <- get_default_tile_source()
+  } else {
+    type <- as.tile_source(type)
+  }
 
   if(project) {
     epsg <- 3857

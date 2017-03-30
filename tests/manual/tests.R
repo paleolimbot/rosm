@@ -31,7 +31,6 @@ tile.url.darkmatter <- function(xtile, ytile, zoom) {
 osm.plot(nsbox, type="darkmatter")
 
 # test bing map types
-
 tiles <- data.frame(types = bmaps.types(), status = NA,
                     stringsAsFactors = FALSE)
 
@@ -78,7 +77,7 @@ bmaps.plot(searchbbox("alaska", source="google"))
 # osm.raster
 library(cartography)
 data(nuts2006)
-for(country in c("PL", "PT", "RO", "SE", "SI", "SK")) {
+for(country in c("PL", "PT")) {
   message("Testing country ", country)
   spdf <- nuts0.spdf[nuts0.spdf$id==country,]
   x <- osm.raster(spdf, type="osm")
@@ -101,4 +100,7 @@ plotRGB(x)
 
 # write to disk check
 osm.raster(x, filename="test.tif")
-osm.raster(usabbox, projection=CRS("+init=epsg:3338"), crop=T, filename="test.tif", overwrite=TRUE)
+file.exists("test.tif")
+x <- raster("test.tif")
+osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=T,
+           filename="test.tif", overwrite=TRUE)

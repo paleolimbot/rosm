@@ -1,134 +1,84 @@
-#tile URLs
+# tile URLs
+# create list() of tile sources
+tile_sources <- list(
+  osm = source_from_url_format(
+    url_format = c('http://a.tile.openstreetmap.org/${z}/${x}/${y}.png',
+                   'http://b.tile.openstreetmap.org/${z}/${x}/${y}.png',
+                   'http://c.tile.openstreetmap.org/${z}/${x}/${y}.png'),
+    attribution = paste("Consider donating to the Open Street Map project",
+                        "at http://donate.openstreetmap.org/")
+  ),
 
-tile.url.osm <- function(xtile, ytile, zoom) {
-  #a. b. or c. all work
-  servers <- c("http://a.tile.openstreetmap.org",
-               "http://b.tile.openstreetmap.org",
-               "http://c.tile.openstreetmap.org")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.osm <- function() {
-  message("Consider donating to the Open Street Map project at ",
-          "http://donate.openstreetmap.org/")
-}
+  opencycle = source_from_url_format(
+    url_format = c('http://a.tile.opencyclemap.org/cycle/${z}/${x}/${y}.png',
+                   'http://b.tile.opencyclemap.org/cycle/${z}/${x}/${y}.png'),
+    attribution = paste("Consider donating to the Open Street Map project",
+                        "at http://donate.openstreetmap.org/")
+  ),
 
-tile.url.opencycle <- function(xtile, ytile, zoom) {
-  servers <- c("http://a.tile.opencyclemap.org/cycle",
-               "http://b.tile.opencyclemap.org/cycle")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.opencycle <- function() {
-  message("Consider donating to the Open Street Map project at ",
-          "http://donate.openstreetmap.org/")
-}
+  hotstyle = source_from_url_format(
+    url_format = c('http://a.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png',
+                   'http://b.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png'),
+    attribution = paste("Consider donating to the Open Street Map project",
+                        "at http://donate.openstreetmap.org/")
+  ),
 
-tile.url.hotstyle <- function(xtile, ytile, zoom) {
-  servers <- c("http://a.tile.openstreetmap.fr/hot",
-               "http://a.tile.openstreetmap.fr/hot")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.hotstyle <- function() {
-  message("Consider donating to the Open Street Map project at ",
-          "http://donate.openstreetmap.org/")
-}
+  loviniahike = source_from_url_format(
+    url_format = 'http://tile.waymarkedtrails.org/hiking/${z}/${x}/${y}.png',
+    attribution = "Visit the Lovinia hike map at http://osm.lonvia.de/hiking.html"
+  ),
 
-tile.url.lovinahike <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://tile.waymarkedtrails.org/hiking",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.loviniahike <- function() {
-  message("Visit the Lovinia hike map at http://osm.lonvia.de/hiking.html")
-}
+  loviniacycle = source_from_url_format(
+    url_format = 'http://tile.waymarkedtrails.org/cycling/${z}/${x}/${y}.png',
+    attribution = "Visit the Lovinia cycle map at http://cycling.waymarkedtrails.org/"
+  ),
 
-tile.url.lovinacycle <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://tile.waymarkedtrails.org/cycling",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.loviniacycle <- function() {
-  message("Visit the Lovinia cycle map at http://cycling.waymarkedtrails.org/")
-}
+  hikebike = source_from_url_format(
+    url_format = paste0("http://", c("a", "b", "c"), ".tiles.wmflabs.org/hikebike/${z}/${x}/${y}.png"),
+    attribution = "Visit the online map at http://hikebikemap.de/"
+  ),
 
-tile.url.hikebike <- function(xtile, ytile, zoom) {
-  servers <- paste0("http://", c("a", "b", "c"), ".tiles.wmflabs.org/hikebike")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.hikebike <- function() {
-  message("Visit the online map at http://hikebikemap.de/")
-}
+  hillshade = source_from_url_format(
+    url_format = 'http://c.tiles.wmflabs.org/hillshading/${z}/${x}/${y}.png',
+    attribution = paste("This project appears to be part of the",
+                        "WikiTech site https://wikitech.wikimedia.org/wiki/Main_Page"),
+    max_zoom = 14
+  ),
 
-tile.maxzoom.hillshade <- function() {return(14)}
-tile.url.hillshade <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://c.tiles.wmflabs.org/hillshading",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.hillshade <- function() {
-  message("This project appears to be part of the ",
-          "WikiTech site https://wikitech.wikimedia.org/wiki/Main_Page")
-}
+  osmgrayscale = source_from_url_format(
+    url_format = 'https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png',
+    attribution = paste("Consider donating to the Open Street Map project",
+                        "at http://donate.openstreetmap.org/")
+  ),
 
-tile.url.osmgrayscale <- function(xtile, ytile, zoom) {
-  # a b and c cause SSL certificate errors
-  servers <- c("https://tiles.wmflabs.org/bw-mapnik")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.osmgrayscale <- function() {
-  message("Consider donating to the Open Street Map project at ",
-          "http://donate.openstreetmap.org/")
-}
+  stamenbw = source_from_url_format(
+    url_format = 'http://a.tile.stamen.com/toner/${z}/${x}/${y}.png',
+    attribution = "Visit the Stamen cartography website at http://maps.stamen.com/"
+  ),
 
-tile.url.stamenbw <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://a.tile.stamen.com/toner",
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.stamenbw <- function() {
-  message("Visit the Stamen cartography website at http://maps.stamen.com/")
-}
+  stamenwatercolor = source_from_url_format(
+    url_format = 'http://a.tile.stamen.com/watercolor/${z}/${x}/${y}.jpg',
+    attribution = "Visit the Stamen cartography website at http://maps.stamen.com/"
+  ),
 
+  osmtransport = source_from_url_format(
+    url_format = c('http://a.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png',
+                   'http://b.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png'),
+    attribution = paste("Consider donating to the Open Street Map project",
+                        "at http://donate.openstreetmap.org/")
+  ),
 
-tile.url.stamenwatercolor <- function(xtile, ytile, zoom) {
-  return(paste(paste("http://a.tile.stamen.com/watercolor",
-                     zoom, xtile, ytile, sep="/"),".jpg", sep=""))
-}
-tile.attribute.stamenwatercolor <- function() {
-  message("Visit the Stamen cartography website at http://maps.stamen.com/")
-}
+  thunderforestlandscape = source_from_url_format(
+    url_format = c('http://a.tile.thunderforest.com/landscape/${z}/${x}/${y}.png',
+                   'http://b.tile.thunderforest.com/landscape/${z}/${x}/${y}.png',
+                   'http://c.tile.thunderforest.com/landscape/${z}/${x}/${y}.png'),
+    attribution = "More on Thunderforest at http://www.thunderforest.com/"
+  ),
 
-tile.url.osmtransport <- function(xtile, ytile, zoom) {
-  servers <- c("http://a.tile2.opencyclemap.org/transport",
-               "http://b.tile2.opencyclemap.org/transport")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.osmtransport <- function() {
-  message("Consider donating to the Open Street Map project at ",
-          "http://donate.openstreetmap.org/")
-}
-
-
-tile.url.thunderforestlandscape <- function(xtile, ytile, zoom) {
-  servers <- c("http://a.tile.thunderforest.com/landscape",
-               "http://b.tile.thunderforest.com/landscape",
-               "http://c.tile.thunderforest.com/landscape")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.thunderforestlandscape <- function() {
-  message("More on Thunderforest at http://www.thunderforest.com/")
-}
-
-tile.url.thunderforestoutdoors <- function(xtile, ytile, zoom) {
-  servers <- c("http://a.tile.thunderforest.com/outdoors",
-               "http://b.tile.thunderforest.com/outdoors",
-               "http://c.tile.thunderforest.com/outdoors")
-  return(paste(paste(sample(servers, 1),
-                     zoom, xtile, ytile, sep="/"),".png", sep=""))
-}
-tile.attribute.thunderforestoutdoors <- function() {
-  message("More on Thunderforest at http://www.thunderforest.com/")
-}
-
+  thunderforestoutdoors = source_from_url_format(
+    url_format = c('http://a.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png',
+                   'http://b.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png',
+                   'http://c.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png'),
+    attribution = "More on Thunderforest at http://www.thunderforest.com/"
+  )
+)

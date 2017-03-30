@@ -4,7 +4,7 @@
 \alias{osm.plot}
 \title{Plot Open Street Map Tiles}
 \usage{
-osm.plot(bbox, zoomin = 0, zoom = NULL, type = "osm",
+osm.plot(bbox, zoomin = 0, zoom = NULL, type = NULL,
   forcedownload = FALSE, stoponlargerequest = TRUE, fusetiles = TRUE,
   cachedir = NULL, res = 150, project = TRUE, progress = c("text",
   "none"), quiet = TRUE, ...)

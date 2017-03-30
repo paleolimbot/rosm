@@ -1,6 +1,22 @@
 
-#modified from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#R
+# modified from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#R
 
+bmaps.quadkey <- function(tilex, tiley, zoom) {
+  nzoom <- 2^zoom
+  if(tilex < 0 || tilex >= nzoom) stop("xtile out of range: ", tilex)
+  if(tiley < 0 || tiley >= nzoom) stop("ytile out of range: ", tilex)
+  out <- ""
+  keymap <- matrix(0:3, byrow=TRUE, ncol=2)
+  decx <- tilex/nzoom
+  decy <- tiley/nzoom
+  for(i in 1:zoom) {
+    n <- 2^i
+    x <- floor(decx*2^i) - floor(decx*2^(i-1))*2
+    y <- floor(decy*2^i) - floor(decy*2^(i-1))*2
+    out <- paste0(out, keymap[y+1,x+1])
+  }
+  out
+}
 
 tiles.bybbox <- function(bbox, zoom, epsg=4326) {
   nwlatlon <- .tolatlon(bbox[1,1], bbox[2,2], epsg)
@@ -67,7 +83,12 @@ tile.bbox <- function(xtile, ytile, zoom, epsg=4326) {
 }
 
 tile.url <- function(xtile, ytile, zoom, type) {
-  do.call(paste0("tile.url.", type), list(xtile, ytile, zoom))
+  fun <- type$get_tile_url
+  if("quadkey" %in% names(formals(fun))) {
+    fun(xtile, ytile, zoom, quadkey = bmaps.quadkey(xtile, ytile, zoom))
+  } else {
+    fun(xtile, ytile, zoom)
+  }
 }
 
 tile.ext <- function(type) {
@@ -77,17 +98,20 @@ tile.ext <- function(type) {
 }
 
 tile.maxzoom <- function(type) {
-  if(methods::existsFunction(paste0("tile.maxzoom.", type))) {
-    do.call(paste0("tile.maxzoom.", type), list())
-  } else {
-    return(19)
-  }
+  type$get_max_zoom()
+}
+
+tile.maxzoom.default <- function() {
+  return(19)
+}
+
+tile.minzoom.default <- function() {
+  return(0)
 }
 
 tile.attribute <- function(type) {
-  if(methods::existsFunction(paste0("tile.attribute.", type))) {
-    do.call(paste0("tile.attribute.", type), list())
-  }
+  attribution <- type$get_attribution()
+  if(!is.null(attribution)) message(attribution)
 }
 
 tile.cachename <- function(xtile, ytile, zoom, type, cachedir=NULL) {

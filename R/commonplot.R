@@ -4,7 +4,8 @@ tile.cachedir <- function(type, cachedir=NULL) {
   if(is.null(cachedir)) {
     cachedir <- "rosm.cache"
   }
-  folder <- file.path(cachedir, type)
+  safename <- gsub("[^a-zA-z0-9]", "", type$name)
+  folder <- file.path(cachedir, safename)
   created <- dir.create(folder, showWarnings=FALSE, recursive=TRUE)
   folder
 }

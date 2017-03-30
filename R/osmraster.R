@@ -145,6 +145,10 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
 
   # extract bounding box
   lookup.bbox <- extract_bbox(x)
+  # if input was a character, make sure lookup only happens once
+  if(is.character(x)) {
+    x <- lookup.bbox
+  }
 
   # fill in destination projection if not specified
   if(is.null(projection)) {

@@ -240,6 +240,9 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
   # validate progress arg
   progress <- match.arg(progress)
 
+  # get lookup information from input
+  bbox <- extract_bbox(bbox)
+
   # verify tile source
   if(is.null(type)) {
     type <- get_default_tile_source()

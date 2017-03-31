@@ -16,7 +16,7 @@ bmaps.restquery <- function(bingtype, key=NULL) {
     }
     urlstring <- paste0("http://dev.virtualearth.net/REST/v1/Imagery/Metadata/", bingtype, "?key=", key)
 
-    connect <- url(urlstring)
+    connect <- curl::curl(urlstring)
     lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
     close(connect)
 
@@ -102,8 +102,8 @@ bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL, scale =
   #http://dev.virtualearth.net/Branding/logo_powered_by.png
   bingfile <- file.path(tile.cachedir(list(name="bing")), "bing.png")
   if(!file.exists(bingfile)) {
-    utils::download.file("http://dev.virtualearth.net/Branding/logo_powered_by.png",
-                  bingfile, quiet=TRUE)
+    curl::curl_download("http://dev.virtualearth.net/Branding/logo_powered_by.png",
+                  bingfile, quiet=TRUE, mode = "wb")
   }
   binglogo <- png::readPNG(bingfile)
   ext <- graphics::par("usr")

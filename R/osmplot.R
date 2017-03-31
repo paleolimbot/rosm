@@ -287,7 +287,7 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
                                                   "Run with stoponlargerequest=FALSE or ",
                                                   "zoomin=-1, to continue")
   tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir,
-                progress=progress)
+                progress=progress, quiet = quiet)
 
   if(fusetiles) {
     tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, quiet = quiet)

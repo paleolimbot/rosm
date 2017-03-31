@@ -143,17 +143,23 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
       # pause to avoid overwhelming servers
       if(pause > 0) Sys.sleep(pause)
 
-      # try to download file (probably a better way to do this than download.file())
-      result <- try(suppressWarnings(utils::download.file(url, cachename, quiet = TRUE, mode="wb")),
-                    silent = TRUE)
+      if(!quiet) message("trying URL: ", url)
+
+      # try to download file
+      result <- try(curl::curl_download(url, cachename, quiet = quiet, mode = "wb"), silent = quiet)
 
       # display errors only in progress mode
       if(!quiet && (class(result) == "try-error")) {
         message(sprintf("Failed to download tile %s:(%s, %s) for type %s / %s",
-                        zoom, xtile, ytile, type, result))
+                        zoom, xtile, ytile, type$name, result))
       } else if(!quiet && !file.exists(cachename)) {
         message(sprintf("Failed to download tile %s:(%s, %s) for type %s",
-                        zoom, xtile, ytile, type))
+                        zoom, xtile, ytile, type$name))
+      }
+
+      # delete files for try-errors
+      if(class(result) == "try-error") {
+        try(unlink(cachename), silent = TRUE)
       }
 
     }, epsg=NULL, cachedir=cachedir, progress=progress)

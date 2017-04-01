@@ -102,7 +102,7 @@ test_that("custom map types load tiles", {
 test_that("wrap around situations warn the user", {
   americas <- zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0))
   # note this doesn't work with project = FALSE
-  expect_warning(osm.plot(americas), "Attempting to plot wrap around tiles")
+  expect_warning(osm.plot(americas, zoomin=1), "Attempting to plot wrap around tiles")
   alaska <- makebbox(71, -129, 51, 172)
   expect_warning(osm.plot(alaska), "Attempting to plot wrap around tiles")
   expect_warning(osm.plot(alaska, project = FALSE),

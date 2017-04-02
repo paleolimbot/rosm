@@ -1,0 +1,8 @@
+title: ROSM
+description: Plot Open Street Map and Other Tiles in R
+google_analytics: UA-73397650-1
+show_downloads: true
+theme: jekyll-theme-minimal
+
+gems:
+  - jekyll-mentions

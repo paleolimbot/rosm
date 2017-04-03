@@ -37,7 +37,7 @@ tiles.bybbox <- function(bbox, zoom, epsg=4326) {
 
   nw <- tile.xy(nwlatlon[1], nwlatlon[2], zoom)
   se <- tile.xy(selatlon[1], selatlon[2], zoom)
-  tiles <- expand.grid(nw[1]:se[1], nw[2]:se[2])
+  tiles <- expand.grid(x = nw[1]:se[1], y = nw[2]:se[2])
 
   if(is.null(backsidetiles)) {
     tiles
@@ -137,7 +137,7 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
       pb <- utils::txtProgressBar(min=0, max=nrow(tiles), width = 20, file = stderr())
     }
 
-    tile.apply(tiles, zoom, type, fun=function(xtile, ytile, zoom, type, epsg, cachedir) {
+    tile.apply(tiles, fun=function(xtile, ytile) {
       cachename <- tile.cachename(xtile, ytile, zoom, type, cachedir)
       url <- tile.url(xtile, ytile, zoom, type)
       # pause to avoid overwhelming servers
@@ -146,7 +146,8 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
       if(!quiet) message("trying URL: ", url)
 
       # try to download file
-      result <- try(curl::curl_download(url, cachename, quiet = quiet, mode = "wb"), silent = quiet)
+      result <- try(curl::curl_download(url, cachename, quiet = quiet, mode = "wb"),
+                    silent = quiet)
 
       # display errors only in progress mode
       if(!quiet && (class(result) == "try-error")) {
@@ -162,7 +163,7 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
         try(unlink(cachename), silent = TRUE)
       }
 
-    }, epsg=NULL, cachedir=cachedir, progress=progress)
+    }, progress=progress)
 
     if(progress != "none") message("...complete!")
   }

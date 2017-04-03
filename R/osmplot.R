@@ -36,30 +36,27 @@ tile.applywrap <- function(tiles, zoom) {
   tiles
 }
 
-# loops through the tiles applies a function (returning a list)
-tile.apply <- function(tiles, zoom, type, fun, epsg=4326, cachedir=NULL, ...,
-                       progress = "none") {
-  plyr::alply(tiles, 1, function(tile) {
-    x <- tile[[1]]
-    y <- tile[[2]]
-    fun(x, y, zoom=zoom, type=type, epsg=epsg, cachedir=cachedir, ...)
-  }, .progress = progress)
+# loops through the tiles and applies a function (returning a list)
+tile.apply <- function(tiles, fun, ..., progress = "none") {
+  plyr::alply(tiles, 1, function(tile, ...) {
+    fun(tile[[1]], tile[[2]], ...)
+  }, ..., .progress = progress)
 }
 
 # loops through the tiles and plots or combines the results to a list
 tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
-  tile.apply(tiles, zoom, type, function(x, y, zoom, type, epsg, cachedir) {
+  tile.apply(tiles, function(x, y) {
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
 
     # if in plotting mode, plot the array
     if(!is.null(image)) tile.plotarray(image, box)
 
-  }, epsg=epsg, cachedir=cachedir)
+  })
 }
 
 tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
-  tile.apply(tiles, zoom, type, function(x, y, zoom, type, epsg, cachedir) {
+  tile.apply(tiles, function(x, y) {
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
 
@@ -84,7 +81,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
 
   tiles <- tile.applywrap(tiles, zoom)
 
-  tile_dims <- check.dimensions(tiles, zoom, type, epsg, cachedir)
+  tile_dims <- check.dimensions(tiles, zoom, type, cachedir)
 
   if(tile_dims$nmissing > 0) {
     message(tile_dims$nmissing, " could not be loaded for type ", type$name)
@@ -93,7 +90,7 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
     missing_tile <- NULL
   }
 
-  tiles <- tiles[order(tiles$Var1, tiles$Var2),]
+  tiles <- tiles[order(tiles[[1]], tiles[[2]]), , drop = FALSE]
   xs <- unique(tiles[,1])
   ys <- unique(tiles[,2])
 
@@ -144,16 +141,16 @@ ensure.bands <- function(image, dimension, default_value=1) {
 
 
 # checks the dimensions of all the tiles (used in tile.fuse)
-check.dimensions <- function(tiles, zoom, type, epsg, cachedir) {
+check.dimensions <- function(tiles, zoom, type, cachedir) {
   # check dimensions of all tiles before fusing
-  dims <- tile.apply(tiles, zoom, type, fun=function(x, y, zoom, type, epsg, cachedir) {
+  dims <- tile.apply(tiles, fun=function(x, y) {
     image <- tile.loadimage(x, y, zoom, type, cachedir)
     if(!is.null(image)) {
       dim(image)
     } else {
       c(0, 0, 0)
     }
-  }, cachedir = cachedir)
+  })
 
   # check for 3 dimensions
   if(!all(vapply(dims, length, integer(1)) == 3)) stop("Incorrect dimensions in image")

@@ -153,7 +153,7 @@ check.dimensions <- function(tiles, zoom, type, epsg, cachedir) {
     } else {
       c(0, 0, 0)
     }
-  })
+  }, cachedir = cachedir)
 
   # check for 3 dimensions
   if(!all(vapply(dims, length, integer(1)) == 3)) stop("Incorrect dimensions in image")

@@ -176,6 +176,66 @@ test_that("osm rasters are written to disk", {
   unlink("test.tif")
 })
 
+test_that("non-default cache directories are respected", {
+  # see issue #3 and PR #4
+  # start with clean cache
+
+  default_cache <- "rosm.cache"
+  if(dir.exists(default_cache)) unlink(default_cache, recursive = TRUE)
+
+  # osm.plot with default cache
+  expect_false(dir.exists(default_cache))
+  osm.plot(nsbox)
+  expect_true(dir.exists(default_cache))
+  unlink(default_cache, recursive = TRUE)
+
+  # osm.plot with fusetiles = FALSE, default cache
+  expect_false(dir.exists(default_cache))
+  osm.plot(nsbox, fusetiles = FALSE)
+  expect_true(dir.exists(default_cache))
+  unlink(default_cache, recursive = TRUE)
+
+  # osm.image with default cache
+  expect_false(dir.exists(default_cache))
+  osm.image(nsbox)
+  expect_true(dir.exists(default_cache))
+  unlink(default_cache, recursive = TRUE)
+
+  # osm.plot with tempdir cache
+  newcache <- tempfile()[1]
+  expect_false(dir.exists(newcache))
+  osm.plot(nsbox, cachedir = newcache)
+  # expect no default cache
+  expect_false(dir.exists(default_cache))
+  # expect temporary cache
+  expect_true(dir.exists(newcache))
+  # remove tempfile cache
+  unlink(newcache, recursive = TRUE)
+
+  # osm.plot(..fusetiles = FALSE) with tempdir cache
+  newcache <- tempfile()[1]
+  expect_false(dir.exists(newcache))
+  osm.plot(nsbox, cachedir = newcache, fusetiles = FALSE)
+  # expect no default cache
+  expect_false(dir.exists(default_cache))
+  # expect temporary cache
+  expect_true(dir.exists(newcache))
+  # remove tempfile cache
+  unlink(newcache, recursive = TRUE)
+
+  # osm.image with tempdir cache
+  newcache <- tempfile()[1]
+  expect_false(dir.exists(newcache))
+  osm.image(nsbox, cachedir = newcache)
+  # expect no default cache
+  expect_false(dir.exists(default_cache))
+  # expect temporary cache
+  expect_true(dir.exists(newcache))
+  # remove tempfile cache
+  unlink(newcache, recursive = TRUE)
+
+})
+
 
 # some wrap around situations currently don't work
 # test_that("harder wrap around situations do not fail", {

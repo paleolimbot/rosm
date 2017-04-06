@@ -1,8 +1,8 @@
 Package: rosm
 Type: Package
 Title: Plot Raster Map Tiles from Open Street Map and Other Sources
-Version: 0.2.2.9000
-Date: 2017-03-30
+Version: 0.2.2
+Date: 2017-04-6
 Encoding: UTF-8
 Authors@R: c(person("Dewey", "Dunnington", role = c("aut", "cre"),
 				email = "dewey@fishandwhistle.net"),

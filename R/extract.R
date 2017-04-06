@@ -50,7 +50,7 @@ extract_bbox <- function(x, tolatlon=TRUE, ...) {
     box
   } else if(is.character(x)) {
     # lookup using prettymapr::searchbbox()
-    prettymapr::searchbbox(x, messaging = FALSE, ...)
+    prettymapr::searchbbox(x, quiet = TRUE, ...)
   } else if(is.bbox(x)) {
     x
   } else {

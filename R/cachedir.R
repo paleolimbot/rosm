@@ -35,6 +35,8 @@ set_default_cachedir <- function(cachedir) {
 }
 
 
+#' @rdname set_default_cachedir
+#' @export
 get_default_cachedir <- function() {
   rosm_state$default_cachedir
 }

@@ -2,7 +2,7 @@
 
 tile.cachedir <- function(type, cachedir=NULL) {
   if(is.null(cachedir)) {
-    cachedir <- "rosm.cache"
+    cachedir <- get_default_cachedir()
   }
   safename <- gsub("[^a-zA-z0-9]", "", type$name)
   folder <- file.path(cachedir, safename)

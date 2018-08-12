@@ -7,12 +7,14 @@
 extract_bbox(x, tolatlon = TRUE, ...)
 }
 \arguments{
-\item{x}{A \code{Spatial*} object, a \code{Raster*} object, a bounding box,
+\item{x}{A \code{Spatial*} object, a \code{Raster*} object, an sp bounding box,
+an sf bounding box,
 or a character string that will be passed to \code{searchbbox()} (prettymapr package). Multiple
 strings will result in a bounding box that contains all of the geocoded
 bounding boxes. The last resort is calling \code{sp::bbox()} on the \code{x}.}
 
-\item{tolatlon}{Should the bounding box be un-projected to lat/lon coordinates?}
+\item{tolatlon}{Should the bounding box be un-projected to lat/lon coordinates?
+Only applied to Spatial and Raster objects.}
 
 \item{...}{Passed to \code{searchbbox()} if applicable}
 }
@@ -37,4 +39,3 @@ ns <- extract_bbox("nova scotia")
 }
 
 }
-

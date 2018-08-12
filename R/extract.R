@@ -10,11 +10,13 @@
 #' character input (a place name that will be geocoded), and other Spatial*/Raster*
 #' objects.
 #'
-#' @param x A \code{Spatial*} object, a \code{Raster*} object, a bounding box,
+#' @param x A \code{Spatial*} object, a \code{Raster*} object, an sp bounding box,
+#'   an sf bounding box,
 #'   or a character string that will be passed to \code{searchbbox()} (prettymapr package). Multiple
 #'   strings will result in a bounding box that contains all of the geocoded
 #'   bounding boxes. The last resort is calling \code{sp::bbox()} on the \code{x}.
 #' @param tolatlon Should the bounding box be un-projected to lat/lon coordinates?
+#'   Only applied to Spatial and Raster objects.
 #' @param ... Passed to \code{searchbbox()} if applicable
 #'
 #' @return A bounding box in the form of \code{sp::bbox()}
@@ -48,6 +50,8 @@ extract_bbox <- function(x, tolatlon=TRUE, ...) {
       box <- sp::bbox(.tolatlon(coords[, 1], coords[, 2], projection = x@crs))
     }
     box
+  } else if(methods::is(x, "bbox")) {
+    prettymapr::makebbox(x[4], x[3], x[2], x[1])
   } else if(is.character(x)) {
     # lookup using prettymapr::searchbbox()
     prettymapr::searchbbox(x, quiet = TRUE, ...)

@@ -329,6 +329,17 @@ test_that("default cache directory is respected", {
   expect_equal(default_cache, "rosm.cache")
 })
 
+test_that("extract bbox", {
+
+  sf_bbox <- setNames(c(-89.60465, 43.03507, -89.20378, 43.36607),
+                      c("xmin", "ymin", "xmax", "ymax"))
+  class(sf_bbox) <- "bbox"
+
+  sp_bbox <- matrix(sf_bbox, ncol = 2,
+                    dimnames=list(c("x", "y"), c("min", "max")))
+  expect_equal(sp_bbox, extract_bbox(sf_bbox))
+
+})
 # some wrap around situations currently don't work
 # test_that("harder wrap around situations do not fail", {
 #   americas <- zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0))

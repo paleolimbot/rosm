@@ -62,4 +62,3 @@ source_from_url_format("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.p
 is.tile_source(as.tile_source("osm"))
 
 }
-

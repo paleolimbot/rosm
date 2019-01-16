@@ -67,4 +67,3 @@ osm.plot(ns, type="stamenbw")
 prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
 }
 }
-

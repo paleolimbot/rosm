@@ -16,4 +16,3 @@ List types of Bing Maps
 bmaps.types()
 
 }
-

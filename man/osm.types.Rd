@@ -16,4 +16,3 @@ Get List of Valid Tile Sources
 osm.types()
 
 }
-

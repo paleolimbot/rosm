@@ -28,4 +28,3 @@ bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type="Road")
 }
 
 }
-

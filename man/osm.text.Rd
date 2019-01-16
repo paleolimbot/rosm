@@ -4,8 +4,8 @@
 \alias{osm.text}
 \title{Overlay text on an OSM plot}
 \usage{
-osm.text(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3857,
-  ...)
+osm.text(x, y = NULL, labels = seq_along(x), epsg = 4326,
+  toepsg = 3857, ...)
 }
 \arguments{
 \item{x}{X coordinate vector or object as parsed by \code{xy.coords}}
@@ -24,4 +24,3 @@ written.}
 \description{
 Plot text on a plot created by \link{osm.plot}.
 }
-

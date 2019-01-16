@@ -19,44 +19,18 @@ the '\href{https://cran.r-project.org/package=raster}{raster}' package.)
 \examples{
 
 \donttest{
- library(rcanvec)
  library(prettymapr)
- library(sp)
 
  # basic ploting
- nsbox <- searchbbox("nova scotia", source="google")
+ nsbox <- searchbbox("nova scotia")
  osm.plot(nsbox)
  osm.plot(nsbox, type="stamenbw")
  bmaps.plot(nsbox)
  bmaps.plot(nsbox, type="Road")
 
- # use {prettymapr} to add scalebar and north arrow
+ # use prettymapr to add scalebar and north arrow
  prettymap(osm.plot(nsbox))
  prettymap(bmaps.plot(nsbox, type="Road"))
-
- # increase res argument to plot to file
- pdf(height=8, width=10.5)
- prettymap(osm.plot(nsbox, type="stamenbw", res=300, stoponlargerequest=FALSE),
-           scale.label.col="white", arrow.text.col = "white",
-           scale.linecol = "white", arrow.border = "white")
- dev.off()
-
- # use osm.raster() to export a RasterStack of tiles
- library(raster)
- x <- osm.raster(nsbox)
- x <- osm.raster(nsbox, projection=CRS("+init=epsg:26920")) #reproject to UTM 20
- plotRGB(x) #plot reprojected image
- # write to disk by passing a filename= argument
- osm.raster(nsbox, projection=CRS("+init=epsg:26920"), filename="ns2.tif")
-
-
- # canvec.qplot and hillshade using the add=TRUE argument
- prettymap({
-   altabox <- prettymapr::searchbbox("Alta Lake BC", source="google")
-   canvec.qplot(bbox=altabox,
-                layers=c("waterbody", "forest", "river", "road"))
-   osm.plot(altabox, type="hillshade", add=T, project = FALSE)
- })
 
  # define custom tile types in several ways
 
@@ -75,11 +49,10 @@ the '\href{https://cran.r-project.org/package=raster}{raster}' package.)
  }
 
 }
-\author{
-Dewey Dunnington <dewey@fishandwhistle.net>
-}
 \references{
 \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
 \href{https://www.microsoft.com/maps/choose-your-bing-maps-API.aspx}{Bing Maps API documentation}
 }
-
+\author{
+Dewey Dunnington <dewey@fishandwhistle.net>
+}

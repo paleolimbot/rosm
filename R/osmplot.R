@@ -94,10 +94,10 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
   xs <- unique(tiles[,1])
   ys <- unique(tiles[,2])
 
-  # bind all the tiles together. foreach was slightly faster
-  # but this is far simpler, and doesn't invoke another dependency
-  wholeimg <- do.call(tile.acbind, lapply(xs, function(x) {
-    do.call(tile.arbind, lapply(ys, function(y) {
+  # bind all the tiles together. plyr::llply properly checks for
+  # interrupt (should migrate this to purrr::map() in the future)
+  wholeimg <- do.call(tile.acbind, plyr::llply(xs, function(x) {
+    do.call(tile.arbind, plyr::llply(ys, function(y) {
       img <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
       if(is.null(img) && is.null(missing_tile)) {
         stop("Cannot fuse unloadable tile")

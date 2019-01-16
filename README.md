@@ -1,6 +1,7 @@
 ROSM: Open Street Map tiles in R
 ================
 
+<!-- README.md is generated from README.Rmd. Please edit that file -->
 [![](http://cranlogs.r-pkg.org/badges/rosm)](https://cran.r-project.org/package=rosm) [![Travis build status](https://travis-ci.org/paleolimbot/rosm.svg?branch=master)](https://travis-ci.org/paleolimbot/rosm) [![Coverage status](https://codecov.io/gh/paleolimbot/rosm/branch/master/graph/badge.svg)](https://codecov.io/github/paleolimbot/rosm?branch=master)
 
 Download and plot [Open Street Map](http://www.openstreetmap.org/), [Bing Maps](http://www.bing.com/maps), and other tiled map sources. Use to create high-resolution basemaps and add hillshade to vector based maps. Note that rosm uses base plotting and not ggplot2: for mapping in ggplot2, use [ggspatial](https://github.com/paleolimbot/ggspatial)::annotation\_map\_tile().
@@ -29,7 +30,7 @@ prettymap({
 }, scale.label.col = "white")
 ```
 
-![](README_files/figure-markdown_github/example-1.png)
+<img src="man/figures/README-example-1.png" width="100%" />
 
 The Future?
 -----------

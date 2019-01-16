@@ -3,7 +3,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^rosm\.cache$
-^README_files$
 ^README\.Rmd$
 ^data-raw$
 ^rcanvec\.cache$

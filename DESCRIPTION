@@ -28,7 +28,8 @@ Suggests:
     cartography,
     raster,
     testthat,
-    covr
+    covr,
+    withr
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
 RoxygenNote: 6.1.1

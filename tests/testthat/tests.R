@@ -1,32 +1,33 @@
 
 # tests
-library(prettymapr)
-library(rosm)
-library(testthat)
 
 context("ROSM tests")
 
-nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
+nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
 
+skip_on_cran()
 test_that("all tile sources load", {
   # test contributed by rCarto (cartography package)
 
-  tiles <- data.frame(types = osm.types(), status = NA,
-                      stringsAsFactors = FALSE)
+  tiles <- data.frame(types = osm.types(), status = NA, stringsAsFactors = FALSE)
 
-  for(i in 1:nrow(tiles)) {
-    status <- tryCatch(
-      {
-        osm.plot(nsbox, type = tiles[i,1])
-        status <- "OK"
-      },
-      error=function(cond) {
-        message(cond, '\n')
-        status <- "error"
-      }
-    )
-    tiles[i,"status"] <- status
-  }
+  # helpful to run this on travis builds, since they are not often
+  skip_on_cran()
+  expect_message({
+    for(i in 1:nrow(tiles)) {
+      status <- tryCatch(
+        {
+          osm.plot(nsbox, type = tiles[i,1], xlab = tiles[i,1])
+          status <- "OK"
+        },
+        error=function(cond) {
+          message(cond, '\n')
+          status <- "error"
+        }
+      )
+      tiles[i,"status"] <- status
+    }
+  })
 
   expect_true(all(tiles$status == "OK"))
 })
@@ -37,19 +38,21 @@ test_that("all bing tile sources load", {
   tiles <- data.frame(types = bmaps.types(), status = NA,
                       stringsAsFactors = FALSE)
 
-  for(i in 1:nrow(tiles)) {
-    status <- tryCatch(
-      {
-        bmaps.plot(nsbox, type = tiles[i,1])
-        status <- "OK"
-      },
-      error=function(cond) {
-        message(cond, '\n')
-        status <- "error"
-      }
-    )
-    tiles[i,"status"] <- status
-  }
+  expect_message({
+    for(i in 1:nrow(tiles)) {
+      status <- tryCatch(
+        {
+          bmaps.plot(nsbox, type = tiles[i,1])
+          status <- "OK"
+        },
+        error=function(cond) {
+          message(cond, '\n')
+          status <- "error"
+        }
+      )
+      tiles[i,"status"] <- status
+    }
+  })
 
   expect_true(all(tiles$status == "OK"))
 })
@@ -64,6 +67,7 @@ test_that("custom map types load tiles", {
 
   assign("tile.url.darkmatter", tile.url.darkmatter, .GlobalEnv)
 
+  skip_on_cran()
   expect_message(osm.plot(nsbox, type="darkmatter"),
                  "Using functions as custom tile sources is deprecated. Use string formats instead.")
 
@@ -76,20 +80,20 @@ test_that("custom map types load tiles", {
   expect_equal(ts$get_tile_url(2, 1, 3),
                "http://a.basemaps.cartocdn.com/dark_all/3/2/1.png")
 
-  osm.plot(nsbox, type=ts)
+  expect_message(osm.plot(nsbox, type=ts))
 
   # test registration
   register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
   expect_true("dark" %in% names(rosm:::registered_sources))
   expect_is(rosm:::registered_sources$dark, "tile_source")
 
-  osm.plot(nsbox, type="dark")
+  expect_message(osm.plot(nsbox, type="dark"))
 
   # test setting of default
   set_default_tile_source("stamenbw")
   expect_equal(get_default_tile_source()$name, "stamenbw")
   # plot
-  osm.plot(nsbox)
+  expect_message(osm.plot(nsbox))
   # reset tile source
   set_default_tile_source("osm")
 })
@@ -100,17 +104,19 @@ test_that("custom map types load tiles", {
 # prettymap(osm.plot(makebbox(89.9, 179.9, -89.9, -179.9)))
 
 test_that("wrap around situations warn the user", {
-  americas <- zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0))
+  americas <- prettymapr::zoombbox(prettymapr::makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0))
   # note this doesn't work with project = FALSE
+  skip_on_cran()
   expect_warning(osm.plot(americas, zoomin=1), "Attempting to plot wrap around tiles")
-  alaska <- makebbox(71, -129, 51, 172)
+  alaska <- prettymapr::makebbox(71, -129, 51, 172)
   expect_warning(osm.plot(alaska), "Attempting to plot wrap around tiles")
   expect_warning(osm.plot(alaska, project = FALSE),
                  "Attempting to plot wrap around tiles")
 })
 
 test_that("osm.image returns an image with the required attrs", {
-  img <- osm.image(nsbox)
+  skip_on_cran()
+  img <- expect_message(osm.image(nsbox))
   expect_is(img, "array")
   expect_length(dim(img), 3)
   expect_true(dim(img)[3] %in% c(3, 4))
@@ -129,118 +135,62 @@ library(cartography)
 
 test_that("osm.raster creates raster objects with the correct projection", {
 
-  for(country in c("PL", "PT")) {
-    message("Testing country ", country)
-    spdf <- nuts0.spdf[nuts0.spdf$id==country,]
-    x <- osm.raster(spdf, type="osm")
+  withr::with_package("cartography", {
+    skip_on_cran()
+    for(country in c("PL", "PT")) {
+      message("Testing country ", country)
+      spdf <- nuts0.spdf[nuts0.spdf$id==country,]
+      x <- expect_message(osm.raster(spdf, type="osm"))
 
+      expect_is(x, "Raster")
+      expect_true(spdf@proj4string@projargs == x@crs@projargs)
+
+      # expect_null(raster::plotRGB(x))
+      expect_silent(sp::plot(spdf, add=T))
+    }
+
+    # make more rasters (projected)
+    x <- expect_message(osm.raster(nsbox, projection=sp::CRS("+init=epsg:26920"), crop=TRUE))
     expect_is(x, "Raster")
-    expect_true(spdf@proj4string@projargs == x@crs@projargs)
+    expect_equal(x@crs@projargs, sp::CRS("+init=epsg:26920")@projargs)
 
-    raster::plotRGB(x)
-    plot(spdf, add=T)
-  }
+    # expect_silent(raster::plotRGB(x))
 
-  # make more rasters (projected)
-  x <- osm.raster(nsbox, projection=sp::CRS("+init=epsg:26920"), crop=TRUE)
-  expect_is(x, "Raster")
-  expect_equal(x@crs@projargs, sp::CRS("+init=epsg:26920")@projargs)
+    # make non-projected raster
+    x <- expect_message(osm.raster(nsbox))
+    expect_is(x, "Raster")
+    expect_equal(x@crs@projargs, sp::CRS("+init=epsg:3857")@projargs)
 
-  raster::plotRGB(x)
+    # expect_null(raster::plotRGB(x))
 
-  # make non-projected raster
-  x <- osm.raster(nsbox)
-  expect_is(x, "Raster")
-  expect_equal(x@crs@projargs, sp::CRS("+init=epsg:3857")@projargs)
-
-  raster::plotRGB(x)
-
-  # make cropped raster, ensure bounds are different
-  x <- osm.raster(nsbox)
-  xcropped <- osm.raster(nsbox, crop = TRUE)
-  boundsx <- raster::as.matrix(x@extent)
-  boundscropped <- raster::as.matrix(xcropped@extent)
-
-  expect_false(all(boundsx == boundscropped))
+    # make cropped raster, ensure bounds are different
+    x <- expect_message(osm.raster(nsbox))
+    xcropped <- expect_message(osm.raster(nsbox, crop = TRUE))
+    expect_false({
+      boundsx <- raster::as.matrix(x@extent)
+      boundscropped <- raster::as.matrix(xcropped@extent)
+      all(boundsx == boundscropped)
+    })
+  })
 })
 
 test_that("osm rasters are written to disk", {
-  x <- osm.raster(nsbox, crop=TRUE)
-  osm.raster(x, filename="test.tif")
-  expect_true(file.exists("test.tif"))
-  unlink("test.tif")
+  skip_on_cran()
+  test_file <- tempfile(fileext = ".tif")
+  x <- expect_message(osm.raster(nsbox))
+  expect_silent(osm.raster(x, filename=test_file, overwrite=TRUE))
+  expect_true(file.exists(test_file))
+  unlink(test_file)
 
-  osm.raster(nsbox, projection=CRS("+init=epsg:26920"), crop=T,
-             filename="test.tif", overwrite=TRUE)
-  expect_true(file.exists("test.tif"))
-  unlink("test.tif")
-})
-
-test_that("non-default cache directories are respected", {
-  # see issue #3 and PR #4
-  # start with clean cache
-
-  default_cache <- get_default_cachedir()
-  # check that cache is where it says it is
-  expect_equal(default_cache, "rosm.cache")
-
-  if(dir.exists(default_cache)) unlink(default_cache, recursive = TRUE)
-
-  # osm.plot with default cache
-  expect_false(dir.exists(default_cache))
-  osm.plot(nsbox)
-  expect_true(dir.exists(default_cache))
-  unlink(default_cache, recursive = TRUE)
-
-  # osm.plot with fusetiles = FALSE, default cache
-  expect_false(dir.exists(default_cache))
-  osm.plot(nsbox, fusetiles = FALSE)
-  expect_true(dir.exists(default_cache))
-  unlink(default_cache, recursive = TRUE)
-
-  # osm.image with default cache
-  expect_false(dir.exists(default_cache))
-  osm.image(nsbox)
-  expect_true(dir.exists(default_cache))
-  unlink(default_cache, recursive = TRUE)
-
-  # osm.plot with tempdir cache
-  newcache <- tempfile()[1]
-  expect_false(dir.exists(newcache))
-  osm.plot(nsbox, cachedir = newcache)
-  # expect no default cache
-  expect_false(dir.exists(default_cache))
-  # expect temporary cache
-  expect_true(dir.exists(newcache))
-  # remove tempfile cache
-  unlink(newcache, recursive = TRUE)
-
-  # osm.plot(..fusetiles = FALSE) with tempdir cache
-  newcache <- tempfile()[1]
-  expect_false(dir.exists(newcache))
-  osm.plot(nsbox, cachedir = newcache, fusetiles = FALSE)
-  # expect no default cache
-  expect_false(dir.exists(default_cache))
-  # expect temporary cache
-  expect_true(dir.exists(newcache))
-  # remove tempfile cache
-  unlink(newcache, recursive = TRUE)
-
-  # osm.image with tempdir cache
-  newcache <- tempfile()[1]
-  expect_false(dir.exists(newcache))
-  osm.image(nsbox, cachedir = newcache)
-  # expect no default cache
-  expect_false(dir.exists(default_cache))
-  # expect temporary cache
-  expect_true(dir.exists(newcache))
-  # remove tempfile cache
-  unlink(newcache, recursive = TRUE)
-
+  expect_message(osm.raster(nsbox, projection=sp::CRS("+init=epsg:26920"), crop=T,
+             filename=test_file, overwrite=TRUE))
+  expect_true(file.exists(test_file))
+  unlink(test_file)
 })
 
 # add test for default cachedir
 test_that("non-default cache directories are respected", {
+  skip_on_cran()
   # see issue #3 and PR #4
   # start with clean cache
 
@@ -249,26 +199,26 @@ test_that("non-default cache directories are respected", {
 
   # osm.plot with default cache
   expect_false(dir.exists(default_cache))
-  osm.plot(nsbox)
+  expect_message(osm.plot(nsbox))
   expect_true(dir.exists(default_cache))
   unlink(default_cache, recursive = TRUE)
 
   # osm.plot with fusetiles = FALSE, default cache
   expect_false(dir.exists(default_cache))
-  osm.plot(nsbox, fusetiles = FALSE)
+  expect_message(osm.plot(nsbox, fusetiles = FALSE))
   expect_true(dir.exists(default_cache))
   unlink(default_cache, recursive = TRUE)
 
   # osm.image with default cache
   expect_false(dir.exists(default_cache))
-  osm.image(nsbox)
+  expect_message(osm.image(nsbox))
   expect_true(dir.exists(default_cache))
   unlink(default_cache, recursive = TRUE)
 
   # osm.plot with tempdir cache
   newcache <- tempfile()[1]
   expect_false(dir.exists(newcache))
-  osm.plot(nsbox, cachedir = newcache)
+  expect_message(osm.plot(nsbox, cachedir = newcache))
   # expect no default cache
   expect_false(dir.exists(default_cache))
   # expect temporary cache
@@ -279,7 +229,7 @@ test_that("non-default cache directories are respected", {
   # osm.plot(..fusetiles = FALSE) with tempdir cache
   newcache <- tempfile()[1]
   expect_false(dir.exists(newcache))
-  osm.plot(nsbox, cachedir = newcache, fusetiles = FALSE)
+  expect_message(osm.plot(nsbox, cachedir = newcache, fusetiles = FALSE))
   # expect no default cache
   expect_false(dir.exists(default_cache))
   # expect temporary cache
@@ -290,7 +240,7 @@ test_that("non-default cache directories are respected", {
   # osm.image with tempdir cache
   newcache <- tempfile()[1]
   expect_false(dir.exists(newcache))
-  osm.image(nsbox, cachedir = newcache)
+  expect_message(osm.image(nsbox, cachedir = newcache))
   # expect no default cache
   expect_false(dir.exists(default_cache))
   # expect temporary cache
@@ -301,6 +251,7 @@ test_that("non-default cache directories are respected", {
 })
 
 test_that("default cache directory is respected", {
+  skip_on_cran()
 
   default_cache <- get_default_cachedir()
   # check that default cache is the correct default
@@ -310,7 +261,7 @@ test_that("default cache directory is respected", {
 
   # osm.plot with default cache
   expect_false(dir.exists(default_cache))
-  osm.plot(nsbox)
+  expect_message(osm.plot(nsbox))
   expect_true(dir.exists(default_cache))
   unlink(default_cache, recursive = TRUE)
 
@@ -320,7 +271,7 @@ test_that("default cache directory is respected", {
   expect_identical(get_default_cachedir(), new_cache)
 
   expect_false(dir.exists(new_cache))
-  osm.plot(nsbox)
+  expect_message(osm.plot(nsbox))
   expect_true(dir.exists(new_cache))
   unlink(new_cache, recursive = TRUE)
 

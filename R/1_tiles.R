@@ -92,9 +92,7 @@ tile.url <- function(xtile, ytile, zoom, type) {
 }
 
 tile.ext <- function(type) {
-  parts <- strsplit(tile.url(0,0,0, type), "\\.")[[1]]
-  parts2 <- strsplit(parts[length(parts)], "\\?")[[1]]
-  parts2[1]
+  type$get_extension()
 }
 
 tile.maxzoom <- function(type) {

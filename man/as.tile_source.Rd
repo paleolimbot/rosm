@@ -11,7 +11,8 @@ as.tile_source(x, ...)
 is.tile_source(x)
 
 source_from_url_format(url_format, max_zoom = tile.maxzoom.default(),
-  min_zoom = 0, attribution = NULL, ...)
+  min_zoom = 0, attribution = NULL,
+  extension = tools::file_ext(url_format[1]), ...)
 }
 \arguments{
 \item{x}{An object (usually a name or string format) with which to create a tile source}
@@ -27,6 +28,9 @@ will be passed a quadkey.}
 \item{min_zoom}{An integer specifying the minimum zoom to use (default is 1)}
 
 \item{attribution}{An attribution string, required by some tile providers.}
+
+\item{extension}{An extension string, used to generate the cache file name and
+determine whether to use png or jpeg to read the cached file.}
 }
 \value{
 An object of class 'tile_source'

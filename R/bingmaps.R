@@ -45,6 +45,9 @@ bmaps.sourcefromrest <- function(rest, name) {
     get_max_zoom = function() rest$zoomMax,
     get_min_zoom = function() rest$zoomMin,
     get_attribution = function() NULL,
+    get_extension = function() {
+      tools::file_ext(gsub("\\?.*$", "", rest$imageUrl[1]))
+    },
     name = name
   )
 }

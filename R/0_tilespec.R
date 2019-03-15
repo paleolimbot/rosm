@@ -19,6 +19,8 @@
 #' @param max_zoom An integer specifying the maximum zoom to use (default is 19)
 #' @param min_zoom An integer specifying the minimum zoom to use (default is 1)
 #' @param attribution An attribution string, required by some tile providers.
+#' @param extension An extension string, used to generate the cache file name and
+#'   determine whether to use png or jpeg to read the cached file.
 #' @param ... Arguments passed to other methods
 #'
 #' @return An object of class 'tile_source'
@@ -81,7 +83,8 @@ is.tile_source <- function(x) {
 #' @rdname as.tile_source
 #' @export
 source_from_url_format <- function(url_format, max_zoom = tile.maxzoom.default(),
-                                   min_zoom = 0, attribution = NULL, ...) {
+                                   min_zoom = 0, attribution = NULL, extension = tools::file_ext(url_format[1]),
+                                   ...) {
   # url format like this: https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png
   # ${q} for quadkey
 
@@ -94,10 +97,14 @@ source_from_url_format <- function(url_format, max_zoom = tile.maxzoom.default()
     stop("url_format must contain ${q} xor ${z} and ${x} and ${y}")
   }
 
+  # check extension
+  extension <- match.arg(extension, c("png", "jpeg", "jpg"))
+
   # force args, since they will be used in closures
   force(max_zoom)
   force(attribution)
   extra_args <- list(...)
+  force(extension)
 
   create_tile_source(
     get_tile_url = function(xtile, ytile, zoom, quadkey = "") {
@@ -110,6 +117,7 @@ source_from_url_format <- function(url_format, max_zoom = tile.maxzoom.default()
     get_attribution = function() attribution,
     get_max_zoom = function() max_zoom,
     get_min_zoom = function() min_zoom,
+    get_extension = function() extension,
     name = url_format[1],
     url_formats = url_format,
     ...
@@ -137,12 +145,16 @@ source_from_global_functions <- function(type) {
     attribution <- function() NULL
   }
 
+  # extension should be from tile url
+  extension <- tools::file_ext(get_url(0, 0, 0)[1])
+
   # return tile source
   create_tile_source(
     get_tile_url = get_url,
     get_max_zoom = get_max_zoom,
     get_min_zoom = tile.minzoom.default,
     get_attribution = attribution,
+    get_extension = function() extension,
     name = type
   )
 }
@@ -219,14 +231,14 @@ osm.types <- function() {
 
 # base function to create specs
 create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
-                               get_attribution, ..., validate = TRUE) {
+                               get_attribution, get_extension, ..., validate = TRUE) {
   # here, get_tile_url, get_max_zoom, and get_attribution are all functions
   # that get passed xtile, ytile, zoom, and quadkey (if quadkey is in the formals)
   # this is for backwards compatiblity with older tile.url.TYPE functions
 
   # force functions
   force(get_tile_url); force(get_max_zoom); force(get_min_zoom)
-  force(get_attribution)
+  force(get_attribution); force(get_extension)
 
   if(validate) {
     # validate the functions
@@ -252,7 +264,14 @@ create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
     attribution <- get_attribution()
     if(!is.null(attribution)) {
       if(!is.character(attribution)) stop("get_attribution must return a character vector")
-      if(length(url) != 1) stop("get_attribution must return a vector of length 1")
+      if(length(attribution) != 1) stop("get_attribution must return a vector of length 1")
+    }
+
+    # check that get_extension returns a character vector of length 1
+    extension <- get_extension()
+    if(!is.null(extension)) {
+      if(!is.character(extension)) stop("get_extension must return a character vector")
+      if(length(extension) != 1) stop("get_extension must return a vector of length 1")
     }
   }
 
@@ -262,6 +281,7 @@ create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
     get_attribution = get_attribution,
     get_max_zoom = get_max_zoom,
     get_min_zoom = get_min_zoom,
+    get_extension = get_extension,
     ...
     ), class = "tile_source")
 }

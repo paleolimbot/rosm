@@ -22,7 +22,8 @@ Imports:
     rjson,
     methods,
     plyr,
-    prettymapr
+    prettymapr,
+    tools
 Suggests:
     cartography,
     raster,

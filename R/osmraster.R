@@ -43,6 +43,8 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #'   \code{raster::writeRaster()}). Use a ".tif" extension to write as a
 #'   GeoTIFF.
 #' @param progress A progress bar to use, or "none" to suppress progress updates
+#' @param resample One of "ngb" (nearest neighbour) or "bilinear". Passed to
+#'   \link[raster]{projectRaster}.
 #' @param quiet Pass \code{FALSE} to see more error messages, particularly if
 #'   your tiles do not download/load properly.
 #' @param ... Arguments passed on to \code{raster::writeRaster()} if
@@ -112,7 +114,8 @@ osm.image <- function(x, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE, ca
 #' @export
 osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
                        progress = c("text", "none"), quiet = TRUE,
-                       projection = NULL, crop = FALSE, filename = NULL, ...) {
+                       projection = NULL, crop = FALSE, filename = NULL, resample = "bilinear",
+                       ...) {
   # verify inputs
   if(!requireNamespace("raster")) stop("Package 'raster' is required for osm.raster()")
 
@@ -194,13 +197,13 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
 
   if(!is.null(projection)) {
     if(crop) {
-      return(osm.proj(rstack, projection, crop.bbox))
+      return(osm.proj(rstack, projection, crop.bbox, method = resample))
     } else {
-      return(osm.proj(rstack, projection))
+      return(osm.proj(rstack, projection, method = resample))
     }
   } else {
     if(crop) {
-      return(osm.proj(rstack, sp::CRS("+init=epsg:3857"), crop.bbox))
+      return(osm.proj(rstack, sp::CRS("+init=epsg:3857"), crop.bbox, method = resample))
     } else {
       return(rstack)
     }
@@ -209,11 +212,13 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
 
 # @title Project an OSM RasterStack
 # projects a raster stack generated above
-osm.proj <- function(osm.raster, projection, crop.bbox=NULL) {
+osm.proj <- function(osm.raster, projection, crop.bbox=NULL, ...) {
 
-  rstackproj <- raster::projectRaster(osm.raster, crs = projection)
-  rstackproj@data@values[rstackproj@data@values > 255 ] <- 255
-  rstackproj@data@values[rstackproj@data@values < 0 ] <- 0
+  rstackproj <- raster::projectRaster(osm.raster, crs = projection, ...)
+
+  # this can occur because of bilinear resampling on project
+  # values outside [0, 255] cause problems (e.g., raster::plotRGB())
+  rstackproj <- raster::clamp(rstackproj, lower = 0, upper = 255, useValues = TRUE)
 
   if(!is.null(crop.bbox)) {
     k <- min(c(0.052 * (crop.bbox[2,2] - crop.bbox[2,1]),

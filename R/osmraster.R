@@ -214,7 +214,7 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
 # projects a raster stack generated above
 osm.proj <- function(osm.raster, projection, crop.bbox=NULL, ...) {
 
-  rstackproj <- raster::projectRaster(osm.raster, crs = projection, ...)
+  rstackproj <- suppressWarnings(raster::projectRaster(osm.raster, crs = projection, ...))
 
   # this can occur because of bilinear resampling on project
   # values outside [0, 255] cause problems (e.g., raster::plotRGB())

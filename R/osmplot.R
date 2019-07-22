@@ -67,23 +67,16 @@ tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
   })
 }
 
-# shortcut to abind(..., along=1)
-tile.arbind <- function(...) {
-  abind::abind(..., along=1)
-}
-
-# shortcut to abind(..., along=2)
-tile.acbind <- function(...) {
-  abind::abind(..., along=2)
-}
-
-tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
+tile.fuse <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
 
   tiles <- tile.applywrap(tiles, zoom)
 
   tile_dims <- check.dimensions(tiles, zoom, type, cachedir)
+  dim_x <- tile_dims$targetdim[1]
+  dim_y <- tile_dims$targetdim[2]
+  dim_bands <- tile_dims$targetdim[3]
 
-  if(tile_dims$nmissing > 0) {
+  if (tile_dims$nmissing > 0) {
     message(tile_dims$nmissing, " could not be loaded for type ", type$name)
     missing_tile <- array(0, tile_dims$targetdim)
   } else {
@@ -91,34 +84,52 @@ tile.fuse <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE
   }
 
   tiles <- tiles[order(tiles[[1]], tiles[[2]]), , drop = FALSE]
-  xs <- unique(tiles[,1])
-  ys <- unique(tiles[,2])
+  x_tile <- unique(tiles[,1])
+  y_tile <- unique(tiles[,2])
 
-  # bind all the tiles together. plyr::llply properly checks for
-  # interrupt (should migrate this to purrr::map() in the future)
-  wholeimg <- do.call(tile.acbind, plyr::llply(xs, function(x) {
-    do.call(tile.arbind, plyr::llply(ys, function(y) {
-      img <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
-      if(is.null(img) && is.null(missing_tile)) {
+  xs <- (seq_along(x_tile) - 1) * dim_x
+  ys <- (seq_along(y_tile) - 1) * dim_y
+
+  out <- array(1, dim = c(dim_y * length(y_tile), dim_x * length(x_tile), dim_bands))
+
+  for (i in seq_along(x_tile)) {
+    for (j in seq_along(y_tile)) {
+      img <- tile.loadimage(x_tile[i], y_tile[j], zoom, type, cachedir, quiet = quiet)
+      if (is.null(img) && is.null(missing_tile)) {
         stop("Cannot fuse unloadable tile")
       } else if(is.null(img)) {
         missing_tile
       } else {
         ensure.bands(img, tile_dims$targetdim, default_value = 1)
       }
-    }))
-  }))
+
+      # row, column, band (where row == y dimension)
+      # sometimes both 3- and 4- band images are returned, so the assignment
+      # needs to assign only the bands in the loaded img
+      out[
+        ys[j]:(ys[j] + dim_y - 1) + 1,
+        xs[i]:(xs[i] + dim_x - 1) + 1,
+        seq_len(dim(img)[3])
+      ] <- img
+    }
+  }
 
   # calc bounding box of whole image
-  nw <- tile.nw(min(xs), min(ys), zoom, epsg)
-  se <- tile.nw(max(xs)+1, max(ys)+1, zoom, epsg)
+  nw <- tile.nw(min(x_tile), min(y_tile), zoom, epsg)
+  se <- tile.nw(max(x_tile) + 1, max(y_tile) + 1, zoom, epsg)
 
-  bbox <- matrix(c(nw[1], se[2], se[1], nw[2]), ncol=2,
-                byrow=FALSE, dimnames=list(c("x", "y"), c("min", "max")))
+  bbox <- matrix(
+    c(nw[1], se[2], se[1], nw[2]),
+    ncol = 2,
+    byrow = FALSE,
+    dimnames = list(
+      c("x", "y"),
+      c("min", "max")
+    )
+  )
 
   # return same structure as tile.each()
-  structure(wholeimg, bbox=bbox, epsg=epsg,
-            type=type, zoom=zoom, tiles = tiles)
+  structure(out, bbox = bbox, epsg = epsg, type = type, zoom = zoom, tiles = tiles)
 }
 
 # ensure array dimensions match a given dim value

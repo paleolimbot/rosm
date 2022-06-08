@@ -7,3 +7,4 @@
 ^data-raw$
 ^rcanvec\.cache$
 ^.*Rplots.pdf$
+^vignettes/articles$

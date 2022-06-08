@@ -8,3 +8,4 @@
 ^rcanvec\.cache$
 ^.*Rplots.pdf$
 ^vignettes/articles$
+^\.github$

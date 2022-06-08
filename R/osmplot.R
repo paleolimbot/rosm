@@ -199,7 +199,7 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = 
 #'
 #' Plot Open Street Map tiles using \code{rasterImage} and \code{sp::plot}.
 #' Define your own tile sources by creating a tile url function in the
-#' global environment, although most \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{OSM listed}
+#' global environment, although most \href{https://wiki.openstreetmap.org/wiki/Tile_servers}{OSM listed}
 #' servers are included. See \link{osm.types} for types options. By default tiles
 #' are plotted in the Spherical Mercator projection
 #' (\href{https://en.wikipedia.org/wiki/Web_Mercator}{epsg:3857}); pass \code{project=FALSE}

@@ -1,8 +1,8 @@
 
 #' Plot Raster Map Tiles From Open Street Map and Other Sources
 #'
-#' This package provides access and plots \href{http://www.openstreetmap.org/}{Open Street Map}
-#' and \href{http://www.bing.com/maps}{Bing Maps} tiles
+#' This package provides access and plots \href{https://www.openstreetmap.org/}{Open Street Map}
+#' and \href{https://www.bing.com/maps}{Bing Maps} tiles
 #' to create high-resolution basemaps and use hillshade tiles to add texture to other maps.
 #' Uses the '\href{https://cran.r-project.org/package=sp}{sp}' package to plot using base graphics. Plot Open Street Map derivative
 #' tiles using \link{osm.plot}, and plot Bing maps (Aerial, Labeled Aerial, Road) using
@@ -47,8 +47,8 @@
 #'  }
 #'
 #' @references
-#' \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
-#' \href{https://www.microsoft.com/maps/choose-your-bing-maps-API.aspx}{Bing Maps API documentation}
+#' \href{https://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
+#' \href{https://www.microsoft.com/en-us/maps/choose-your-bing-maps-api}{Bing Maps API documentation}
 #'
 #' @name rosm
 #' @docType package

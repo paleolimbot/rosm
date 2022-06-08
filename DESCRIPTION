@@ -7,8 +7,8 @@ Authors@R: c(person("Dewey", "Dunnington", role = c("aut", "cre"),
 				email = "dewey@fishandwhistle.net", comment = c(ORCID = "0000-0002-9415-4582")),
 			person("Timothée", "Giraud", role = "ctb"))
 Maintainer: Dewey Dunnington <dewey@fishandwhistle.net>
-Description: Download and plot Open Street Map <http://www.openstreetmap.org/>,
-    Bing Maps <http://www.bing.com/maps> and other tiled map sources. Use to create 
+Description: Download and plot Open Street Map <https://www.openstreetmap.org/>,
+    Bing Maps <https://www.bing.com/maps> and other tiled map sources. Use to create 
     basemaps quickly and add hillshade to vector-based maps.
 License: GPL-2
 Imports:

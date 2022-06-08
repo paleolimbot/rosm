@@ -12,7 +12,7 @@ bmaps.plot(bbox, type = "Aerial", key = NULL, ...)
 \item{type}{Use \code{Aerial}, \code{AerialWithLabels}, or \code{Road}.}
 
 \item{key}{If plotting a large number of images, consider getting your own (free) key at
-the \href{https://msdn.microsoft.com/en-us/library/ff428642.aspx}{Microsoft Website}.}
+the Microsoft Website.}
 
 \item{...}{Arguments passed on to \link{osm.plot}.}
 }

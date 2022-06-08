@@ -1,7 +1,7 @@
 
 # script to find tile formats
 
-curl::curl_download("http://wiki.openstreetmap.org/wiki/Tile_servers", "data-raw/tileservers.html")
+curl::curl_download("https://wiki.openstreetmap.org/wiki/Tile_servers", "data-raw/tileservers.html")
 
 xml <- XML::htmlParse("tileservers.html")
 links <- XML::getHTMLLinks("data-raw/tileservers.html")

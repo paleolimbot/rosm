@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 ## Using rosm to plot basemaps
 
-The **rosm** package pulls [Bing Maps](https://www.bing.com/maps/), [Open Street Map](https://www.openstreetmap.org/), and [related maps](http://wiki.openstreetmap.org/wiki/Tile_servers) from the internet, caches them locally, and renders them to provide context to overlying data (your sample sites, etc.). First we'll load the packages (we'll also be using the [prettymapr](http://paleolimbot.github.io/prettymapr) package to help us with bounding boxes and plotting.)
+The **rosm** package pulls [Bing Maps](https://www.bing.com/maps/), [Open Street Map](https://www.openstreetmap.org/), and [related maps](https://wiki.openstreetmap.org/wiki/Tile_servers) from the internet, caches them locally, and renders them to provide context to overlying data (your sample sites, etc.). First we'll load the packages (we'll also be using the [prettymapr](http://paleolimbot.github.io/prettymapr) package to help us with bounding boxes and plotting.)
 
 ```{r, message=FALSE}
 library(rosm)

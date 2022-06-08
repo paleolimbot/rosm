@@ -9,3 +9,4 @@
 ^.*Rplots.pdf$
 ^vignettes/articles$
 ^\.github$
+^cran-comments\.md$

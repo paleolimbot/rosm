@@ -6,6 +6,8 @@ context("ROSM tests")
 nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
 
 skip_on_cran()
+skip_if_offline()
+
 test_that("all tile sources load", {
   # test contributed by rCarto (cartography package)
 

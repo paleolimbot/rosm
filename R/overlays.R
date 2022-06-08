@@ -12,7 +12,7 @@
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #' \donttest{
 #' library(rosm)
 #' library(prettymapr)
@@ -42,7 +42,7 @@ osm.points <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #' \donttest{
 #' library(rosm)
 #' library(prettymapr)
@@ -72,7 +72,7 @@ osm.segments <- function(x0, y0, x1=x0, y1=y0, epsg=4326, toepsg=3857, ...) {
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #' \donttest{
 #' library(rosm)
 #' library(prettymapr)
@@ -100,7 +100,7 @@ osm.lines <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #' \donttest{
 #' library(rosm)
 #' library(prettymapr)

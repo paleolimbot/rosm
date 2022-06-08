@@ -21,10 +21,11 @@ Identical syntax to \link{osm.plot}, but using Bing maps (\url{https://www.bing.
 instead of Open Street Map.
 }
 \examples{
+\dontshow{if (has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 library(prettymapr)
 bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4))
 bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type="Road")
 }
-
+\dontshow{\}) # examplesIf}
 }

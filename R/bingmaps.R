@@ -78,7 +78,7 @@ bmaps.types <- function() {
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf has_internet()
 #' \donttest{
 #' library(prettymapr)
 #' bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4))

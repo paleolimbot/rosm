@@ -70,6 +70,7 @@ are plotted in the Spherical Mercator projection
 to keep lat/lon coordinates.
 }
 \examples{
+\dontshow{if (has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 library(prettymapr)
 ns <- makebbox(47.2, -59.7, 43.3, -66.4)
@@ -77,4 +78,5 @@ osm.plot(ns)
 osm.plot(ns, type="stamenbw")
 prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
 }
+\dontshow{\}) # examplesIf}
 }

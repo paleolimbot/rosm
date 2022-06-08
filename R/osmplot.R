@@ -234,7 +234,7 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = 
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf has_internet()
 #' \donttest{
 #' library(prettymapr)
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)

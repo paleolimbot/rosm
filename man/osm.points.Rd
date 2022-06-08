@@ -22,6 +22,7 @@ Plot points on a plot created by \link{osm.plot}. This is a simple wrapper aroun
 \code{points()}.
 }
 \examples{
+\dontshow{if (identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 library(rosm)
 library(prettymapr)
@@ -31,5 +32,5 @@ prettymap({
   osm.points(locs$lon, locs$lat, pch=18, cex=0.7)
 })
 }
-
+\dontshow{\}) # examplesIf}
 }

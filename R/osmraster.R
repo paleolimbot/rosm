@@ -50,7 +50,7 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #' @param ... Arguments passed on to \code{raster::writeRaster()} if
 #'   \code{filename} is specified.
 #' @return A projected RasterStack of the fused tiles.
-#' @examples
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #' \donttest{
 #' library(cartography)
 #' library(raster)
@@ -72,7 +72,9 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #' osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE, filename="ns.tif")
 #'
 #' # can also write Raster* objects using osm.raster
-#' osm.raster(x, filename="germany.tif")
+#' tf <- tempfile(fileext = ".tif")
+#' osm.raster(x, filename=tf)
+#' unlink(tf)
 #'
 #' }
 #' @export

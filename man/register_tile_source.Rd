@@ -24,6 +24,7 @@ Use this function to register tile sources so they can be referred to by name in
 is loaded. Use \code{set_default_tile_source()} to set the default source.
 }
 \examples{
+\dontshow{if (has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # set the default tile source
 set_default_tile_source("stamenbw")
 
@@ -35,5 +36,5 @@ library(prettymapr)
 ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 prettymap(osm.plot(ns, "dark"))
 }
-
+\dontshow{\}) # examplesIf}
 }

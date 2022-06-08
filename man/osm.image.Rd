@@ -87,6 +87,7 @@ Get Open Street Map tiles as RasterStack object (requires package
 \code{raster} to be installed).
 }
 \examples{
+\dontshow{if (identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 library(cartography)
 library(raster)
@@ -108,7 +109,10 @@ plotRGB(x)
 osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE, filename="ns.tif")
 
 # can also write Raster* objects using osm.raster
-osm.raster(x, filename="germany.tif")
+tf <- tempfile(fileext = ".tif")
+osm.raster(x, filename=tf)
+unlink(tf)
 
 }
+\dontshow{\}) # examplesIf}
 }

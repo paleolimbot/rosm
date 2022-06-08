@@ -22,6 +22,7 @@ Plot a polygon on a plot created by \link{osm.plot}. This is a simple wrapper ar
 \code{polygon()}.
 }
 \examples{
+\dontshow{if (identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 library(rosm)
 library(prettymapr)
@@ -31,5 +32,5 @@ prettymap({
   osm.polygon(locs$lon, locs$lat)
 })
 }
-
+\dontshow{\}) # examplesIf}
 }

@@ -172,7 +172,7 @@ source_from_global_functions <- function(type) {
 #'
 #' @export
 #'
-#' @examples
+#' @examplesIf has_internet()
 #' # set the default tile source
 #' set_default_tile_source("stamenbw")
 #'

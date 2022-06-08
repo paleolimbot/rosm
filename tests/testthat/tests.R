@@ -178,7 +178,7 @@ test_that("osm rasters are written to disk", {
   skip_on_cran()
   test_file <- tempfile(fileext = ".tif")
   x <- expect_message(osm.raster(nsbox))
-  expect_silent(osm.raster(x, filename=test_file, overwrite=TRUE))
+  osm.raster(x, filename=test_file, overwrite=TRUE)
   expect_true(file.exists(test_file))
   unlink(test_file)
 

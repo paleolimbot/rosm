@@ -14,7 +14,7 @@
 #' @author
 #' Dewey Dunnington <dewey@fishandwhistle.net>
 #'
-#' @examples
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #'
 #' \donttest{
 #'  library(prettymapr)

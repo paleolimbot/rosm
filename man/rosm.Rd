@@ -16,6 +16,7 @@ tiles in a \code{RasterStack} or write to disk (requires
 the '\href{https://cran.r-project.org/package=raster}{raster}' package.)
 }
 \examples{
+\dontshow{if (identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 
 \donttest{
  library(prettymapr)
@@ -46,7 +47,7 @@ the '\href{https://cran.r-project.org/package=raster}{raster}' package.)
  osm.plot(nsbox)
 
  }
-
+\dontshow{\}) # examplesIf}
 }
 \references{
 \href{http://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},

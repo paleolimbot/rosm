@@ -20,7 +20,7 @@ bmaps.restquery <- function(bingtype, key=NULL) {
     lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
     close(connect)
 
-    if(class(lines) == "try-error") stop("  Bing REST query failed for type: ", bingtype)
+    if(inherits(lines, "try-error")) stop("  Bing REST query failed for type: ", bingtype)
 
     # convert to a list
     result <- rjson::fromJSON(paste(lines, collapse = ""))

@@ -4,8 +4,7 @@
 \alias{osm.segments}
 \title{Overlay segments on an OSM plot}
 \usage{
-osm.segments(x0, y0, x1 = x0, y1 = y0, epsg = 4326, toepsg = 3857,
-  ...)
+osm.segments(x0, y0, x1 = x0, y1 = y0, epsg = 4326, toepsg = 3857, ...)
 }
 \arguments{
 \item{x0}{X1 coordinate vector}

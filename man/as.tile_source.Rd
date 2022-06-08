@@ -10,9 +10,14 @@ as.tile_source(x, ...)
 
 is.tile_source(x)
 
-source_from_url_format(url_format, max_zoom = tile.maxzoom.default(),
-  min_zoom = 0, attribution = NULL,
-  extension = tools::file_ext(url_format[1]), ...)
+source_from_url_format(
+  url_format,
+  max_zoom = tile.maxzoom.default(),
+  min_zoom = 0,
+  attribution = NULL,
+  extension = tools::file_ext(url_format[1]),
+  ...
+)
 }
 \arguments{
 \item{x}{An object (usually a name or string format) with which to create a tile source}

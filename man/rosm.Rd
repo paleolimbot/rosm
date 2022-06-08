@@ -3,7 +3,6 @@
 \docType{package}
 \name{rosm}
 \alias{rosm}
-\alias{rosm-package}
 \title{Plot Raster Map Tiles From Open Street Map and Other Sources}
 \description{
 This package provides access and plots \href{http://www.openstreetmap.org/}{Open Street Map}

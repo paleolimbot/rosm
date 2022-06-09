@@ -148,7 +148,7 @@ tile.download <- function(tiles, zoom, type="osm", forcedownload=FALSE, cachedir
                     silent = quiet)
 
       # display errors only in progress mode
-      if(!quiet && inherits(result == "try-error")) {
+      if(!quiet && inherits(result, "try-error")) {
         message(sprintf("Failed to download tile %s:(%s, %s) for type %s / %s",
                         zoom, xtile, ytile, type$name, result))
       } else if(!quiet && !file.exists(cachename)) {

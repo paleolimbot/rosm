@@ -644,13 +644,15 @@ extract_bbox <- function(x, tolatlon = TRUE, ...) {
     sp::bbox(x)
   } else if (methods::is(x, "Raster")) {
     box <- raster::as.matrix(x@extent)
-    if (tolatlon && !is.na(rgdal::CRSargs(x@crs))) {
-      requireNamespace("rgdal", quietly = TRUE)
-
+    if (tolatlon && !is.na(longlake_depth_raster@crs@projargs)) {
       # need a couple of points to get a decent approximation
       coords <- expand.grid(x = box[1, ], y = box[2, ])
-      box <- sp::bbox(.tolatlon(coords[, 1], coords[, 2], projection = x@crs))
+      coords_lonlat <- .tolatlon(coords[, 1], coords[, 2], projection = x@crs)
+      lon_range <- range(coords_lonlat[, 1])
+      lat_range <- range(coords_lonlat[, 2])
+      box <- makebbox(lat_range[2], lon_range[2], lat_range[1], lon_range[1])
     }
+
     box
   } else if (methods::is(x, "bbox")) {
     makebbox(x[4], x[3], x[2], x[1])
@@ -659,7 +661,7 @@ extract_bbox <- function(x, tolatlon = TRUE, ...) {
   } else if (is.bbox(x)) {
     x
   } else {
-    sp::bbox(x)
+    extract_bbox(sf::st_bbox(x))
   }
 }
 
@@ -1240,8 +1242,6 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
 }
 
 .projectbbox <- function(bbox, toepsg = NULL, projection = NULL) {
-  requireNamespace("rgdal", quietly = TRUE)
-
   if (is.null(toepsg) && is.null(projection)) {
     stop("toepsg and projection both null...nothing to project")
   } else if (!is.null(toepsg) && !is.null(projection)) {
@@ -1249,12 +1249,18 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
   }
 
   if (is.null(projection)) {
-    projection <- sp::CRS(paste0("+init=epsg:", toepsg))
+    projection <- sf::st_crs(toepsg)
+  } else {
+    projection <- sf::st_crs(projection)
   }
-  coords <- sp::coordinates(t(bbox))
-  spoints <- sp::SpatialPoints(coords, proj4string = sp::CRS("+init=epsg:4326"))
-  newpoints <- sp::spTransform(spoints, projection)
-  newbbox <- t(sp::coordinates(newpoints))
+
+  newpoints <- sf::sf_project(
+    sf::st_crs(4326),
+    projection,
+    t(bbox)
+  )
+
+  newbbox <- t(newpoints)
 
   if (newbbox[1, 1] > newbbox[1, 2]) { # if min>max
     maxx <- .fromlatlon(180, bbox[2, 1], projection = projection)[1]
@@ -1264,20 +1270,25 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
 }
 
 .revprojectbbox <- function(bbox, fromepsg = NULL, projection = NULL) {
-  requireNamespace("rgdal", quietly = TRUE)
-
   if (is.null(fromepsg) && is.null(projection)) {
     stop("fromepsg and projection both null...nothing to project")
   } else if (!is.null(fromepsg) && !is.null(projection)) {
     stop("fromepsg and projection both specified...ambiguous call")
   }
+
   if (is.null(projection)) {
-    projection <- sp::CRS(paste0("+init=epsg:", fromepsg))
+    projection <- sf::st_crs(fromepsg)
+  } else {
+    projection <- sf::st_crs(projection)
   }
-  coords <- sp::coordinates(t(bbox))
-  spoints <- sp::SpatialPoints(coords, proj4string = projection)
-  newpoints <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
-  t(sp::coordinates(newpoints))
+
+  newpoints <- sf::sf_project(
+    projection,
+    sf::st_crs(4326),
+    t(bbox)
+  )
+
+  t(newpoints)
 }
 
 # tile URLs

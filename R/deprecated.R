@@ -1369,15 +1369,3 @@ tile_sources <- list(
     attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
   )
 )
-
-#' Check for Internet
-#'
-#' @return TRUE if the internet is available, false otherwise
-#' @export
-#'
-#' @examples
-#' has_internet()
-#'
-has_internet <- function() {
-  !is.null(curl::nslookup("r-project.org", error = FALSE))
-}

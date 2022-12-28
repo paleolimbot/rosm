@@ -1,20 +1,20 @@
-#functions used by both google and osm
+# functions used by both google and osm
 
-tile.cachedir <- function(type, cachedir=NULL) {
-  if(is.null(cachedir)) {
+tile.cachedir <- function(type, cachedir = NULL) {
+  if (is.null(cachedir)) {
     cachedir <- get_default_cachedir()
   }
   safename <- gsub("[^a-zA-z0-9]", "", type$name)
   folder <- file.path(cachedir, safename)
-  created <- dir.create(folder, showWarnings=FALSE, recursive=TRUE)
+  created <- dir.create(folder, showWarnings = FALSE, recursive = TRUE)
   folder
 }
 
 tile.plotarray <- function(image, box) {
-  graphics::rasterImage(image, box[1,1], box[2,1], box[1,2], box[2,2])
+  graphics::rasterImage(image, box[1, 1], box[2, 1], box[1, 2], box[2, 2])
 }
 
-tile.autozoom <- function(res=150, epsg=4326) {
+tile.autozoom <- function(res = 150, epsg = 4326) {
   ext <- graphics::par("usr")
   midy <- mean(c(ext[3], ext[4]))
   rightmid <- .tolatlon(ext[2], midy, epsg)
@@ -22,22 +22,22 @@ tile.autozoom <- function(res=150, epsg=4326) {
   leftmid <- .tolatlon(ext[1], midy, epsg)
 
   anglewidth1 <- rightmid[1] - centermid[1]
-  if(anglewidth1 < 0) {
-    anglewidth1 <- anglewidth1+360
+  if (anglewidth1 < 0) {
+    anglewidth1 <- anglewidth1 + 360
   }
 
   anglewidth2 <- rightmid[1] - centermid[1]
-  if(anglewidth2 < 0) {
-    anglewidth2 <- anglewidth2+360
+  if (anglewidth2 < 0) {
+    anglewidth2 <- anglewidth2 + 360
   }
-  anglewidth <- anglewidth1+anglewidth2
+  anglewidth <- anglewidth1 + anglewidth2
 
-  #PROBLEMS WITH WIDE EXTENTS LIKE THE WORLD
-  widthin <- graphics::grconvertX(ext[2], from="user", to="inches") -
-    graphics::grconvertX(ext[1], from="user", to="inches")
+  # PROBLEMS WITH WIDE EXTENTS LIKE THE WORLD
+  widthin <- graphics::grconvertX(ext[2], from = "user", to = "inches") -
+    graphics::grconvertX(ext[1], from = "user", to = "inches")
   widthpx <- widthin * res
 
-  zoom = log2((360.0 / anglewidth) * (widthpx / 256.0))
+  zoom <- log2((360.0 / anglewidth) * (widthpx / 256.0))
 
   as.integer(floor(zoom))
 }

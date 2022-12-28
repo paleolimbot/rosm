@@ -20,10 +20,10 @@
 #'
 set_default_cachedir <- function(cachedir) {
   # NULL sets back to the default
-  if(is.null(cachedir)) {
+  if (is.null(cachedir)) {
     cachedir <- "rosm.cache"
   }
-  if(!is.character(cachedir) || (length(cachedir) != 1)) {
+  if (!is.character(cachedir) || (length(cachedir) != 1)) {
     stop("'cachedir' must be a character vector of length 1")
   }
   # keep ref to old cachedir
@@ -43,5 +43,3 @@ get_default_cachedir <- function() {
 
 rosm_state <- new.env(parent = emptyenv())
 rosm_state$default_cachedir <- "rosm.cache"
-
-

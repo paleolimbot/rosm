@@ -40,33 +40,36 @@
 #'
 #' # create more complex tile sources using source_from_url_format
 #' source_from_url_format("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
-#'                        attribution = "Tiles by CartoDB")
+#'   attribution = "Tiles by CartoDB"
+#' )
 #'
 #' # test for tile sources
 #' is.tile_source(as.tile_source("osm"))
 #'
 as.tile_source <- function(x, ...) {
   # first check if x is a tile source
-  if(is.tile_source(x)) return(x)
+  if (is.tile_source(x)) {
+    return(x)
+  }
 
   # order is registered -> built_in -> functions -> string format
-  if((length(x) == 1) && (x %in% names(registered_sources))) {
+  if ((length(x) == 1) && (x %in% names(registered_sources))) {
     src <- registered_sources[[x]]
     src$name <- x
     src
-  } else if((length(x) == 1) && (x %in% names(tile_sources))) {
+  } else if ((length(x) == 1) && (x %in% names(tile_sources))) {
     src <- tile_sources[[x]]
     src$name <- x
     src
-  } else if( (length(x) == 1) && is.character(x)) {
+  } else if ((length(x) == 1) && is.character(x)) {
     # if url function exists, use old-style function definitions
-    if(exists(paste0("tile.url.", x))) {
+    if (exists(paste0("tile.url.", x))) {
       source_from_global_functions(x)
     } else {
       # create using string format
       source_from_url_format(x, ...)
     }
-  } else if((length(x) > 1) && is.character(x)) {
+  } else if ((length(x) > 1) && is.character(x)) {
     # character vectors > 1 can't be functions
     source_from_url_format(x, ...)
   } else {
@@ -90,10 +93,12 @@ source_from_url_format <- function(url_format, max_zoom = tile.maxzoom.default()
 
   # check format: need ${z}/${x}/${y} xor ${q} (not both)
   # url_format may be a vector of names, so wrap in all()
-  if(xor(!all(grepl("${q}", url_format, fixed = TRUE)),
-         !(!all(grepl("${z}", url_format, fixed = TRUE)) &&
-           !all(grepl("${x}", url_format, fixed = TRUE)) &&
-           !all(grepl("${y}", url_format, fixed = TRUE))))) {
+  if (xor(
+    !all(grepl("${q}", url_format, fixed = TRUE)),
+    !(!all(grepl("${z}", url_format, fixed = TRUE)) &&
+      !all(grepl("${x}", url_format, fixed = TRUE)) &&
+      !all(grepl("${y}", url_format, fixed = TRUE)))
+  )) {
     stop("url_format must contain ${q} xor ${z} and ${x} and ${y}")
   }
 
@@ -132,14 +137,14 @@ source_from_global_functions <- function(type) {
   get_url <- match.fun(paste0("tile.url.", type))
 
   # maxzoom function is not manditory
-  if(exists(paste0("tile.maxzoom.", type))) {
+  if (exists(paste0("tile.maxzoom.", type))) {
     get_max_zoom <- match.fun(paste0("tile.maxzoom.", type))
   } else {
     get_max_zoom <- tile.maxzoom.default
   }
 
   # attribute function is not manditory
-  if(exists(paste0("tile.attribute.", type))) {
+  if (exists(paste0("tile.attribute.", type))) {
     attribution <- match.fun(paste0("tile.attribute", type))
   } else {
     attribution <- function() NULL
@@ -187,8 +192,8 @@ source_from_global_functions <- function(type) {
 #'
 register_tile_source <- function(...) {
   sources <- list(...)
-  if(is.null(names(sources))) stop("register_source must be called with named arguments")
-  if(any(nchar(names(sources)) == 0)) stop("register_source must be called with named arguments")
+  if (is.null(names(sources))) stop("register_source must be called with named arguments")
+  if (any(nchar(names(sources)) == 0)) stop("register_source must be called with named arguments")
 
   # lapply as.tile_source and copy to registered_sources
   list2env(lapply(sources, as.tile_source), registered_sources)
@@ -206,7 +211,7 @@ set_default_tile_source <- function(x, ...) {
 #' @rdname register_tile_source
 #' @export
 get_default_tile_source <- function() {
-  if(exists(".defaultsource", where = registered_sources)) {
+  if (exists(".defaultsource", where = registered_sources)) {
     registered_sources$.defaultsource
   } else {
     as.tile_source("osm")
@@ -237,41 +242,44 @@ create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
   # this is for backwards compatiblity with older tile.url.TYPE functions
 
   # force functions
-  force(get_tile_url); force(get_max_zoom); force(get_min_zoom)
-  force(get_attribution); force(get_extension)
+  force(get_tile_url)
+  force(get_max_zoom)
+  force(get_min_zoom)
+  force(get_attribution)
+  force(get_extension)
 
-  if(validate) {
+  if (validate) {
     # validate the functions
 
     # check that get_tile_url returns a character vector of length 1
-    if("quadkey" %in% names(formals(get_tile_url))) {
-      url <- get_tile_url(0, 0, 0, quadkey="0")
+    if ("quadkey" %in% names(formals(get_tile_url))) {
+      url <- get_tile_url(0, 0, 0, quadkey = "0")
     } else {
       url <- get_tile_url(0, 0, 0)
     }
-    if(!is.character(url)) stop("get_tile_url must return type 'character'")
-    if(length(url) != 1) stop("get_tile_url must return a vector of length 1")
+    if (!is.character(url)) stop("get_tile_url must return type 'character'")
+    if (length(url) != 1) stop("get_tile_url must return a vector of length 1")
 
     # check that maxzoom is an integer
     maxzoom <- get_max_zoom()
-    if((maxzoom %% 1) != 0) stop("get_max_zoom must return an integer")
+    if ((maxzoom %% 1) != 0) stop("get_max_zoom must return an integer")
 
     # check that minzoom is an integer
     minzoom <- get_min_zoom()
-    if((minzoom %% 1) != 0) stop("get_min_zoom must return an integer")
+    if ((minzoom %% 1) != 0) stop("get_min_zoom must return an integer")
 
     # check that get_attribution returns a character vector of length 1
     attribution <- get_attribution()
-    if(!is.null(attribution)) {
-      if(!is.character(attribution)) stop("get_attribution must return a character vector")
-      if(length(attribution) != 1) stop("get_attribution must return a vector of length 1")
+    if (!is.null(attribution)) {
+      if (!is.character(attribution)) stop("get_attribution must return a character vector")
+      if (length(attribution) != 1) stop("get_attribution must return a vector of length 1")
     }
 
     # check that get_extension returns a character vector of length 1
     extension <- get_extension()
-    if(!is.null(extension)) {
-      if(!is.character(extension)) stop("get_extension must return a character vector")
-      if(length(extension) != 1) stop("get_extension must return a vector of length 1")
+    if (!is.null(extension)) {
+      if (!is.character(extension)) stop("get_extension must return a character vector")
+      if (length(extension) != 1) stop("get_extension must return a vector of length 1")
     }
   }
 
@@ -283,5 +291,5 @@ create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
     get_min_zoom = get_min_zoom,
     get_extension = get_extension,
     ...
-    ), class = "tile_source")
+  ), class = "tile_source")
 }

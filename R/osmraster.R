@@ -1,9 +1,9 @@
 
 
-tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
-  for(zoom in 1:19) {
-    tiles <- tiles.bybbox(bbox, zoom, epsg) #always latlon
-    if(nrow(tiles) >= minnumtiles) {
+tile.raster.autozoom <- function(bbox, epsg, minnumtiles = 12) {
+  for (zoom in 1:19) {
+    tiles <- tiles.bybbox(bbox, zoom, epsg) # always latlon
+    if (nrow(tiles) >= minnumtiles) {
       return(zoom)
     }
   }
@@ -57,35 +57,34 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles=12) {
 #' library(prettymapr)
 #'
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
-#' x <- osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE)
+#' x <- osm.raster(ns, projection = CRS("+init=epsg:26920"), crop = TRUE)
 #' # plot using plotRGB (from the raster package)
 #' plotRGB(x)
 #'
 #' # use a Spatial* object as the first argument to automatically set the bounding
 #' # box and projection
 #' data(nuts2006)
-#' spdf <- nuts0.spdf[nuts0.spdf$id=="DE",]
-#' x <- osm.raster(spdf, type="thunderforestlandscape")
+#' spdf <- nuts0.spdf[nuts0.spdf$id == "DE", ]
+#' x <- osm.raster(spdf, type = "thunderforestlandscape")
 #' plotRGB(x)
 #'
 #' # write to disk by passing a filename argument (use .tif extension to write GeoTIFF)
-#' osm.raster(ns, projection=CRS("+init=epsg:26920"), crop=TRUE, filename="ns.tif")
+#' osm.raster(ns, projection = CRS("+init=epsg:26920"), crop = TRUE, filename = "ns.tif")
 #'
 #' # can also write Raster* objects using osm.raster
 #' tf <- tempfile(fileext = ".tif")
-#' osm.raster(x, filename=tf)
+#' osm.raster(x, filename = tf)
 #' unlink(tf)
-#'
 #' }
 #' @export
 #'
-osm.image <- function(x, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE, cachedir=NULL,
+osm.image <- function(x, zoomin = 0, zoom = NULL, type = NULL, forcedownload = FALSE, cachedir = NULL,
                       progress = c("text", "none"), quiet = TRUE) {
   # verify progress input
   progress <- match.arg(progress)
 
   # verify tile source
-  if(is.null(type)) {
+  if (is.null(type)) {
     type <- get_default_tile_source()
   } else {
     type <- as.tile_source(type)
@@ -95,53 +94,59 @@ osm.image <- function(x, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE, ca
   lookup.bbox <- extract_bbox(x)
 
   # get zoom level
-  if(is.null(zoom)) {
-    zoom <- tile.raster.autozoom(lookup.bbox, epsg=4326)
+  if (is.null(zoom)) {
+    zoom <- tile.raster.autozoom(lookup.bbox, epsg = 4326)
   }
 
-  zoom <- min(zoom+zoomin, tile.maxzoom(type))
+  zoom <- min(zoom + zoomin, tile.maxzoom(type))
   zoom <- max(1, zoom) # global min zoom set to 1
-  if(progress != "none") message("Zoom: ", zoom)
+  if (progress != "none") message("Zoom: ", zoom)
 
   # get tile list, download tiles
-  tiles <- tiles.bybbox(lookup.bbox, zoom, epsg=4326)
-  tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir,
-                progress = progress, quiet = quiet)
+  tiles <- tiles.bybbox(lookup.bbox, zoom, epsg = 4326)
+  tile.download(tiles, zoom,
+    type = type, forcedownload = forcedownload, cachedir = cachedir,
+    progress = progress, quiet = quiet
+  )
 
   # return fused image
-  tile.fuse(tiles, zoom, type=type, epsg=3857, cachedir=cachedir, quiet = quiet)
+  tile.fuse(tiles, zoom, type = type, epsg = 3857, cachedir = cachedir, quiet = quiet)
 }
 
 #' @rdname osm.image
 #' @export
-osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, cachedir=NULL,
+osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload = FALSE, cachedir = NULL,
                        progress = c("text", "none"), quiet = TRUE,
                        projection = NULL, crop = FALSE, filename = NULL, resample = "bilinear",
                        ...) {
   # verify inputs
-  if(!requireNamespace("raster")) stop("Package 'raster' is required for osm.raster()")
+  if (!requireNamespace("raster")) stop("Package 'raster' is required for osm.raster()")
 
   # verify progress input
   progress <- match.arg(progress)
 
   # verify tile source
-  if(is.null(type)) {
+  if (is.null(type)) {
     type <- get_default_tile_source()
   } else {
     type <- as.tile_source(type)
   }
 
   # if filename is specified, write output of osm.raster() to filename
-  if(!is.null(filename)) {
-    if(methods::is(x, "Raster")) {
-      return(invisible(raster::writeRaster(x, filename=filename, datatype="INT1U", ...)))
+  if (!is.null(filename)) {
+    if (methods::is(x, "Raster")) {
+      return(invisible(raster::writeRaster(x, filename = filename, datatype = "INT1U", ...)))
     } else {
-      return(invisible(raster::writeRaster(osm.raster(x=x, zoomin=zoomin, zoom=zoom,
-                                                      type=type, forcedownload=forcedownload,
-                                                      progress = progress, quiet = quiet,
-                                                      cachedir=cachedir, projection=projection,
-                                                      crop=crop, filename=NULL),
-                                           filename=filename, datatype="INT1U", ...)))
+      return(invisible(raster::writeRaster(
+        osm.raster(
+          x = x, zoomin = zoomin, zoom = zoom,
+          type = type, forcedownload = forcedownload,
+          progress = progress, quiet = quiet,
+          cachedir = cachedir, projection = projection,
+          crop = crop, filename = NULL
+        ),
+        filename = filename, datatype = "INT1U", ...
+      )))
     }
   }
 
@@ -151,13 +156,13 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
   # extract bounding box
   lookup.bbox <- extract_bbox(x)
   # if input was a character, make sure lookup only happens once
-  if(is.character(x)) {
+  if (is.character(x)) {
     x <- lookup.bbox
   }
 
   # fill in destination projection if not specified
-  if(is.null(projection)) {
-    if(is.na(src_proj)) {
+  if (is.null(projection)) {
+    if (is.na(src_proj)) {
       # default is to project to google mercator
       projection <- extract_projection(3857)
     } else {
@@ -168,43 +173,46 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
   }
 
   # get cropping information, if desired
-  if(crop) {
+  if (crop) {
     crop.bbox <- extract_bbox(x, tolatlon = FALSE)
-    if(is.na(src_proj)) {
+    if (is.na(src_proj)) {
       # default is to project to google mercator
       crop.bbox <- .projectbbox(crop.bbox, projection = projection)
     }
   }
 
-  arr <- osm.image(x, zoomin = zoomin, zoom = zoom, type = type,
-                   forcedownload = forcedownload, cachedir = cachedir,
-                   progress = progress, quiet = quiet)
+  arr <- osm.image(x,
+    zoomin = zoomin, zoom = zoom, type = type,
+    forcedownload = forcedownload, cachedir = cachedir,
+    progress = progress, quiet = quiet
+  )
   box <- attr(arr, "bbox")
   nbrow <- dim(arr)[1]
   nbcol <- dim(arr)[2]
   bands <- dim(arr)[3]
   .makeraster <- function(i) {
-    raster::raster(matrix(arr[,,i]*255, nrow = nbrow, ncol = nbcol),
-                   xmn = box[1,1], xmx = box[1,2],
-                   ymn = box[2,1], ymx = box[2,2],
-                   crs = "+init=epsg:3857")
+    raster::raster(matrix(arr[, , i] * 255, nrow = nbrow, ncol = nbcol),
+      xmn = box[1, 1], xmx = box[1, 2],
+      ymn = box[2, 1], ymx = box[2, 2],
+      crs = "+init=epsg:3857"
+    )
   }
-  if(bands==3) {
+  if (bands == 3) {
     rstack <- raster::stack(.makeraster(1), .makeraster(2), .makeraster(3))
-  } else if(bands==4) {
+  } else if (bands == 4) {
     rstack <- raster::stack(.makeraster(1), .makeraster(2), .makeraster(3), .makeraster(4))
   } else {
     stop("Invalid number of bands in image: ", bands)
   }
 
-  if(!is.null(projection)) {
-    if(crop) {
+  if (!is.null(projection)) {
+    if (crop) {
       return(osm.proj(rstack, projection, crop.bbox, method = resample))
     } else {
       return(osm.proj(rstack, projection, method = resample))
     }
   } else {
-    if(crop) {
+    if (crop) {
       return(osm.proj(rstack, sp::CRS("+init=epsg:3857"), crop.bbox, method = resample))
     } else {
       return(rstack)
@@ -214,25 +222,25 @@ osm.raster <- function(x, zoomin=0, zoom=NULL, type="osm", forcedownload=FALSE, 
 
 # @title Project an OSM RasterStack
 # projects a raster stack generated above
-osm.proj <- function(osm.raster, projection, crop.bbox=NULL, ...) {
-
+osm.proj <- function(osm.raster, projection, crop.bbox = NULL, ...) {
   rstackproj <- suppressWarnings(raster::projectRaster(osm.raster, crs = projection, ...))
 
   # this can occur because of bilinear resampling on project
   # values outside [0, 255] cause problems (e.g., raster::plotRGB())
   rstackproj <- raster::clamp(rstackproj, lower = 0, upper = 255, useValues = TRUE)
 
-  if(!is.null(crop.bbox)) {
-    k <- min(c(0.052 * (crop.bbox[2,2] - crop.bbox[2,1]),
-               0.052 * (crop.bbox[1,2] - crop.bbox[1,1])))
-    crop.bbox[2,2] <- crop.bbox[2,2] + k
-    crop.bbox[1,1] <- crop.bbox[1,1] - k
-    crop.bbox[2,1] <- crop.bbox[2,1] - k
-    crop.bbox[1,2] <- crop.bbox[1,2] + k
+  if (!is.null(crop.bbox)) {
+    k <- min(c(
+      0.052 * (crop.bbox[2, 2] - crop.bbox[2, 1]),
+      0.052 * (crop.bbox[1, 2] - crop.bbox[1, 1])
+    ))
+    crop.bbox[2, 2] <- crop.bbox[2, 2] + k
+    crop.bbox[1, 1] <- crop.bbox[1, 1] - k
+    crop.bbox[2, 1] <- crop.bbox[2, 1] - k
+    crop.bbox[1, 2] <- crop.bbox[1, 2] + k
 
     return(raster::crop(rstackproj, crop.bbox))
   } else {
     return(rstackproj)
   }
 }
-

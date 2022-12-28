@@ -29,7 +29,7 @@ library(prettymapr)
 locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
 prettymap({
   osm.plot(searchbbox("nova scotia"))
-  osm.points(locs$lon, locs$lat, pch=18, cex=0.7)
+  osm.points(locs$lon, locs$lat, pch = 18, cex = 0.7)
 })
 }
 \dontshow{\}) # examplesIf}

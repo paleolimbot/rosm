@@ -65,7 +65,8 @@ as.tile_source("dark")
 
 # create more complex tile sources using source_from_url_format
 source_from_url_format("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
-                       attribution = "Tiles by CartoDB")
+  attribution = "Tiles by CartoDB"
+)
 
 # test for tile sources
 is.tile_source(as.tile_source("osm"))

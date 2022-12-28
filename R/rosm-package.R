@@ -17,34 +17,33 @@
 #' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
 #'
 #' \donttest{
-#'  library(prettymapr)
+#' library(prettymapr)
 #'
-#'  # basic ploting
-#'  nsbox <- searchbbox("nova scotia")
-#'  osm.plot(nsbox)
-#'  osm.plot(nsbox, type="stamenbw")
-#'  bmaps.plot(nsbox)
-#'  bmaps.plot(nsbox, type="Road")
+#' # basic ploting
+#' nsbox <- searchbbox("nova scotia")
+#' osm.plot(nsbox)
+#' osm.plot(nsbox, type = "stamenbw")
+#' bmaps.plot(nsbox)
+#' bmaps.plot(nsbox, type = "Road")
 #'
-#'  # use prettymapr to add scalebar and north arrow
-#'  prettymap(osm.plot(nsbox))
-#'  prettymap(bmaps.plot(nsbox, type="Road"))
+#' # use prettymapr to add scalebar and north arrow
+#' prettymap(osm.plot(nsbox))
+#' prettymap(bmaps.plot(nsbox, type = "Road"))
 #'
-#'  # define custom tile types in several ways
+#' # define custom tile types in several ways
 #'
-#'  # using string formats
-#'  ts <- as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
-#'  osm.plot(nsbox, type=ts)
+#' # using string formats
+#' ts <- as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#' osm.plot(nsbox, type = ts)
 #'
-#'  # using string formats and register_tile_source
-#'  register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
-#'  osm.plot(nsbox, type="dark")
+#' # using string formats and register_tile_source
+#' register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#' osm.plot(nsbox, type = "dark")
 #'
-#'  # set default plot type to something other than 'osm'
-#'  set_default_tile_source("stamenbw")
-#'  osm.plot(nsbox)
-#'
-#'  }
+#' # set default plot type to something other than 'osm'
+#' set_default_tile_source("stamenbw")
+#' osm.plot(nsbox)
+#' }
 #'
 #' @references
 #' \href{https://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
@@ -54,4 +53,3 @@
 #' @docType package
 #'
 NULL
-

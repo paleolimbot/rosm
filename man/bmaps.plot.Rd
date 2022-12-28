@@ -25,7 +25,7 @@ instead of Open Street Map.
 \donttest{
 library(prettymapr)
 bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4))
-bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type="Road")
+bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type = "Road")
 }
 \dontshow{\}) # examplesIf}
 }

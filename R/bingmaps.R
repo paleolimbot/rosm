@@ -2,16 +2,15 @@
 # use an internal environment to cache REST information
 bing_rest_queries <- new.env(parent = emptyenv())
 
-bmaps.restquery <- function(bingtype, key=NULL) {
+bmaps.restquery <- function(bingtype, key = NULL) {
   # http://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=KEY
   # get a key at https://msdn.microsoft.com/en-us/library/ff428642.aspx
 
   # use cached information first
-  if(bingtype %in% names(bing_rest_queries)) {
+  if (bingtype %in% names(bing_rest_queries)) {
     result <- bing_rest_queries[[bingtype]]
   } else {
-
-    if(is.null(key)) {
+    if (is.null(key)) {
       key <- "Aut49nhp5_Twwf_5RHF6wSGk7sEzpcSA__niIXCHowQZLMeC-m8cdy7EmZd2r7Gs"
     }
     urlstring <- paste0("http://dev.virtualearth.net/REST/v1/Imagery/Metadata/", bingtype, "?key=", key)
@@ -20,7 +19,7 @@ bmaps.restquery <- function(bingtype, key=NULL) {
     lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
     close(connect)
 
-    if(inherits(lines, "try-error")) stop("  Bing REST query failed for type: ", bingtype)
+    if (inherits(lines, "try-error")) stop("  Bing REST query failed for type: ", bingtype)
 
     # convert to a list
     result <- rjson::fromJSON(paste(lines, collapse = ""))
@@ -35,12 +34,16 @@ bmaps.restquery <- function(bingtype, key=NULL) {
 }
 
 bmaps.sourcefromrest <- function(rest, name) {
-  force(rest); force(name)
+  force(rest)
+  force(name)
   create_tile_source(
     get_tile_url = function(xtile, ytile, zoom, quadkey) {
       gsub("{quadkey}", quadkey, gsub("{subdomain}", sample(rest$imageUrlSubdomains, 1),
-                                      rest$imageUrl, fixed = TRUE),
-           fixed = TRUE)
+        rest$imageUrl,
+        fixed = TRUE
+      ),
+      fixed = TRUE
+      )
     },
     get_max_zoom = function() rest$zoomMax,
     get_min_zoom = function() rest$zoomMin,
@@ -82,42 +85,44 @@ bmaps.types <- function() {
 #' \donttest{
 #' library(prettymapr)
 #' bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4))
-#' bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type="Road")
+#' bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type = "Road")
 #' }
 #'
-bmaps.plot <- function(bbox, type="Aerial", key=NULL, ...) {
-  if(!(type %in% bmaps.types())) stop("type must be one of Aerial, AerialWithLabels, or Road")
+bmaps.plot <- function(bbox, type = "Aerial", key = NULL, ...) {
+  if (!(type %in% bmaps.types())) stop("type must be one of Aerial, AerialWithLabels, or Road")
 
   # get REST information
   rest <- bmaps.restquery(type, key)
   # plot using OSM.plot
-  osm.plot(bbox=bbox, type=bmaps.sourcefromrest(rest, paste0("bing_", type)), ...)
+  osm.plot(bbox = bbox, type = bmaps.sourcefromrest(rest, paste0("bing_", type)), ...)
   # plot the little bing logo
   extraargs <- list(...)
-  bmaps.attribute(res=extraargs$res, cachedir=extraargs$cachedir)
+  bmaps.attribute(res = extraargs$res, cachedir = extraargs$cachedir)
 }
 
 
-bmaps.attribute <- function(padin=c(0.05,0.05), res=NULL, cachedir=NULL, scale = 0.7) {
-  if(is.null(res)) {
+bmaps.attribute <- function(padin = c(0.05, 0.05), res = NULL, cachedir = NULL, scale = 0.7) {
+  if (is.null(res)) {
     res <- 80
   }
-  #http://dev.virtualearth.net/Branding/logo_powered_by.png
-  bingfile <- file.path(tile.cachedir(list(name="bing")), "bing.png")
-  if(!file.exists(bingfile)) {
+  # http://dev.virtualearth.net/Branding/logo_powered_by.png
+  bingfile <- file.path(tile.cachedir(list(name = "bing")), "bing.png")
+  if (!file.exists(bingfile)) {
     curl::curl_download("http://dev.virtualearth.net/Branding/logo_powered_by.png",
-                  bingfile, quiet=TRUE, mode = "wb")
+      bingfile,
+      quiet = TRUE, mode = "wb"
+    )
   }
   binglogo <- png::readPNG(bingfile)
   ext <- graphics::par("usr")
-  rightin <- graphics::grconvertX(ext[2], from="user", to="inches")
-  bottomin <- graphics::grconvertY(ext[3], from="user", to="inches")
-  widthin <- dim(binglogo)[2]/res * scale
-  heightin <- dim(binglogo)[1]/res * scale
-  leftusr <- graphics::grconvertX(rightin-padin[1]-widthin, from="inches", to="user")
-  bottomusr <- graphics::grconvertY(bottomin+padin[2], from="inches", to="user")
-  topusr <- graphics::grconvertY(bottomin+padin[2]+heightin, from="inches", to="user")
-  rightusr <- graphics::grconvertX(rightin-padin[1], from="inches", to="user")
+  rightin <- graphics::grconvertX(ext[2], from = "user", to = "inches")
+  bottomin <- graphics::grconvertY(ext[3], from = "user", to = "inches")
+  widthin <- dim(binglogo)[2] / res * scale
+  heightin <- dim(binglogo)[1] / res * scale
+  leftusr <- graphics::grconvertX(rightin - padin[1] - widthin, from = "inches", to = "user")
+  bottomusr <- graphics::grconvertY(bottomin + padin[2], from = "inches", to = "user")
+  topusr <- graphics::grconvertY(bottomin + padin[2] + heightin, from = "inches", to = "user")
+  rightusr <- graphics::grconvertX(rightin - padin[1], from = "inches", to = "user")
 
   graphics::rasterImage(binglogo, leftusr, bottomusr, rightusr, topusr)
 }

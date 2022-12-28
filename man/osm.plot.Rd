@@ -75,8 +75,8 @@ to keep lat/lon coordinates.
 library(prettymapr)
 ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 osm.plot(ns)
-osm.plot(ns, type="stamenbw")
-prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
+osm.plot(ns, type = "stamenbw")
+prettymap(osm.plot(ns), scale.style = "ticks", scale.tick.cex = 0)
 }
 \dontshow{\}) # examplesIf}
 }

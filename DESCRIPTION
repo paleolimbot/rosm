@@ -31,4 +31,4 @@ Suggests:
     withr
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1

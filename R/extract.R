@@ -27,30 +27,30 @@
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 #' stopifnot(identical(ns, extract_bbox(ns)))
 #'
-extract_bbox <- function(x, tolatlon=TRUE, ...) {
-  if(methods::is(x, "Spatial")) {
+extract_bbox <- function(x, tolatlon = TRUE, ...) {
+  if (methods::is(x, "Spatial")) {
     box <- sp::bbox(x)
-    if(tolatlon && !is.na(rgdal::CRSargs(x@proj4string))) {
+    if (tolatlon && !is.na(rgdal::CRSargs(x@proj4string))) {
       requireNamespace("rgdal", quietly = TRUE)
       box <- sp::bbox(sp::spTransform(x, sp::CRS("+init=epsg:4326")))
     }
     box
-  } else if(methods::is(x, "Raster")) {
+  } else if (methods::is(x, "Raster")) {
     box <- raster::as.matrix(x@extent)
-    if(tolatlon && !is.na(rgdal::CRSargs(x@crs))) {
+    if (tolatlon && !is.na(rgdal::CRSargs(x@crs))) {
       requireNamespace("rgdal", quietly = TRUE)
 
       # need a couple of points to get a decent approximation
-      coords <- expand.grid(x=box[1,], y=box[2,])
+      coords <- expand.grid(x = box[1, ], y = box[2, ])
       box <- sp::bbox(.tolatlon(coords[, 1], coords[, 2], projection = x@crs))
     }
     box
-  } else if(methods::is(x, "bbox")) {
+  } else if (methods::is(x, "bbox")) {
     prettymapr::makebbox(x[4], x[3], x[2], x[1])
-  } else if(is.character(x)) {
+  } else if (is.character(x)) {
     # lookup using prettymapr::searchbbox()
     prettymapr::searchbbox(x, quiet = TRUE, ...)
-  } else if(is.bbox(x)) {
+  } else if (is.bbox(x)) {
     x
   } else {
     sp::bbox(x)
@@ -63,18 +63,18 @@ is.bbox <- function(x) {
 
 # function to extract a projection from an object
 extract_projection <- function(x) {
-  if(methods::is(x, "CRS")) {
+  if (methods::is(x, "CRS")) {
     x
-  } else if(methods::is(x, "Spatial")) {
-    if(!is.na(rgdal::CRSargs(x@proj4string))) {
+  } else if (methods::is(x, "Spatial")) {
+    if (!is.na(rgdal::CRSargs(x@proj4string))) {
       x@proj4string
     } else {
       NA
     }
-  } else if(methods::is(x, "Raster")) {
+  } else if (methods::is(x, "Raster")) {
     x@crs
-  } else if(is.numeric(x) && (length(x) == 1)) {
-    requireNamespace("rgdal", quietly=TRUE)
+  } else if (is.numeric(x) && (length(x) == 1)) {
+    requireNamespace("rgdal", quietly = TRUE)
     intx <- as.integer(x)
     sp::CRS(paste0("+init=epsg:", intx))
   } else {

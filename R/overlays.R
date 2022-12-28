@@ -19,11 +19,11 @@
 #' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
 #' prettymap({
 #'   osm.plot(searchbbox("nova scotia"))
-#'   osm.points(locs$lon, locs$lat, pch=18, cex=0.7)
+#'   osm.points(locs$lon, locs$lat, pch = 18, cex = 0.7)
 #' })
 #' }
 #'
-osm.points <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
+osm.points <- function(x, y = NULL, epsg = 4326, toepsg = 3857, ...) {
   graphics::points(.projpts(x, y, epsg, toepsg), ...)
 }
 
@@ -53,10 +53,10 @@ osm.points <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #' })
 #' }
 #'
-osm.segments <- function(x0, y0, x1=x0, y1=y0, epsg=4326, toepsg=3857, ...) {
+osm.segments <- function(x0, y0, x1 = x0, y1 = y0, epsg = 4326, toepsg = 3857, ...) {
   c0 <- .projpts(x0, y0, epsg, toepsg)
   c1 <- .projpts(x1, y1, epsg, toepsg)
-  graphics::segments(c0[,1], c0[,2], c1[,1], c1[,2])
+  graphics::segments(c0[, 1], c0[, 2], c1[, 1], c1[, 2])
 }
 
 #' Overlay lines on an OSM plot
@@ -79,11 +79,11 @@ osm.segments <- function(x0, y0, x1=x0, y1=y0, epsg=4326, toepsg=3857, ...) {
 #' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
 #' prettymap({
 #'   osm.plot(searchbbox("nova scotia"))
-#'   osm.lines(locs$lon, locs$lat, lwd=2)
+#'   osm.lines(locs$lon, locs$lat, lwd = 2)
 #' })
 #' }
 #'
-osm.lines <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
+osm.lines <- function(x, y = NULL, epsg = 4326, toepsg = 3857, ...) {
   graphics::lines(.projpts(x, y, epsg, toepsg), ...)
 }
 
@@ -111,7 +111,7 @@ osm.lines <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #' })
 #' }
 #'
-osm.polygon <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
+osm.polygon <- function(x, y = NULL, epsg = 4326, toepsg = 3857, ...) {
   graphics::polygon(.projpts(x, y, epsg, toepsg), ...)
 }
 
@@ -130,16 +130,18 @@ osm.polygon <- function(x, y=NULL, epsg=4326, toepsg=3857, ...) {
 #'
 #' @export
 #'
-osm.text <- function(x, y=NULL, labels = seq_along(x), epsg=4326, toepsg=3857, ...) {
+osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3857, ...) {
   graphics::text(.projpts(x, y, epsg, toepsg), labels = labels, ...)
 }
 
 
-.projpts <- function(x, y=NULL, epsg, toepsg) {
-  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) #hack to load rgdal namespace
+.projpts <- function(x, y = NULL, epsg, toepsg) {
+  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) # hack to load rgdal namespace
   xy <- grDevices::xy.coords(x, y)
-  sp::coordinates(sp::spTransform(sp::SpatialPoints(sp::coordinates(cbind(xy$x, xy$y)),
-                                    proj4string=sp::CRS(sprintf("+init=epsg:%s", epsg))),
-                  sp::CRS(sprintf("+init=epsg:%s", toepsg))))
+  sp::coordinates(sp::spTransform(
+    sp::SpatialPoints(sp::coordinates(cbind(xy$x, xy$y)),
+      proj4string = sp::CRS(sprintf("+init=epsg:%s", epsg))
+    ),
+    sp::CRS(sprintf("+init=epsg:%s", toepsg))
+  ))
 }
-

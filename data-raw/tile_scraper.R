@@ -10,6 +10,7 @@ links <- links[grepl("\\$\\{.\\}", links)]
 # group a/b/c tile
 linkcat <- gsub("http://[abc]\\.(.*)", "http://\\1", links)
 linklist <- tapply(links, linkcat, function(v) paste0("'", v, "'", collapse = ", "),
-                   simplify = FALSE)
+  simplify = FALSE
+)
 names(linklist) <- NULL
 print(linklist)

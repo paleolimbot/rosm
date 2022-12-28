@@ -1,36 +1,39 @@
 # plot slippy tiles
 
-tile.loadimage <- function(x, y, zoom, type, cachedir=NULL, quiet = TRUE) {
-  if(x < 0) {
+tile.loadimage <- function(x, y, zoom, type, cachedir = NULL, quiet = TRUE) {
+  if (x < 0) {
     # negative tiles from wrap situation
-    x <- x+2^zoom
+    x <- x + 2^zoom
   }
 
   fname <- tile.cachename(x, y, zoom, type, cachedir)
   parts <- strsplit(fname, "\\.")[[1]]
   ext <- parts[length(parts)]
-  tryCatch({
-    if(ext == "jpg" || ext =="jpeg") {
-      jpeg::readJPEG(fname)
-    } else if(ext == "png") {
-      png::readPNG(fname)
-    } else {
-      stop("Extension not recognized: ", ext)
+  tryCatch(
+    {
+      if (ext == "jpg" || ext == "jpeg") {
+        jpeg::readJPEG(fname)
+      } else if (ext == "png") {
+        png::readPNG(fname)
+      } else {
+        stop("Extension not recognized: ", ext)
+      }
+    },
+    error = function(err) {
+      if (!quiet) message("Error loading ", fname, ": ", err)
+      NULL
     }
-  }, error=function(err) {
-    if(!quiet) message("Error loading ", fname, ": ", err)
-    NULL
-  })
+  )
 }
 
 tile.applywrap <- function(tiles, zoom) {
-  if(!all(min(tiles[,1]):max(tiles[,1]) %in% tiles[,1])) {
+  if (!all(min(tiles[, 1]):max(tiles[, 1]) %in% tiles[, 1])) {
     # wrapping around the backside of the earth, make end tiles negative
     warning("Attempting to plot wrap around tiles (~lat=-180), things may get funky.")
     n <- -1
-    while(length(tiles[,1][tiles[,1]==2^zoom+n]) > 0) {
-      tiles[,1][tiles[,1]==2^zoom+n] <- (tiles[,1][tiles[,1]==2^zoom+n]) - 2^zoom
-      n <- n-1
+    while (length(tiles[, 1][tiles[, 1] == 2^zoom + n]) > 0) {
+      tiles[, 1][tiles[, 1] == 2^zoom + n] <- (tiles[, 1][tiles[, 1] == 2^zoom + n]) - 2^zoom
+      n <- n - 1
     }
   }
   tiles
@@ -44,31 +47,31 @@ tile.apply <- function(tiles, fun, ..., progress = "none") {
 }
 
 # loops through the tiles and plots or combines the results to a list
-tile.ploteach <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
+tile.ploteach <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
   tile.apply(tiles, function(x, y) {
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
 
     # if in plotting mode, plot the array
-    if(!is.null(image)) tile.plotarray(image, box)
-
+    if (!is.null(image)) tile.plotarray(image, box)
   })
 }
 
-tile.each <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
+tile.each <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
   tile.apply(tiles, function(x, y) {
     box <- tile.bbox(x, y, zoom, epsg)
     image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
 
     # return structure as the image array, with attribute 'bbox'
     # this is modeled after the @bbox slot in the sp package
-    structure(image, bbox=box, type=type,
-              epsg=epsg, zoom=zoom, tiles = data.frame(x, y))
+    structure(image,
+      bbox = box, type = type,
+      epsg = epsg, zoom = zoom, tiles = data.frame(x, y)
+    )
   })
 }
 
 tile.fuse <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
-
   tiles <- tile.applywrap(tiles, zoom)
 
   tile_dims <- check.dimensions(tiles, zoom, type, cachedir)
@@ -84,8 +87,8 @@ tile.fuse <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = F
   }
 
   tiles <- tiles[order(tiles[[1]], tiles[[2]]), , drop = FALSE]
-  x_tile <- unique(tiles[,1])
-  y_tile <- unique(tiles[,2])
+  x_tile <- unique(tiles[, 1])
+  y_tile <- unique(tiles[, 2])
 
   xs <- (seq_along(x_tile) - 1) * dim_x
   ys <- (seq_along(y_tile) - 1) * dim_y
@@ -97,7 +100,7 @@ tile.fuse <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = F
       img <- tile.loadimage(x_tile[i], y_tile[j], zoom, type, cachedir, quiet = quiet)
       if (is.null(img) && is.null(missing_tile)) {
         stop("Cannot fuse unloadable tile")
-      } else if(is.null(img)) {
+      } else if (is.null(img)) {
         missing_tile
       } else {
         ensure.bands(img, tile_dims$targetdim, default_value = 1)
@@ -133,20 +136,23 @@ tile.fuse <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = F
 }
 
 # ensure array dimensions match a given dim value
-ensure.bands <- function(image, dimension, default_value=1) {
+ensure.bands <- function(image, dimension, default_value = 1) {
   banddiff <- dimension[3] - dim(image)[3]
-  if(banddiff == 0) {
+  if (banddiff == 0) {
     image
   } else if (banddiff > 0) {
     # add extra bands
-    abind::abind(image, array(default_value,
-                              c(dimension[1], dimension[2], banddiff)),
-                 along = 3)
-  } else if(banddiff < 0) {
+    abind::abind(image, array(
+      default_value,
+      c(dimension[1], dimension[2], banddiff)
+    ),
+    along = 3
+    )
+  } else if (banddiff < 0) {
     # this shouldn't happen, but...
     warning("Cropping image in ensure.bands")
     # crop
-    image[ , , 1:dimension[3], drop = FALSE]
+    image[, , 1:dimension[3], drop = FALSE]
   }
 }
 
@@ -154,9 +160,9 @@ ensure.bands <- function(image, dimension, default_value=1) {
 # checks the dimensions of all the tiles (used in tile.fuse)
 check.dimensions <- function(tiles, zoom, type, cachedir) {
   # check dimensions of all tiles before fusing
-  dims <- tile.apply(tiles, fun=function(x, y) {
+  dims <- tile.apply(tiles, fun = function(x, y) {
     image <- tile.loadimage(x, y, zoom, type, cachedir)
-    if(!is.null(image)) {
+    if (!is.null(image)) {
       dim(image)
     } else {
       c(0, 0, 0)
@@ -164,33 +170,43 @@ check.dimensions <- function(tiles, zoom, type, cachedir) {
   })
 
   # check for 3 dimensions
-  if(!all(vapply(dims, length, integer(1)) == 3)) stop("Incorrect dimensions in image")
+  if (!all(vapply(dims, length, integer(1)) == 3)) stop("Incorrect dimensions in image")
 
   # check for missing tiles
-  missing_tiles <- vapply(dims, function(dim) identical(dim, c(0, 0, 0)),
-                          logical(1))
-  if(all(missing_tiles)) stop("Zero tiles were loaded for type ", type$name)
+  missing_tiles <- vapply(
+    dims, function(dim) identical(dim, c(0, 0, 0)),
+    logical(1)
+  )
+  if (all(missing_tiles)) stop("Zero tiles were loaded for type ", type$name)
 
   # find dimension of non-missing tiles (hopefully the same...)
   tiledim <- do.call(rbind, dims[!missing_tiles])
 
   uniqueXs <- unique(tiledim[, 1, drop = TRUE])
   uniqueYs <- unique(tiledim[, 2, drop = TRUE])
-  if(length(uniqueXs) > 1) stop("More than one image x dimension: ",
-                                paste(uniqueXs, collapse = ", "))
-  if(length(uniqueYs) > 1) stop("More than one image y dimension: ",
-                                paste(uniqueYs, collapse = ", "))
+  if (length(uniqueXs) > 1) {
+    stop(
+      "More than one image x dimension: ",
+      paste(uniqueXs, collapse = ", ")
+    )
+  }
+  if (length(uniqueYs) > 1) {
+    stop(
+      "More than one image y dimension: ",
+      paste(uniqueYs, collapse = ", ")
+    )
+  }
 
   # assign target dim with the max of z dimensions (so a band can be added)
   # if not all have the same bands
   targetdim <- c(uniqueXs, uniqueYs, max(tiledim[, 3, drop = TRUE]))
 
   # also return the number of missing tiles
-  list(targetdim=targetdim, nmissing=sum(missing_tiles))
+  list(targetdim = targetdim, nmissing = sum(missing_tiles))
 }
 
-tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = FALSE) {
-  fused <- tile.fuse(tiles, zoom, type, epsg=epsg, cachedir=cachedir, quiet = quiet)
+tile.plotfused <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
+  fused <- tile.fuse(tiles, zoom, type, epsg = epsg, cachedir = cachedir, quiet = quiet)
   # plot image
   tile.plotarray(fused, attr(fused, "bbox"))
 }
@@ -239,12 +255,12 @@ tile.plotfused <- function(tiles, zoom, type, epsg=4326, cachedir=NULL, quiet = 
 #' library(prettymapr)
 #' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
 #' osm.plot(ns)
-#' osm.plot(ns, type="stamenbw")
-#' prettymap(osm.plot(ns), scale.style="ticks", scale.tick.cex=0)
+#' osm.plot(ns, type = "stamenbw")
+#' prettymap(osm.plot(ns), scale.style = "ticks", scale.tick.cex = 0)
 #' }
-osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
-                     stoponlargerequest=TRUE, fusetiles=TRUE, cachedir=NULL, res=150,
-                     project=TRUE, progress=c("text", "none"), quiet = TRUE, ...) {
+osm.plot <- function(bbox, zoomin = 0, zoom = NULL, type = NULL, forcedownload = FALSE,
+                     stoponlargerequest = TRUE, fusetiles = TRUE, cachedir = NULL, res = 150,
+                     project = TRUE, progress = c("text", "none"), quiet = TRUE, ...) {
   # validate progress arg
   progress <- match.arg(progress)
 
@@ -252,13 +268,13 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
   bbox <- extract_bbox(bbox)
 
   # verify tile source
-  if(is.null(type)) {
+  if (is.null(type)) {
     type <- get_default_tile_source()
   } else {
     type <- as.tile_source(type)
   }
 
-  if(project) {
+  if (project) {
     epsg <- 3857
   } else {
     epsg <- 4326
@@ -267,40 +283,48 @@ osm.plot <- function(bbox, zoomin=0, zoom=NULL, type=NULL, forcedownload=FALSE,
   bbox <- .projectbbox(bbox, epsg)
 
   coords <- sp::coordinates(t(bbox))
-  spoints = sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", epsg)))
+  spoints <- sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", epsg)))
 
   plotargs <- list(...)
-  if(is.null(plotargs$xlim))
-    xlim <- bbox[1,]
-  if(is.null(plotargs$ylim))
-    ylim <- bbox[2,]
-
-  sp::plot(spoints, pch=".", xlim=xlim, ylim=ylim, ...)
-
-  if(is.null(zoom)) {
-    zoom <- tile.autozoom(res=res, epsg=epsg)
+  if (is.null(plotargs$xlim)) {
+    xlim <- bbox[1, ]
   }
-  zoom <- zoom+zoomin
+  if (is.null(plotargs$ylim)) {
+    ylim <- bbox[2, ]
+  }
+
+  sp::plot(spoints, pch = ".", xlim = xlim, ylim = ylim, ...)
+
+  if (is.null(zoom)) {
+    zoom <- tile.autozoom(res = res, epsg = epsg)
+  }
+  zoom <- zoom + zoomin
   maxzoom <- tile.maxzoom(type)
   zoom <- min(zoom, maxzoom)
 
-  #global min zoom set to 1
+  # global min zoom set to 1
   zoom <- max(1, zoom)
   message("Zoom: ", zoom)
-  #adjust bbox to final plot extents
-  bbox <- t(matrix(graphics::par('usr'), ncol=2, byrow=FALSE))
+  # adjust bbox to final plot extents
+  bbox <- t(matrix(graphics::par("usr"), ncol = 2, byrow = FALSE))
 
-  tiles <- tiles.bybbox(bbox, zoom, epsg=epsg)
-  if((nrow(tiles)>32) && stoponlargerequest) stop("More than 32 tiles to be loaded. ",
-                                                  "Run with stoponlargerequest=FALSE or ",
-                                                  "zoomin=-1, to continue")
-  tile.download(tiles, zoom, type=type, forcedownload=forcedownload, cachedir=cachedir,
-                progress=progress, quiet = quiet)
+  tiles <- tiles.bybbox(bbox, zoom, epsg = epsg)
+  if ((nrow(tiles) > 32) && stoponlargerequest) {
+    stop(
+      "More than 32 tiles to be loaded. ",
+      "Run with stoponlargerequest=FALSE or ",
+      "zoomin=-1, to continue"
+    )
+  }
+  tile.download(tiles, zoom,
+    type = type, forcedownload = forcedownload, cachedir = cachedir,
+    progress = progress, quiet = quiet
+  )
 
-  if(fusetiles) {
-    tile.plotfused(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, quiet = quiet)
+  if (fusetiles) {
+    tile.plotfused(tiles, zoom, type = type, epsg = epsg, cachedir = cachedir, quiet = quiet)
   } else {
-    tile.ploteach(tiles, zoom, type=type, epsg=epsg, cachedir=cachedir, quiet = quiet)
+    tile.ploteach(tiles, zoom, type = type, epsg = epsg, cachedir = cachedir, quiet = quiet)
   }
 
   tile.attribute(type)

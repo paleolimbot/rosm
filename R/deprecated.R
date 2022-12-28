@@ -1200,8 +1200,6 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
 # projection functions
 
 .tolatlon <- function(x, y, epsg = NULL, projection = NULL) {
-  requireNamespace("rgdal", quietly = TRUE)
-
   if (is.null(epsg) && is.null(projection)) {
     stop("epsg and projection both null...nothing to project")
   } else if (!is.null(epsg) && !is.null(projection)) {
@@ -1209,19 +1207,19 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
   }
 
   if (is.null(projection)) {
-    projection <- sp::CRS(paste0("+init=epsg:", epsg))
+    projection <- sf::st_crs(paste0("EPSG:", epsg))
+  } else {
+    projection <- sf::st_crs(projection)
   }
 
-  coords <- sp::coordinates(cbind(x, y))
-  rownames(coords) <- NULL
-  spoints <- sp::SpatialPoints(coords, projection)
-  spnew <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
-  sp::coordinates(spnew)
+  sf::sf_project(
+    projection,
+    sf::st_crs(4326),
+    cbind(x, y)
+  )
 }
 
 .fromlatlon <- function(lon, lat, epsg = NULL, projection = NULL) {
-  requireNamespace("rgdal", quietly = TRUE)
-
   if (is.null(epsg) && is.null(projection)) {
     stop("epsg and projection both null...nothing to project")
   } else if (!is.null(epsg) && !is.null(projection)) {
@@ -1229,14 +1227,16 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
   }
 
   if (is.null(projection)) {
-    projection <- sp::CRS(paste0("+init=epsg:", epsg))
+    projection <- sf::st_crs(epsg)
+  } else {
+    projection <- sf::st_crs(projection)
   }
 
-  coords <- sp::coordinates(cbind(lon, lat))
-  rownames(coords) <- NULL
-  spoints <- sp::SpatialPoints(coords, sp::CRS("+init=epsg:4326"))
-  spnew <- sp::spTransform(spoints, projection)
-  sp::coordinates(spnew)
+  sf::sf_project(
+    sf::st_crs(4326),
+    projection,
+    cbind(lon, lat)
+  )
 }
 
 .projectbbox <- function(bbox, toepsg = NULL, projection = NULL) {

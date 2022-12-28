@@ -1,0 +1,1726 @@
+
+
+#' Tile Sources
+#'
+#' Tile sources define where rosm looks for map tiles. There are a number of
+#' built-in types (\link{osm.types}), or they can be created using \code{as.tile_source()},
+#' registered using \link{register_tile_source} for easy access, or passed directly to
+#' the \link{osm.plot} family of methods.
+#'
+#' Passing a name from \link{osm.types} will return that tile source; passing a name from
+#' \link{register_tile_source} will return that tile source, and passing a URL format in the form
+#' \code{https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png} will create a new tile source.
+#' Old style function names in the form tile.url.TYPE are still supported but are deprecated.
+#'
+#' @param x An object (usually a name or string format) with which to create a tile source
+#' @param url_format A string in the form \code{https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png},
+#'   where z, x, and y are the zoom, xtile, and ytile, respectively. Also valid is ${q}, which
+#'   will be passed a quadkey.
+#' @param max_zoom An integer specifying the maximum zoom to use (default is 19)
+#' @param min_zoom An integer specifying the minimum zoom to use (default is 1)
+#' @param attribution An attribution string, required by some tile providers.
+#' @param extension An extension string, used to generate the cache file name and
+#'   determine whether to use png or jpeg to read the cached file.
+#' @param ... Arguments passed to other methods
+#'
+#' @return An object of class 'tile_source'
+#' @export
+#'
+#'
+#' @examples
+#' # get builtin tile sources
+#' as.tile_source("osm")
+#'
+#' # get custom tile sources
+#' as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#'
+#' # get registered tile sources
+#' register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#' as.tile_source("dark")
+#'
+#' # create more complex tile sources using source_from_url_format
+#' source_from_url_format("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
+#'   attribution = "Tiles by CartoDB"
+#' )
+#'
+#' # test for tile sources
+#' is.tile_source(as.tile_source("osm"))
+#'
+as.tile_source <- function(x, ...) {
+  # first check if x is a tile source
+  if (is.tile_source(x)) {
+    return(x)
+  }
+
+  # order is registered -> built_in -> functions -> string format
+  if ((length(x) == 1) && (x %in% names(registered_sources))) {
+    src <- registered_sources[[x]]
+    src$name <- x
+    src
+  } else if ((length(x) == 1) && (x %in% names(tile_sources))) {
+    src <- tile_sources[[x]]
+    src$name <- x
+    src
+  } else if ((length(x) == 1) && is.character(x)) {
+    # if url function exists, use old-style function definitions
+    if (exists(paste0("tile.url.", x))) {
+      source_from_global_functions(x)
+    } else {
+      # create using string format
+      source_from_url_format(x, ...)
+    }
+  } else if ((length(x) > 1) && is.character(x)) {
+    # character vectors > 1 can't be functions
+    source_from_url_format(x, ...)
+  } else {
+    stop("Don't know how to create a tile_source from type ", class(x))
+  }
+}
+
+#' @rdname as.tile_source
+#' @export
+is.tile_source <- function(x) {
+  inherits(x, "tile_source")
+}
+
+#' @rdname as.tile_source
+#' @export
+source_from_url_format <- function(url_format, max_zoom = tile.maxzoom.default(),
+                                   min_zoom = 0, attribution = NULL, extension = tools::file_ext(url_format[1]),
+                                   ...) {
+  # url format like this: https://tiles.wmflabs.org/bw-mapnik/${z}/${x}/${y}.png
+  # ${q} for quadkey
+
+  # check format: need ${z}/${x}/${y} xor ${q} (not both)
+  # url_format may be a vector of names, so wrap in all()
+  if (xor(
+    !all(grepl("${q}", url_format, fixed = TRUE)),
+    !(!all(grepl("${z}", url_format, fixed = TRUE)) &&
+      !all(grepl("${x}", url_format, fixed = TRUE)) &&
+      !all(grepl("${y}", url_format, fixed = TRUE)))
+  )) {
+    stop("url_format must contain ${q} xor ${z} and ${x} and ${y}")
+  }
+
+  # check extension
+  extension <- match.arg(extension, c("png", "jpeg", "jpg"))
+
+  # force args, since they will be used in closures
+  force(max_zoom)
+  force(attribution)
+  extra_args <- list(...)
+  force(extension)
+
+  create_tile_source(
+    get_tile_url = function(xtile, ytile, zoom, quadkey = "") {
+      withx <- gsub("${x}", xtile, sample(url_format, 1), fixed = TRUE)
+      withy <- gsub("${y}", ytile, withx, fixed = TRUE)
+      withz <- gsub("${z}", zoom, withy, fixed = TRUE)
+      # return with quadkey
+      gsub("${q}", quadkey, withz, fixed = TRUE)
+    },
+    get_attribution = function() attribution,
+    get_max_zoom = function() max_zoom,
+    get_min_zoom = function() min_zoom,
+    get_extension = function() extension,
+    name = url_format[1],
+    url_formats = url_format,
+    ...
+  )
+}
+
+# these are old-style custom tile naming functions
+source_from_global_functions <- function(type) {
+  message("Using functions as custom tile sources is deprecated. Use string formats instead.")
+
+  # get_url is mandatory, so use match.fun
+  get_url <- match.fun(paste0("tile.url.", type))
+
+  # maxzoom function is not manditory
+  if (exists(paste0("tile.maxzoom.", type))) {
+    get_max_zoom <- match.fun(paste0("tile.maxzoom.", type))
+  } else {
+    get_max_zoom <- tile.maxzoom.default
+  }
+
+  # attribute function is not manditory
+  if (exists(paste0("tile.attribute.", type))) {
+    attribution <- match.fun(paste0("tile.attribute", type))
+  } else {
+    attribution <- function() NULL
+  }
+
+  # extension should be from tile url
+  extension <- tools::file_ext(get_url(0, 0, 0)[1])
+
+  # return tile source
+  create_tile_source(
+    get_tile_url = get_url,
+    get_max_zoom = get_max_zoom,
+    get_min_zoom = tile.minzoom.default,
+    get_attribution = attribution,
+    get_extension = function() extension,
+    name = type
+  )
+}
+
+
+#' Register Tile Sources
+#'
+#' Use this function to register tile sources so they can be referred to by name in
+#' \link{osm.plot}. Tile sources will be registered for as long as the namespace
+#' is loaded. Use \code{set_default_tile_source()} to set the default source.
+#'
+#' @param x The tile source (or coercible string) to use as the default tile source
+#' @param ... Passed to \link{as.tile_source} for set_default_tile_source, or a named
+#'   list of tile sources for register_tile_source
+#'
+#' @export
+#'
+#' @examplesIf has_internet()
+#' # set the default tile source
+#' set_default_tile_source("stamenbw")
+#'
+#' # register a custom tile source
+#' register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#'
+#' \donttest{
+#' library(prettymapr)
+#' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+#' prettymap(osm.plot(ns, "dark"))
+#' }
+#'
+register_tile_source <- function(...) {
+  sources <- list(...)
+  if (is.null(names(sources))) stop("register_source must be called with named arguments")
+  if (any(nchar(names(sources)) == 0)) stop("register_source must be called with named arguments")
+
+  # lapply as.tile_source and copy to registered_sources
+  list2env(lapply(sources, as.tile_source), registered_sources)
+
+  invisible(NULL)
+}
+
+#' @rdname register_tile_source
+#' @export
+set_default_tile_source <- function(x, ...) {
+  ts <- as.tile_source(x, ...)
+  registered_sources$.defaultsource <- ts
+}
+
+#' @rdname register_tile_source
+#' @export
+get_default_tile_source <- function() {
+  if (exists(".defaultsource", where = registered_sources)) {
+    registered_sources$.defaultsource
+  } else {
+    as.tile_source("osm")
+  }
+}
+
+# use an environment to keep track of registered sources
+registered_sources <- new.env(parent = emptyenv())
+
+#' Get List of Valid Tile Sources
+#'
+#' @return A character vector of valid \code{type} parameters.
+#'
+#' @export
+#'
+#' @examples
+#' osm.types()
+#'
+osm.types <- function() {
+  c(names(tile_sources), setdiff(names(registered_sources), ".defaultsource"))
+}
+
+# base function to create specs
+create_tile_source <- function(get_tile_url, get_max_zoom, get_min_zoom,
+                               get_attribution, get_extension, ..., validate = TRUE) {
+  # here, get_tile_url, get_max_zoom, and get_attribution are all functions
+  # that get passed xtile, ytile, zoom, and quadkey (if quadkey is in the formals)
+  # this is for backwards compatiblity with older tile.url.TYPE functions
+
+  # force functions
+  force(get_tile_url)
+  force(get_max_zoom)
+  force(get_min_zoom)
+  force(get_attribution)
+  force(get_extension)
+
+  if (validate) {
+    # validate the functions
+
+    # check that get_tile_url returns a character vector of length 1
+    if ("quadkey" %in% names(formals(get_tile_url))) {
+      url <- get_tile_url(0, 0, 0, quadkey = "0")
+    } else {
+      url <- get_tile_url(0, 0, 0)
+    }
+    if (!is.character(url)) stop("get_tile_url must return type 'character'")
+    if (length(url) != 1) stop("get_tile_url must return a vector of length 1")
+
+    # check that maxzoom is an integer
+    maxzoom <- get_max_zoom()
+    if ((maxzoom %% 1) != 0) stop("get_max_zoom must return an integer")
+
+    # check that minzoom is an integer
+    minzoom <- get_min_zoom()
+    if ((minzoom %% 1) != 0) stop("get_min_zoom must return an integer")
+
+    # check that get_attribution returns a character vector of length 1
+    attribution <- get_attribution()
+    if (!is.null(attribution)) {
+      if (!is.character(attribution)) stop("get_attribution must return a character vector")
+      if (length(attribution) != 1) stop("get_attribution must return a vector of length 1")
+    }
+
+    # check that get_extension returns a character vector of length 1
+    extension <- get_extension()
+    if (!is.null(extension)) {
+      if (!is.character(extension)) stop("get_extension must return a character vector")
+      if (length(extension) != 1) stop("get_extension must return a vector of length 1")
+    }
+  }
+
+  # return list of class "tile_source"
+  structure(list(
+    get_tile_url = get_tile_url,
+    get_attribution = get_attribution,
+    get_max_zoom = get_max_zoom,
+    get_min_zoom = get_min_zoom,
+    get_extension = get_extension,
+    ...
+  ), class = "tile_source")
+}
+
+# modified from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#R
+
+bmaps.quadkey <- function(tilex, tiley, zoom) {
+  nzoom <- 2^zoom
+  if (tilex < 0 || tilex >= nzoom) stop("xtile out of range: ", tilex)
+  if (tiley < 0 || tiley >= nzoom) stop("ytile out of range: ", tilex)
+  out <- ""
+  keymap <- matrix(0:3, byrow = TRUE, ncol = 2)
+  decx <- tilex / nzoom
+  decy <- tiley / nzoom
+  for (i in 1:zoom) {
+    n <- 2^i
+    x <- floor(decx * 2^i) - floor(decx * 2^(i - 1)) * 2
+    y <- floor(decy * 2^i) - floor(decy * 2^(i - 1)) * 2
+    out <- paste0(out, keymap[y + 1, x + 1])
+  }
+  out
+}
+
+tiles.bybbox <- function(bbox, zoom, epsg = 4326) {
+  nwlatlon <- .tolatlon(bbox[1, 1], bbox[2, 2], epsg)
+  selatlon <- .tolatlon(bbox[1, 2], bbox[2, 1], epsg)
+
+  if (nwlatlon[1] < -180) { # fixes wraparound problem with project=F
+    nwlatlon[1] <- nwlatlon[1] + 360
+  }
+
+  if (nwlatlon[1] > selatlon[1]) {
+    # wrapping around backside of earth
+    backsidebbox <- matrix(c(nwlatlon[1], selatlon[2], 180, nwlatlon[2]), ncol = 2, byrow = FALSE)
+    backsidetiles <- tiles.bybbox(backsidebbox, zoom, 4326)
+    nwlatlon[1] <- -180
+  } else {
+    backsidetiles <- NULL
+  }
+
+  nw <- tile.xy(nwlatlon[1], nwlatlon[2], zoom)
+  se <- tile.xy(selatlon[1], selatlon[2], zoom)
+  tiles <- expand.grid(x = nw[1]:se[1], y = nw[2]:se[2])
+
+  if (is.null(backsidetiles)) {
+    tiles
+  } else {
+    rbind(backsidetiles, tiles)
+  }
+}
+
+tile.xy <- function(x, y, zoom, epsg = 4326) {
+  latlon <- .tolatlon(x, y, epsg)
+
+  lat_rad <- latlon[2] * pi / 180
+  n <- 2.0^zoom
+  xtile <- floor((latlon[1] + 180.0) / 360.0 * n)
+  ytile <- floor((1.0 - log(tan(lat_rad) + (1 / cos(lat_rad))) / pi) / 2.0 * n)
+  xtile <- max(0, min(xtile, n - 1)) # limit x, y tiles to valid tile numbers
+  ytile <- max(0, min(ytile, n - 1))
+  c(xtile, ytile)
+}
+
+tile.nw <- function(xtile, ytile, zoom, epsg = 4326) {
+  n <- 2.0^zoom
+  lon_deg <- xtile / n * 360.0 - 180.0
+  lat_rad <- atan(sinh(pi * (1 - 2 * ytile / n)))
+  lat_deg <- lat_rad * 180 / pi
+
+  projected <- .fromlatlon(lon_deg, lat_deg, epsg)
+  # added to support wrap around tiles
+  if (lon_deg < -180 && projected[1] > 0) {
+    # wrap around situation
+
+    maxx <- .fromlatlon(180, lat_deg, epsg)[1]
+    projected[1] <- projected[1] - maxx * 2
+  }
+  projected
+}
+
+tile.bbox <- function(xtile, ytile, zoom, epsg = 4326) {
+  nw <- tile.nw(xtile, ytile, zoom, epsg)
+  se <- tile.nw(xtile + 1, ytile + 1, zoom, epsg)
+  matrix(c(nw[1], se[2], se[1], nw[2]),
+    ncol = 2,
+    byrow = FALSE, dimnames = list(c("x", "y"), c("min", "max"))
+  )
+}
+
+tile.url <- function(xtile, ytile, zoom, type) {
+  fun <- type$get_tile_url
+  if ("quadkey" %in% names(formals(fun))) {
+    fun(xtile, ytile, zoom, quadkey = bmaps.quadkey(xtile, ytile, zoom))
+  } else {
+    fun(xtile, ytile, zoom)
+  }
+}
+
+tile.ext <- function(type) {
+  type$get_extension()
+}
+
+tile.maxzoom <- function(type) {
+  type$get_max_zoom()
+}
+
+tile.maxzoom.default <- function() {
+  return(19)
+}
+
+tile.minzoom.default <- function() {
+  return(0)
+}
+
+tile.attribute <- function(type) {
+  attribution <- type$get_attribution()
+  if (!is.null(attribution)) message(attribution)
+}
+
+tile.cachename <- function(xtile, ytile, zoom, type, cachedir = NULL) {
+  folder <- tile.cachedir(type, cachedir)
+  ext <- tile.ext(type)
+  file.path(folder, paste0(zoom, "_", xtile, "_", ytile, ".", ext))
+}
+
+tile.download <- function(tiles, zoom, type = "osm", forcedownload = FALSE, cachedir = NULL,
+                          progress = "text", quiet = TRUE, pause = 0.1) {
+  if (!forcedownload) {
+    # check which tiles exist
+    texists <- vapply(1:nrow(tiles), function(i) {
+      cachename <- tile.cachename(tiles[i, 1], tiles[i, 2], zoom, type, cachedir)
+      return(file.exists(cachename))
+    }, logical(1))
+    tiles <- tiles[!texists, , drop = FALSE]
+  }
+
+  if (nrow(tiles) > 0) {
+    if (progress != "none") {
+      message("Fetching ", nrow(tiles), " missing tiles")
+      pb <- utils::txtProgressBar(min = 0, max = nrow(tiles), width = 20, file = stderr())
+    }
+
+    tile.apply(tiles, fun = function(xtile, ytile) {
+      cachename <- tile.cachename(xtile, ytile, zoom, type, cachedir)
+      url <- tile.url(xtile, ytile, zoom, type)
+      # pause to avoid overwhelming servers
+      if (pause > 0) Sys.sleep(pause)
+
+      if (!quiet) message("trying URL: ", url)
+
+      # try to download file
+      result <- try(curl::curl_download(url, cachename, quiet = quiet, mode = "wb"),
+        silent = quiet
+      )
+
+      # display errors only in progress mode
+      if (!quiet && inherits(result, "try-error")) {
+        message(sprintf(
+          "Failed to download tile %s:(%s, %s) for type %s / %s",
+          zoom, xtile, ytile, type$name, result
+        ))
+      } else if (!quiet && !file.exists(cachename)) {
+        message(sprintf(
+          "Failed to download tile %s:(%s, %s) for type %s",
+          zoom, xtile, ytile, type$name
+        ))
+      }
+
+      # delete files for try-errors
+      if (inherits(result, "try-error")) {
+        try(unlink(cachename), silent = TRUE)
+      }
+    }, progress = progress)
+
+    if (progress != "none") message("...complete!")
+  }
+}
+
+# use an internal environment to cache REST information
+bing_rest_queries <- new.env(parent = emptyenv())
+
+bmaps.restquery <- function(bingtype, key = NULL) {
+  # http://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=KEY
+  # get a key at https://msdn.microsoft.com/en-us/library/ff428642.aspx
+
+  # use cached information first
+  if (bingtype %in% names(bing_rest_queries)) {
+    result <- bing_rest_queries[[bingtype]]
+  } else {
+    if (is.null(key)) {
+      key <- "Aut49nhp5_Twwf_5RHF6wSGk7sEzpcSA__niIXCHowQZLMeC-m8cdy7EmZd2r7Gs"
+    }
+    urlstring <- paste0("http://dev.virtualearth.net/REST/v1/Imagery/Metadata/", bingtype, "?key=", key)
+
+    connect <- curl::curl(urlstring)
+    lines <- try(readLines(connect, warn = FALSE), silent = TRUE)
+    close(connect)
+
+    if (inherits(lines, "try-error")) stop("  Bing REST query failed for type: ", bingtype)
+
+    # convert to a list
+    result <- rjson::fromJSON(paste(lines, collapse = ""))
+    # cache the result
+    bing_rest_queries[[bingtype]] <- result
+  }
+  # display the copyright notice
+  message(result$copyright)
+
+  # return only the relevant node
+  result$resourceSets[[1]]$resources[[1]]
+}
+
+bmaps.sourcefromrest <- function(rest, name) {
+  force(rest)
+  force(name)
+  create_tile_source(
+    get_tile_url = function(xtile, ytile, zoom, quadkey) {
+      gsub("{quadkey}", quadkey, gsub("{subdomain}", sample(rest$imageUrlSubdomains, 1),
+        rest$imageUrl,
+        fixed = TRUE
+      ),
+      fixed = TRUE
+      )
+    },
+    get_max_zoom = function() rest$zoomMax,
+    get_min_zoom = function() rest$zoomMin,
+    get_attribution = function() NULL,
+    get_extension = function() {
+      tools::file_ext(gsub("\\?.*$", "", rest$imageUrl[1]))
+    },
+    name = name
+  )
+}
+
+#' List types of Bing Maps
+#'
+#'
+#' @return A list of valid bing map types
+#' @export
+#'
+#' @examples
+#' bmaps.types()
+#'
+bmaps.types <- function() {
+  c("Aerial", "AerialWithLabels", "Road")
+}
+
+#' Plot Bing Maps
+#'
+#' Identical syntax to \link{osm.plot}, but using Bing maps (\url{https://www.bing.com/maps/})
+#' instead of Open Street Map.
+#'
+#' @param bbox A bounding box as generated by \code{sp::bbox()} or \code{prettymapr::searchbbox()}
+#' @param type Use \code{Aerial}, \code{AerialWithLabels}, or \code{Road}.
+#' @param key If plotting a large number of images, consider getting your own (free) key at
+#' the Microsoft Website.
+#' @param ... Arguments passed on to \link{osm.plot}.
+#'
+#' @export
+#'
+#' @examplesIf has_internet()
+#' \donttest{
+#' library(prettymapr)
+#' bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4))
+#' bmaps.plot(makebbox(47.2, -59.7, 43.3, -66.4), type = "Road")
+#' }
+#'
+bmaps.plot <- function(bbox, type = "Aerial", key = NULL, ...) {
+  if (!(type %in% bmaps.types())) stop("type must be one of Aerial, AerialWithLabels, or Road")
+
+  # get REST information
+  rest <- bmaps.restquery(type, key)
+  # plot using OSM.plot
+  osm.plot(bbox = bbox, type = bmaps.sourcefromrest(rest, paste0("bing_", type)), ...)
+  # plot the little bing logo
+  extraargs <- list(...)
+  bmaps.attribute(res = extraargs$res, cachedir = extraargs$cachedir)
+}
+
+
+bmaps.attribute <- function(padin = c(0.05, 0.05), res = NULL, cachedir = NULL, scale = 0.7) {
+  if (is.null(res)) {
+    res <- 80
+  }
+  # http://dev.virtualearth.net/Branding/logo_powered_by.png
+  bingfile <- file.path(tile.cachedir(list(name = "bing")), "bing.png")
+  if (!file.exists(bingfile)) {
+    curl::curl_download("http://dev.virtualearth.net/Branding/logo_powered_by.png",
+      bingfile,
+      quiet = TRUE, mode = "wb"
+    )
+  }
+  binglogo <- png::readPNG(bingfile)
+  ext <- graphics::par("usr")
+  rightin <- graphics::grconvertX(ext[2], from = "user", to = "inches")
+  bottomin <- graphics::grconvertY(ext[3], from = "user", to = "inches")
+  widthin <- dim(binglogo)[2] / res * scale
+  heightin <- dim(binglogo)[1] / res * scale
+  leftusr <- graphics::grconvertX(rightin - padin[1] - widthin, from = "inches", to = "user")
+  bottomusr <- graphics::grconvertY(bottomin + padin[2], from = "inches", to = "user")
+  topusr <- graphics::grconvertY(bottomin + padin[2] + heightin, from = "inches", to = "user")
+  rightusr <- graphics::grconvertX(rightin - padin[1], from = "inches", to = "user")
+
+  graphics::rasterImage(binglogo, leftusr, bottomusr, rightusr, topusr)
+}
+
+
+#' Set/Get the Default Tile Cache Location
+#'
+#' The default tile cache location is the "rosm.cache" folder in the current
+#' working directory, but for a variety of reasons it may be desirable to
+#' use one cache directory for all calls in a script. This must be called
+#' every time the namespace is loaded.
+#'
+#' @param cachedir A path to use as the cache directory (relative to the working directory).
+#'   Use NULL to reset to the default.
+#'
+#' @return The previous cache directory, invisibly.
+#' @export
+#'
+#' @examples
+#' set_default_cachedir(tempfile())
+#' get_default_cachedir()
+#' (set_default_cachedir(NULL))
+#'
+set_default_cachedir <- function(cachedir) {
+  # NULL sets back to the default
+  if (is.null(cachedir)) {
+    cachedir <- "rosm.cache"
+  }
+  if (!is.character(cachedir) || (length(cachedir) != 1)) {
+    stop("'cachedir' must be a character vector of length 1")
+  }
+  # keep ref to old cachedir
+  old_cachedir <- rosm_state$default_cachedir
+  # set new cachedir
+  rosm_state$default_cachedir <- cachedir
+  # return old cachedir
+  invisible(old_cachedir)
+}
+
+
+#' @rdname set_default_cachedir
+#' @export
+get_default_cachedir <- function() {
+  rosm_state$default_cachedir
+}
+
+rosm_state <- new.env(parent = emptyenv())
+rosm_state$default_cachedir <- "rosm.cache"
+# functions used by both google and osm
+
+tile.cachedir <- function(type, cachedir = NULL) {
+  if (is.null(cachedir)) {
+    cachedir <- get_default_cachedir()
+  }
+  safename <- gsub("[^a-zA-z0-9]", "", type$name)
+  folder <- file.path(cachedir, safename)
+  created <- dir.create(folder, showWarnings = FALSE, recursive = TRUE)
+  folder
+}
+
+tile.plotarray <- function(image, box) {
+  graphics::rasterImage(image, box[1, 1], box[2, 1], box[1, 2], box[2, 2])
+}
+
+tile.autozoom <- function(res = 150, epsg = 4326) {
+  ext <- graphics::par("usr")
+  midy <- mean(c(ext[3], ext[4]))
+  rightmid <- .tolatlon(ext[2], midy, epsg)
+  centermid <- .tolatlon(mean(c(ext[1], ext[2])), midy, epsg)
+  leftmid <- .tolatlon(ext[1], midy, epsg)
+
+  anglewidth1 <- rightmid[1] - centermid[1]
+  if (anglewidth1 < 0) {
+    anglewidth1 <- anglewidth1 + 360
+  }
+
+  anglewidth2 <- rightmid[1] - centermid[1]
+  if (anglewidth2 < 0) {
+    anglewidth2 <- anglewidth2 + 360
+  }
+  anglewidth <- anglewidth1 + anglewidth2
+
+  # PROBLEMS WITH WIDE EXTENTS LIKE THE WORLD
+  widthin <- graphics::grconvertX(ext[2], from = "user", to = "inches") -
+    graphics::grconvertX(ext[1], from = "user", to = "inches")
+  widthpx <- widthin * res
+
+  zoom <- log2((360.0 / anglewidth) * (widthpx / 256.0))
+
+  as.integer(floor(zoom))
+}
+
+# function to extract the bounding box given an input object
+# always returns the bbox in lat/lon
+
+#' Extract a bounding box from an object
+#'
+#' This function is used internally by \link{osm.plot}, \link{bmaps.plot}, and
+#' \link{osm.raster} to extract a bounding box from their first argument. This allows
+#' considerable flexibility when specifying a location to map, in particular with
+#' character input (a place name that will be geocoded), and other Spatial*/Raster*
+#' objects.
+#'
+#' @param x A \code{Spatial*} object, a \code{Raster*} object, an sp bounding box,
+#'   an sf bounding box,
+#'   or a character string that will be passed to \code{searchbbox()} (prettymapr package). Multiple
+#'   strings will result in a bounding box that contains all of the geocoded
+#'   bounding boxes. The last resort is calling \code{sp::bbox()} on the \code{x}.
+#' @param tolatlon Should the bounding box be un-projected to lat/lon coordinates?
+#'   Only applied to Spatial and Raster objects.
+#' @param ... Passed to \code{searchbbox()} if applicable
+#'
+#' @return A bounding box in the form of \code{sp::bbox()}
+#' @export
+#'
+#' @examples
+#' library(prettymapr)
+#' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+#' stopifnot(identical(ns, extract_bbox(ns)))
+#'
+extract_bbox <- function(x, tolatlon = TRUE, ...) {
+  if (methods::is(x, "Spatial")) {
+    box <- sp::bbox(x)
+    if (tolatlon && !is.na(rgdal::CRSargs(x@proj4string))) {
+      requireNamespace("rgdal", quietly = TRUE)
+      box <- sp::bbox(sp::spTransform(x, sp::CRS("+init=epsg:4326")))
+    }
+    box
+  } else if (methods::is(x, "Raster")) {
+    box <- raster::as.matrix(x@extent)
+    if (tolatlon && !is.na(rgdal::CRSargs(x@crs))) {
+      requireNamespace("rgdal", quietly = TRUE)
+
+      # need a couple of points to get a decent approximation
+      coords <- expand.grid(x = box[1, ], y = box[2, ])
+      box <- sp::bbox(.tolatlon(coords[, 1], coords[, 2], projection = x@crs))
+    }
+    box
+  } else if (methods::is(x, "bbox")) {
+    prettymapr::makebbox(x[4], x[3], x[2], x[1])
+  } else if (is.character(x)) {
+    # lookup using prettymapr::searchbbox()
+    prettymapr::searchbbox(x, quiet = TRUE, ...)
+  } else if (is.bbox(x)) {
+    x
+  } else {
+    sp::bbox(x)
+  }
+}
+
+is.bbox <- function(x) {
+  is.matrix(x) && identical(dim(x), c(2L, 2L)) && identical(rownames(x), c("x", "y"))
+}
+
+# function to extract a projection from an object
+extract_projection <- function(x) {
+  if (methods::is(x, "CRS")) {
+    x
+  } else if (methods::is(x, "Spatial")) {
+    if (!is.na(rgdal::CRSargs(x@proj4string))) {
+      x@proj4string
+    } else {
+      NA
+    }
+  } else if (methods::is(x, "Raster")) {
+    x@crs
+  } else if (is.numeric(x) && (length(x) == 1)) {
+    requireNamespace("rgdal", quietly = TRUE)
+    intx <- as.integer(x)
+    sp::CRS(paste0("+init=epsg:", intx))
+  } else {
+    NA
+  }
+}
+# plot slippy tiles
+
+tile.loadimage <- function(x, y, zoom, type, cachedir = NULL, quiet = TRUE) {
+  if (x < 0) {
+    # negative tiles from wrap situation
+    x <- x + 2^zoom
+  }
+
+  fname <- tile.cachename(x, y, zoom, type, cachedir)
+  parts <- strsplit(fname, "\\.")[[1]]
+  ext <- parts[length(parts)]
+  tryCatch(
+    {
+      if (ext == "jpg" || ext == "jpeg") {
+        jpeg::readJPEG(fname)
+      } else if (ext == "png") {
+        png::readPNG(fname)
+      } else {
+        stop("Extension not recognized: ", ext)
+      }
+    },
+    error = function(err) {
+      if (!quiet) message("Error loading ", fname, ": ", err)
+      NULL
+    }
+  )
+}
+
+tile.applywrap <- function(tiles, zoom) {
+  if (!all(min(tiles[, 1]):max(tiles[, 1]) %in% tiles[, 1])) {
+    # wrapping around the backside of the earth, make end tiles negative
+    warning("Attempting to plot wrap around tiles (~lat=-180), things may get funky.")
+    n <- -1
+    while (length(tiles[, 1][tiles[, 1] == 2^zoom + n]) > 0) {
+      tiles[, 1][tiles[, 1] == 2^zoom + n] <- (tiles[, 1][tiles[, 1] == 2^zoom + n]) - 2^zoom
+      n <- n - 1
+    }
+  }
+  tiles
+}
+
+# loops through the tiles and applies a function (returning a list)
+tile.apply <- function(tiles, fun, ..., progress = "none") {
+  plyr::alply(tiles, 1, function(tile, ...) {
+    fun(tile[[1]], tile[[2]], ...)
+  }, ..., .progress = progress)
+}
+
+# loops through the tiles and plots or combines the results to a list
+tile.ploteach <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
+  tile.apply(tiles, function(x, y) {
+    box <- tile.bbox(x, y, zoom, epsg)
+    image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
+
+    # if in plotting mode, plot the array
+    if (!is.null(image)) tile.plotarray(image, box)
+  })
+}
+
+tile.each <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
+  tile.apply(tiles, function(x, y) {
+    box <- tile.bbox(x, y, zoom, epsg)
+    image <- tile.loadimage(x, y, zoom, type, cachedir, quiet = quiet)
+
+    # return structure as the image array, with attribute 'bbox'
+    # this is modeled after the @bbox slot in the sp package
+    structure(image,
+      bbox = box, type = type,
+      epsg = epsg, zoom = zoom, tiles = data.frame(x, y)
+    )
+  })
+}
+
+tile.fuse <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
+  tiles <- tile.applywrap(tiles, zoom)
+
+  tile_dims <- check.dimensions(tiles, zoom, type, cachedir)
+  dim_x <- tile_dims$targetdim[1]
+  dim_y <- tile_dims$targetdim[2]
+  dim_bands <- tile_dims$targetdim[3]
+
+  if (tile_dims$nmissing > 0) {
+    message(tile_dims$nmissing, " could not be loaded for type ", type$name)
+    missing_tile <- array(0, tile_dims$targetdim)
+  } else {
+    missing_tile <- NULL
+  }
+
+  tiles <- tiles[order(tiles[[1]], tiles[[2]]), , drop = FALSE]
+  x_tile <- unique(tiles[, 1])
+  y_tile <- unique(tiles[, 2])
+
+  xs <- (seq_along(x_tile) - 1) * dim_x
+  ys <- (seq_along(y_tile) - 1) * dim_y
+
+  out <- array(1, dim = c(dim_y * length(y_tile), dim_x * length(x_tile), dim_bands))
+
+  for (i in seq_along(x_tile)) {
+    for (j in seq_along(y_tile)) {
+      img <- tile.loadimage(x_tile[i], y_tile[j], zoom, type, cachedir, quiet = quiet)
+      if (is.null(img) && is.null(missing_tile)) {
+        stop("Cannot fuse unloadable tile")
+      } else if (is.null(img)) {
+        missing_tile
+      } else {
+        ensure.bands(img, tile_dims$targetdim, default_value = 1)
+      }
+
+      # row, column, band (where row == y dimension)
+      # sometimes both 3- and 4- band images are returned, so the assignment
+      # needs to assign only the bands in the loaded img
+      out[
+        ys[j]:(ys[j] + dim_y - 1) + 1,
+        xs[i]:(xs[i] + dim_x - 1) + 1,
+        seq_len(dim(img)[3])
+      ] <- img
+    }
+  }
+
+  # calc bounding box of whole image
+  nw <- tile.nw(min(x_tile), min(y_tile), zoom, epsg)
+  se <- tile.nw(max(x_tile) + 1, max(y_tile) + 1, zoom, epsg)
+
+  bbox <- matrix(
+    c(nw[1], se[2], se[1], nw[2]),
+    ncol = 2,
+    byrow = FALSE,
+    dimnames = list(
+      c("x", "y"),
+      c("min", "max")
+    )
+  )
+
+  # return same structure as tile.each()
+  structure(out, bbox = bbox, epsg = epsg, type = type, zoom = zoom, tiles = tiles)
+}
+
+# ensure array dimensions match a given dim value
+ensure.bands <- function(image, dimension, default_value = 1) {
+  banddiff <- dimension[3] - dim(image)[3]
+  if (banddiff == 0) {
+    image
+  } else if (banddiff > 0) {
+    # add extra bands
+    abind::abind(image, array(
+      default_value,
+      c(dimension[1], dimension[2], banddiff)
+    ),
+    along = 3
+    )
+  } else if (banddiff < 0) {
+    # this shouldn't happen, but...
+    warning("Cropping image in ensure.bands")
+    # crop
+    image[, , 1:dimension[3], drop = FALSE]
+  }
+}
+
+
+# checks the dimensions of all the tiles (used in tile.fuse)
+check.dimensions <- function(tiles, zoom, type, cachedir) {
+  # check dimensions of all tiles before fusing
+  dims <- tile.apply(tiles, fun = function(x, y) {
+    image <- tile.loadimage(x, y, zoom, type, cachedir)
+    if (!is.null(image)) {
+      dim(image)
+    } else {
+      c(0, 0, 0)
+    }
+  })
+
+  # check for 3 dimensions
+  if (!all(vapply(dims, length, integer(1)) == 3)) stop("Incorrect dimensions in image")
+
+  # check for missing tiles
+  missing_tiles <- vapply(
+    dims, function(dim) identical(dim, c(0, 0, 0)),
+    logical(1)
+  )
+  if (all(missing_tiles)) stop("Zero tiles were loaded for type ", type$name)
+
+  # find dimension of non-missing tiles (hopefully the same...)
+  tiledim <- do.call(rbind, dims[!missing_tiles])
+
+  uniqueXs <- unique(tiledim[, 1, drop = TRUE])
+  uniqueYs <- unique(tiledim[, 2, drop = TRUE])
+  if (length(uniqueXs) > 1) {
+    stop(
+      "More than one image x dimension: ",
+      paste(uniqueXs, collapse = ", ")
+    )
+  }
+  if (length(uniqueYs) > 1) {
+    stop(
+      "More than one image y dimension: ",
+      paste(uniqueYs, collapse = ", ")
+    )
+  }
+
+  # assign target dim with the max of z dimensions (so a band can be added)
+  # if not all have the same bands
+  targetdim <- c(uniqueXs, uniqueYs, max(tiledim[, 3, drop = TRUE]))
+
+  # also return the number of missing tiles
+  list(targetdim = targetdim, nmissing = sum(missing_tiles))
+}
+
+tile.plotfused <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quiet = FALSE) {
+  fused <- tile.fuse(tiles, zoom, type, epsg = epsg, cachedir = cachedir, quiet = quiet)
+  # plot image
+  tile.plotarray(fused, attr(fused, "bbox"))
+}
+
+#' Plot Open Street Map Tiles
+#'
+#' Plot Open Street Map tiles using \code{rasterImage} and \code{sp::plot}.
+#' Define your own tile sources by creating a tile url function in the
+#' global environment, although most \href{https://wiki.openstreetmap.org/wiki/Tile_servers}{OSM listed}
+#' servers are included. See \link{osm.types} for types options. By default tiles
+#' are plotted in the Spherical Mercator projection
+#' (\href{https://en.wikipedia.org/wiki/Web_Mercator}{epsg:3857}); pass \code{project=FALSE}
+#' to keep lat/lon coordinates.
+#'
+#' @param bbox A bounding box as generated by \code{sp::bbox()} or \code{prettymapr::searchbbox()}
+#' @param zoomin The amount by which to adjust the automatically calculated zoom (or
+#' manually specified if the \code{zoom} parameter is passed). Use +1 to zoom in, or -1 to zoom out.
+#' @param zoom Manually specify the zoom level (not reccomended; adjust \code{zoomin} or
+#' \code{res} instead.
+#' @param type A map type; one of that returned by \link{osm.types}. User defined types are possible
+#' by defining \code{tile.url.TYPENAME <- function(xtile, ytile, zoom){}} and passing TYPENAME
+#' as the \code{type} argument.
+#' @param forcedownload \code{TRUE} if cached tiles should be re-downloaded. Useful if
+#' some tiles are corrupted.
+#' @param stoponlargerequest By default \code{osm.plot} will only load 32 tiles at a time. If
+#' plotting at a higher resolution it may be necessary to pass \code{true} here.
+#' @param fusetiles \code{TRUE} if tiles should be fused into a single image. This is the
+#' default because white lines appear between tiles if it is set to \code{FALSE}. PDFs
+#' appear not to have this problem, so when plotting large, high resolution PDFs it may be
+#' faster (and more memory efficient) to use \code{fusetiles=FALSE}.
+#' @param cachedir The directory in which tiles should be cached. Defaults to \code{getwd()/rosm.cache}.
+#' @param res The resolution used to calculate scale.
+#' @param project \code{TRUE} if tiles should be projected to a pseudo-mercator projection,
+#' \code{FALSE} if lat/lon should be maintained. Becuase \code{sp::plot} adjusts the aspect
+#' according to latitude for lat/lon coordinates, this makes little difference at high
+#' zoom and may make plotting overlays more convenient. Defaults to \code{TRUE}.
+#' @param progress A progress bar to use, or "none" to suppress progress updates
+#' @param quiet Pass \code{FALSE} to see more error messages, particularly if
+#'   your tiles do not download/load properly.
+#' @param ... Additional parameters to be passed on to the first call to \code{sp::plot}
+#'
+#' @export
+#'
+#' @examplesIf has_internet()
+#' \donttest{
+#' library(prettymapr)
+#' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+#' osm.plot(ns)
+#' osm.plot(ns, type = "stamenbw")
+#' prettymap(osm.plot(ns), scale.style = "ticks", scale.tick.cex = 0)
+#' }
+osm.plot <- function(bbox, zoomin = 0, zoom = NULL, type = NULL, forcedownload = FALSE,
+                     stoponlargerequest = TRUE, fusetiles = TRUE, cachedir = NULL, res = 150,
+                     project = TRUE, progress = c("text", "none"), quiet = TRUE, ...) {
+  # validate progress arg
+  progress <- match.arg(progress)
+
+  # get lookup information from input
+  bbox <- extract_bbox(bbox)
+
+  # verify tile source
+  if (is.null(type)) {
+    type <- get_default_tile_source()
+  } else {
+    type <- as.tile_source(type)
+  }
+
+  if (project) {
+    epsg <- 3857
+  } else {
+    epsg <- 4326
+  }
+
+  bbox <- .projectbbox(bbox, epsg)
+
+  coords <- sp::coordinates(t(bbox))
+  spoints <- sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", epsg)))
+
+  plotargs <- list(...)
+  if (is.null(plotargs$xlim)) {
+    xlim <- bbox[1, ]
+  }
+  if (is.null(plotargs$ylim)) {
+    ylim <- bbox[2, ]
+  }
+
+  sp::plot(spoints, pch = ".", xlim = xlim, ylim = ylim, ...)
+
+  if (is.null(zoom)) {
+    zoom <- tile.autozoom(res = res, epsg = epsg)
+  }
+  zoom <- zoom + zoomin
+  maxzoom <- tile.maxzoom(type)
+  zoom <- min(zoom, maxzoom)
+
+  # global min zoom set to 1
+  zoom <- max(1, zoom)
+  message("Zoom: ", zoom)
+  # adjust bbox to final plot extents
+  bbox <- t(matrix(graphics::par("usr"), ncol = 2, byrow = FALSE))
+
+  tiles <- tiles.bybbox(bbox, zoom, epsg = epsg)
+  if ((nrow(tiles) > 32) && stoponlargerequest) {
+    stop(
+      "More than 32 tiles to be loaded. ",
+      "Run with stoponlargerequest=FALSE or ",
+      "zoomin=-1, to continue"
+    )
+  }
+  tile.download(tiles, zoom,
+    type = type, forcedownload = forcedownload, cachedir = cachedir,
+    progress = progress, quiet = quiet
+  )
+
+  if (fusetiles) {
+    tile.plotfused(tiles, zoom, type = type, epsg = epsg, cachedir = cachedir, quiet = quiet)
+  } else {
+    tile.ploteach(tiles, zoom, type = type, epsg = epsg, cachedir = cachedir, quiet = quiet)
+  }
+
+  tile.attribute(type)
+}
+
+
+tile.raster.autozoom <- function(bbox, epsg, minnumtiles = 12) {
+  for (zoom in 1:19) {
+    tiles <- tiles.bybbox(bbox, zoom, epsg) # always latlon
+    if (nrow(tiles) >= minnumtiles) {
+      return(zoom)
+    }
+  }
+  return(20)
+}
+
+
+#' Get Open Street Map Tiles As A RasterStack
+#'
+#' Get Open Street Map tiles as RasterStack object (requires package
+#' \code{raster} to be installed).
+#'
+#' @param x A bounding box as generated by \code{sp::bbox()} or
+#'   \code{prettymapr::searchbbox()}. Must be in lon/lat (epsg:4326)!
+#'   Alternatively, pass a \code{Spatial*} object to use the bounding box of
+#'   that
+#' @param zoomin The amount by which to adjust the automatically calculated zoom
+#'   (or manually specified if the \code{zoom} parameter is passed). Use +1 to
+#'   zoom in, or -1 to zoom out.
+#' @param zoom Manually specify the zoom level (not recommended; adjust
+#'   \code{zoomin} instead.
+#' @param type A map type; one of that returned by \link{osm.types}. User
+#'   defined types are possible by defining \code{tile.url.TYPENAME <-
+#'   function(xtile, ytile, zoom){}} and passing TYPENAME as the \code{type}
+#'   argument.
+#' @param forcedownload \code{TRUE} if cached tiles should be re-downloaded.
+#'   Useful if some tiles are corrupted.
+#' @param cachedir The directory in which tiles should be cached. Defaults to
+#'   \code{getwd()/rosm.cache}.
+#' @param projection A map projection in which to reproject the RasterStack as
+#'   generated by \code{CRS()} or \code{Spatial*@@proj4string}. If a
+#'   \code{Spatial*} object is passed as the first argument, this argument will
+#'   be ignored.
+#' @param crop \code{TRUE} if results should be cropped to the specified
+#'   bounding box (see \code{x}), \code{FALSE} otherwise.
+#' @param filename A filename to which the raster should be written (see
+#'   \code{raster::writeRaster()}). Use a ".tif" extension to write as a
+#'   GeoTIFF.
+#' @param progress A progress bar to use, or "none" to suppress progress updates
+#' @param resample One of "ngb" (nearest neighbour) or "bilinear". Passed to
+#'   \link[raster]{projectRaster}.
+#' @param quiet Pass \code{FALSE} to see more error messages, particularly if
+#'   your tiles do not download/load properly.
+#' @param ... Arguments passed on to \code{raster::writeRaster()} if
+#'   \code{filename} is specified.
+#' @return A projected RasterStack of the fused tiles.
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
+#' \donttest{
+#' library(cartography)
+#' library(raster)
+#' library(prettymapr)
+#'
+#' ns <- makebbox(47.2, -59.7, 43.3, -66.4)
+#' x <- osm.raster(ns, projection = CRS("+init=epsg:26920"), crop = TRUE)
+#' # plot using plotRGB (from the raster package)
+#' plotRGB(x)
+#'
+#' # use a Spatial* object as the first argument to automatically set the bounding
+#' # box and projection
+#' data(nuts2006)
+#' spdf <- nuts0.spdf[nuts0.spdf$id == "DE", ]
+#' x <- osm.raster(spdf, type = "thunderforestlandscape")
+#' plotRGB(x)
+#'
+#' # write to disk by passing a filename argument (use .tif extension to write GeoTIFF)
+#' osm.raster(ns, projection = CRS("+init=epsg:26920"), crop = TRUE, filename = "ns.tif")
+#'
+#' # can also write Raster* objects using osm.raster
+#' tf <- tempfile(fileext = ".tif")
+#' osm.raster(x, filename = tf)
+#' unlink(tf)
+#' }
+#' @export
+#'
+osm.image <- function(x, zoomin = 0, zoom = NULL, type = NULL, forcedownload = FALSE, cachedir = NULL,
+                      progress = c("text", "none"), quiet = TRUE) {
+  # verify progress input
+  progress <- match.arg(progress)
+
+  # verify tile source
+  if (is.null(type)) {
+    type <- get_default_tile_source()
+  } else {
+    type <- as.tile_source(type)
+  }
+
+  # get lookup information from input
+  lookup.bbox <- extract_bbox(x)
+
+  # get zoom level
+  if (is.null(zoom)) {
+    zoom <- tile.raster.autozoom(lookup.bbox, epsg = 4326)
+  }
+
+  zoom <- min(zoom + zoomin, tile.maxzoom(type))
+  zoom <- max(1, zoom) # global min zoom set to 1
+  if (progress != "none") message("Zoom: ", zoom)
+
+  # get tile list, download tiles
+  tiles <- tiles.bybbox(lookup.bbox, zoom, epsg = 4326)
+  tile.download(tiles, zoom,
+    type = type, forcedownload = forcedownload, cachedir = cachedir,
+    progress = progress, quiet = quiet
+  )
+
+  # return fused image
+  tile.fuse(tiles, zoom, type = type, epsg = 3857, cachedir = cachedir, quiet = quiet)
+}
+
+#' @rdname osm.image
+#' @export
+osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload = FALSE, cachedir = NULL,
+                       progress = c("text", "none"), quiet = TRUE,
+                       projection = NULL, crop = FALSE, filename = NULL, resample = "bilinear",
+                       ...) {
+  # verify inputs
+  if (!requireNamespace("raster")) stop("Package 'raster' is required for osm.raster()")
+
+  # verify progress input
+  progress <- match.arg(progress)
+
+  # verify tile source
+  if (is.null(type)) {
+    type <- get_default_tile_source()
+  } else {
+    type <- as.tile_source(type)
+  }
+
+  # if filename is specified, write output of osm.raster() to filename
+  if (!is.null(filename)) {
+    if (methods::is(x, "Raster")) {
+      return(invisible(raster::writeRaster(x, filename = filename, datatype = "INT1U", ...)))
+    } else {
+      return(invisible(raster::writeRaster(
+        osm.raster(
+          x = x, zoomin = zoomin, zoom = zoom,
+          type = type, forcedownload = forcedownload,
+          progress = progress, quiet = quiet,
+          cachedir = cachedir, projection = projection,
+          crop = crop, filename = NULL
+        ),
+        filename = filename, datatype = "INT1U", ...
+      )))
+    }
+  }
+
+  # extract source projection
+  src_proj <- extract_projection(x)
+
+  # extract bounding box
+  lookup.bbox <- extract_bbox(x)
+  # if input was a character, make sure lookup only happens once
+  if (is.character(x)) {
+    x <- lookup.bbox
+  }
+
+  # fill in destination projection if not specified
+  if (is.null(projection)) {
+    if (is.na(src_proj)) {
+      # default is to project to google mercator
+      projection <- extract_projection(3857)
+    } else {
+      projection <- src_proj
+    }
+  } else {
+    projection <- extract_projection(projection)
+  }
+
+  # get cropping information, if desired
+  if (crop) {
+    crop.bbox <- extract_bbox(x, tolatlon = FALSE)
+    if (is.na(src_proj)) {
+      # default is to project to google mercator
+      crop.bbox <- .projectbbox(crop.bbox, projection = projection)
+    }
+  }
+
+  arr <- osm.image(x,
+    zoomin = zoomin, zoom = zoom, type = type,
+    forcedownload = forcedownload, cachedir = cachedir,
+    progress = progress, quiet = quiet
+  )
+  box <- attr(arr, "bbox")
+  nbrow <- dim(arr)[1]
+  nbcol <- dim(arr)[2]
+  bands <- dim(arr)[3]
+  .makeraster <- function(i) {
+    raster::raster(matrix(arr[, , i] * 255, nrow = nbrow, ncol = nbcol),
+      xmn = box[1, 1], xmx = box[1, 2],
+      ymn = box[2, 1], ymx = box[2, 2],
+      crs = "+init=epsg:3857"
+    )
+  }
+  if (bands == 3) {
+    rstack <- raster::stack(.makeraster(1), .makeraster(2), .makeraster(3))
+  } else if (bands == 4) {
+    rstack <- raster::stack(.makeraster(1), .makeraster(2), .makeraster(3), .makeraster(4))
+  } else {
+    stop("Invalid number of bands in image: ", bands)
+  }
+
+  if (!is.null(projection)) {
+    if (crop) {
+      return(osm.proj(rstack, projection, crop.bbox, method = resample))
+    } else {
+      return(osm.proj(rstack, projection, method = resample))
+    }
+  } else {
+    if (crop) {
+      return(osm.proj(rstack, sp::CRS("+init=epsg:3857"), crop.bbox, method = resample))
+    } else {
+      return(rstack)
+    }
+  }
+}
+
+# @title Project an OSM RasterStack
+# projects a raster stack generated above
+osm.proj <- function(osm.raster, projection, crop.bbox = NULL, ...) {
+  rstackproj <- suppressWarnings(raster::projectRaster(osm.raster, crs = projection, ...))
+
+  # this can occur because of bilinear resampling on project
+  # values outside [0, 255] cause problems (e.g., raster::plotRGB())
+  rstackproj <- raster::clamp(rstackproj, lower = 0, upper = 255, useValues = TRUE)
+
+  if (!is.null(crop.bbox)) {
+    k <- min(c(
+      0.052 * (crop.bbox[2, 2] - crop.bbox[2, 1]),
+      0.052 * (crop.bbox[1, 2] - crop.bbox[1, 1])
+    ))
+    crop.bbox[2, 2] <- crop.bbox[2, 2] + k
+    crop.bbox[1, 1] <- crop.bbox[1, 1] - k
+    crop.bbox[2, 1] <- crop.bbox[2, 1] - k
+    crop.bbox[1, 2] <- crop.bbox[1, 2] + k
+
+    return(raster::crop(rstackproj, crop.bbox))
+  } else {
+    return(rstackproj)
+  }
+}
+
+#' Overlay points on an OSM plot
+#'
+#' Plot points on a plot created by \link{osm.plot}. This is a simple wrapper around
+#' \code{points()}.
+#'
+#' @param x X coordinate vector or object as parsed by \code{xy.coords}
+#' @param y Y coordinate vector
+#' @param epsg EPSG code of the supplied coordinates
+#' @param toepsg EPSG code of the projected coordinates to be ploted
+#' @param ... Args passed on to \code{points}
+#'
+#' @export
+#'
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
+#' \donttest{
+#' library(rosm)
+#' library(prettymapr)
+#' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
+#' prettymap({
+#'   osm.plot(searchbbox("nova scotia"))
+#'   osm.points(locs$lon, locs$lat, pch = 18, cex = 0.7)
+#' })
+#' }
+#'
+osm.points <- function(x, y = NULL, epsg = 4326, toepsg = 3857, ...) {
+  graphics::points(.projpts(x, y, epsg, toepsg), ...)
+}
+
+#' Overlay segments on an OSM plot
+#'
+#' Plot segments on a plot created by \link{osm.plot}. This is a simple wrapper around
+#' \code{segments()}.
+#'
+#' @param x0 X1 coordinate vector
+#' @param y0 Y1 coordinate vector
+#' @param x1 X2 coordinate vector
+#' @param y1 Y2 coordinate vector
+#' @param epsg EPSG code of the supplied coordinates
+#' @param toepsg EPSG code of the projected coordinates to be ploted
+#' @param ... Args passed on to \code{points}
+#'
+#' @export
+#'
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
+#' \donttest{
+#' library(rosm)
+#' library(prettymapr)
+#' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
+#' prettymap({
+#'   osm.plot(searchbbox("nova scotia"))
+#'   osm.segments(locs$lon[1:2], locs$lat[1:2], locs$lon[2:3], locs$lat[2:3])
+#' })
+#' }
+#'
+osm.segments <- function(x0, y0, x1 = x0, y1 = y0, epsg = 4326, toepsg = 3857, ...) {
+  c0 <- .projpts(x0, y0, epsg, toepsg)
+  c1 <- .projpts(x1, y1, epsg, toepsg)
+  graphics::segments(c0[, 1], c0[, 2], c1[, 1], c1[, 2])
+}
+
+#' Overlay lines on an OSM plot
+#'
+#' Plot lines on a plot created by \link{osm.plot}. This is a simple wrapper around
+#' \code{points()}.
+#'
+#' @param x X coordinate vector or object as parsed by \code{xy.coords}
+#' @param y Y coordinate vector
+#' @param epsg EPSG code of the supplied coordinates
+#' @param toepsg EPSG code of the projected coordinates to be ploted
+#' @param ... Args passed on to \code{lines}
+#'
+#' @export
+#'
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
+#' \donttest{
+#' library(rosm)
+#' library(prettymapr)
+#' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
+#' prettymap({
+#'   osm.plot(searchbbox("nova scotia"))
+#'   osm.lines(locs$lon, locs$lat, lwd = 2)
+#' })
+#' }
+#'
+osm.lines <- function(x, y = NULL, epsg = 4326, toepsg = 3857, ...) {
+  graphics::lines(.projpts(x, y, epsg, toepsg), ...)
+}
+
+#' Overlay a polygon on an OSM plot
+#'
+#' Plot a polygon on a plot created by \link{osm.plot}. This is a simple wrapper around
+#' \code{polygon()}.
+#'
+#' @param x X coordinate vector or object as parsed by \code{xy.coords}
+#' @param y Y coordinate vector
+#' @param epsg EPSG code of the supplied coordinates
+#' @param toepsg EPSG code of the projected coordinates to be ploted
+#' @param ... Args passed on to \code{polygon}
+#'
+#' @export
+#'
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
+#' \donttest{
+#' library(rosm)
+#' library(prettymapr)
+#' locs <- geocode(c("wolfville, ns", "kentville, ns", "halifax, ns"))
+#' prettymap({
+#'   osm.plot(searchbbox("nova scotia"))
+#'   osm.polygon(locs$lon, locs$lat)
+#' })
+#' }
+#'
+osm.polygon <- function(x, y = NULL, epsg = 4326, toepsg = 3857, ...) {
+  graphics::polygon(.projpts(x, y, epsg, toepsg), ...)
+}
+
+
+#' Overlay text on an OSM plot
+#'
+#' Plot text on a plot created by \link{osm.plot}.
+#'
+#' @param x X coordinate vector or object as parsed by \code{xy.coords}
+#' @param y Y coordinate vector
+#' @param labels A character vector or expression specifying the text to be
+#'   written.
+#' @param epsg EPSG code of the supplied coordinates
+#' @param toepsg EPSG code of the projected coordinates to be ploted
+#' @param ... Args passed on to \code{text()}
+#'
+#' @export
+#'
+osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3857, ...) {
+  graphics::text(.projpts(x, y, epsg, toepsg), labels = labels, ...)
+}
+
+
+.projpts <- function(x, y = NULL, epsg, toepsg) {
+  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) # hack to load rgdal namespace
+  xy <- grDevices::xy.coords(x, y)
+  sp::coordinates(sp::spTransform(
+    sp::SpatialPoints(sp::coordinates(cbind(xy$x, xy$y)),
+      proj4string = sp::CRS(sprintf("+init=epsg:%s", epsg))
+    ),
+    sp::CRS(sprintf("+init=epsg:%s", toepsg))
+  ))
+}
+# projection functions
+
+.tolatlon <- function(x, y, epsg = NULL, projection = NULL) {
+  requireNamespace("rgdal", quietly = TRUE)
+
+  if (is.null(epsg) && is.null(projection)) {
+    stop("epsg and projection both null...nothing to project")
+  } else if (!is.null(epsg) && !is.null(projection)) {
+    stop("epsg and projection both specified...ambiguous call")
+  }
+
+  if (is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", epsg))
+  }
+
+  coords <- sp::coordinates(cbind(x, y))
+  rownames(coords) <- NULL
+  spoints <- sp::SpatialPoints(coords, projection)
+  spnew <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
+  sp::coordinates(spnew)
+}
+
+.fromlatlon <- function(lon, lat, epsg = NULL, projection = NULL) {
+  requireNamespace("rgdal", quietly = TRUE)
+
+  if (is.null(epsg) && is.null(projection)) {
+    stop("epsg and projection both null...nothing to project")
+  } else if (!is.null(epsg) && !is.null(projection)) {
+    stop("epsg and projection both specified...ambiguous call")
+  }
+
+  if (is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", epsg))
+  }
+
+  coords <- sp::coordinates(cbind(lon, lat))
+  rownames(coords) <- NULL
+  spoints <- sp::SpatialPoints(coords, sp::CRS("+init=epsg:4326"))
+  spnew <- sp::spTransform(spoints, projection)
+  sp::coordinates(spnew)
+}
+
+.projectbbox <- function(bbox, toepsg = NULL, projection = NULL) {
+  requireNamespace("rgdal", quietly = TRUE)
+
+  if (is.null(toepsg) && is.null(projection)) {
+    stop("toepsg and projection both null...nothing to project")
+  } else if (!is.null(toepsg) && !is.null(projection)) {
+    stop("toepsg and projection both specified...ambiguous call")
+  }
+
+  if (is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", toepsg))
+  }
+  coords <- sp::coordinates(t(bbox))
+  spoints <- sp::SpatialPoints(coords, proj4string = sp::CRS("+init=epsg:4326"))
+  newpoints <- sp::spTransform(spoints, projection)
+  newbbox <- t(sp::coordinates(newpoints))
+
+  if (newbbox[1, 1] > newbbox[1, 2]) { # if min>max
+    maxx <- .fromlatlon(180, bbox[2, 1], projection = projection)[1]
+    newbbox[1, 1] <- newbbox[1, 1] - maxx * 2
+  }
+  newbbox
+}
+
+.revprojectbbox <- function(bbox, fromepsg = NULL, projection = NULL) {
+  requireNamespace("rgdal", quietly = TRUE)
+
+  if (is.null(fromepsg) && is.null(projection)) {
+    stop("fromepsg and projection both null...nothing to project")
+  } else if (!is.null(fromepsg) && !is.null(projection)) {
+    stop("fromepsg and projection both specified...ambiguous call")
+  }
+  if (is.null(projection)) {
+    projection <- sp::CRS(paste0("+init=epsg:", fromepsg))
+  }
+  coords <- sp::coordinates(t(bbox))
+  spoints <- sp::SpatialPoints(coords, proj4string = projection)
+  newpoints <- sp::spTransform(spoints, sp::CRS("+init=epsg:4326"))
+  t(sp::coordinates(newpoints))
+}
+
+#' Plot Raster Map Tiles From Open Street Map and Other Sources
+#'
+#' This package provides access and plots \href{https://www.openstreetmap.org/}{Open Street Map}
+#' and \href{https://www.bing.com/maps}{Bing Maps} tiles
+#' to create high-resolution basemaps and use hillshade tiles to add texture to other maps.
+#' Uses the '\href{https://cran.r-project.org/package=sp}{sp}' package to plot using base graphics. Plot Open Street Map derivative
+#' tiles using \link{osm.plot}, and plot Bing maps (Aerial, Labeled Aerial, Road) using
+#' \link{bmaps.plot}. 16 OSM and 3 Bing sources are included, with the ability to define
+#' custom tile sources based on OSM tilex, tiley, and zoom. Use \link{osm.raster} to get
+#' tiles in a \code{RasterStack} or write to disk (requires
+#' the '\href{https://cran.r-project.org/package=raster}{raster}' package.)
+#'
+#' @author
+#' Dewey Dunnington <dewey@fishandwhistle.net>
+#'
+#' @examplesIf identical(Sys.getenv("R_PRETTYMAPR_HAS_API_KEY"), "true")
+#'
+#' \donttest{
+#' library(prettymapr)
+#'
+#' # basic ploting
+#' nsbox <- searchbbox("nova scotia")
+#' osm.plot(nsbox)
+#' osm.plot(nsbox, type = "stamenbw")
+#' bmaps.plot(nsbox)
+#' bmaps.plot(nsbox, type = "Road")
+#'
+#' # use prettymapr to add scalebar and north arrow
+#' prettymap(osm.plot(nsbox))
+#' prettymap(bmaps.plot(nsbox, type = "Road"))
+#'
+#' # define custom tile types in several ways
+#'
+#' # using string formats
+#' ts <- as.tile_source("http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#' osm.plot(nsbox, type = ts)
+#'
+#' # using string formats and register_tile_source
+#' register_tile_source(dark = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png")
+#' osm.plot(nsbox, type = "dark")
+#'
+#' # set default plot type to something other than 'osm'
+#' set_default_tile_source("stamenbw")
+#' osm.plot(nsbox)
+#' }
+#'
+#' @references
+#' \href{https://wiki.openstreetmap.org/wiki/Tile_servers}{Open Street Map tile servers},
+#' \href{https://www.microsoft.com/en-us/maps/choose-your-bing-maps-api}{Bing Maps API documentation}
+#'
+#' @name rosm
+#' @docType package
+#'
+NULL
+# tile URLs
+# create list() of tile sources
+tile_sources <- list(
+  osm = source_from_url_format(
+    url_format = c(
+      "http://a.tile.openstreetmap.org/${z}/${x}/${y}.png",
+      "http://b.tile.openstreetmap.org/${z}/${x}/${y}.png",
+      "http://c.tile.openstreetmap.org/${z}/${x}/${y}.png"
+    ),
+    attribution = paste(
+      "Consider donating to the Open Street Map project",
+      "at http://donate.openstreetmap.org/"
+    )
+  ),
+  opencycle = source_from_url_format(
+    url_format = c(
+      "http://a.tile.opencyclemap.org/cycle/${z}/${x}/${y}.png",
+      "http://b.tile.opencyclemap.org/cycle/${z}/${x}/${y}.png"
+    ),
+    attribution = paste(
+      "Consider donating to the Open Street Map project",
+      "at http://donate.openstreetmap.org/"
+    )
+  ),
+  hotstyle = source_from_url_format(
+    url_format = c(
+      "http://a.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png",
+      "http://b.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png"
+    ),
+    attribution = paste(
+      "Consider donating to the Open Street Map project",
+      "at http://donate.openstreetmap.org/"
+    )
+  ),
+  loviniahike = source_from_url_format(
+    url_format = "http://tile.waymarkedtrails.org/hiking/${z}/${x}/${y}.png",
+    attribution = "Visit the Lovinia hike map at http://osm.lonvia.de/hiking.html"
+  ),
+  loviniacycle = source_from_url_format(
+    url_format = "http://tile.waymarkedtrails.org/cycling/${z}/${x}/${y}.png",
+    attribution = "Visit the Lovinia cycle map at http://cycling.waymarkedtrails.org/"
+  ),
+  stamenbw = source_from_url_format(
+    url_format = "http://a.tile.stamen.com/toner/${z}/${x}/${y}.png",
+    attribution = "Visit the Stamen cartography website at http://maps.stamen.com/"
+  ),
+  stamenwatercolor = source_from_url_format(
+    url_format = "http://a.tile.stamen.com/watercolor/${z}/${x}/${y}.jpg",
+    attribution = "Visit the Stamen cartography website at http://maps.stamen.com/"
+  ),
+  osmtransport = source_from_url_format(
+    url_format = c(
+      "http://a.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png",
+      "http://b.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png"
+    ),
+    attribution = paste(
+      "Consider donating to the Open Street Map project",
+      "at http://donate.openstreetmap.org/"
+    )
+  ),
+  thunderforestlandscape = source_from_url_format(
+    url_format = c(
+      "http://a.tile.thunderforest.com/landscape/${z}/${x}/${y}.png",
+      "http://b.tile.thunderforest.com/landscape/${z}/${x}/${y}.png",
+      "http://c.tile.thunderforest.com/landscape/${z}/${x}/${y}.png"
+    ),
+    attribution = "More on Thunderforest at http://www.thunderforest.com/"
+  ),
+  thunderforestoutdoors = source_from_url_format(
+    url_format = c(
+      "http://a.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png",
+      "http://b.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png",
+      "http://c.tile.thunderforest.com/outdoors/${z}/${x}/${y}.png"
+    ),
+    attribution = "More on Thunderforest at http://www.thunderforest.com/"
+  ),
+  cartodark = source_from_url_format(
+    url_format = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
+    attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
+  ),
+  cartolight = source_from_url_format(
+    url_format = "http://a.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png",
+    attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
+  )
+)
+
+#' Check for Internet
+#'
+#' @return TRUE if the internet is available, false otherwise
+#' @export
+#'
+#' @examples
+#' has_internet()
+#'
+has_internet <- function() {
+  !is.null(curl::nslookup("r-project.org", error = FALSE))
+}

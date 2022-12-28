@@ -1,8 +1,8 @@
 
-nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
-
 test_that("all named tile sources load", {
   skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   # test contributed by rCarto (cartography package)
 
   tiles <- data.frame(types = osm.types(), status = NA, stringsAsFactors = FALSE)
@@ -28,6 +28,9 @@ test_that("all named tile sources load", {
 })
 
 test_that("all named bing tile sources load", {
+  skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   # test contributed by rCarto (cartography package)
 
   tiles <- data.frame(
@@ -55,6 +58,9 @@ test_that("all named bing tile sources load", {
 })
 
 test_that("custom map types load tiles", {
+  skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   # this should throw a deprecation message but still work
   tile.url.darkmatter <- function(xtile, ytile, zoom) {
     paste0(paste("http://a.basemaps.cartocdn.com/dark_all",
@@ -65,7 +71,6 @@ test_that("custom map types load tiles", {
 
   assign("tile.url.darkmatter", tile.url.darkmatter, .GlobalEnv)
 
-  skip_on_cran()
   expect_message(
     osm.plot(nsbox, type = "darkmatter", progress = "none"),
     "Using functions as custom tile sources is deprecated. Use string formats instead."
@@ -106,6 +111,8 @@ test_that("custom map types load tiles", {
 # prettymap(osm.plot(makebbox(89.9, 179.9, -89.9, -179.9)))
 
 test_that("wrap around situations warn the user", {
+  skip_on_cran()
+
   americas <- prettymapr::zoombbox(prettymapr::makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0))
   # note this doesn't work with project = FALSE
   skip_on_cran()
@@ -120,6 +127,8 @@ test_that("wrap around situations warn the user", {
 
 test_that("osm.image returns an image with the required attrs", {
   skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   img <- osm.image(nsbox, progress = "none")
   expect_true(inherits(img, "array"))
   expect_length(dim(img), 3)
@@ -134,6 +143,9 @@ test_that("osm.image returns an image with the required attrs", {
 })
 
 test_that("osm.raster creates raster objects with the correct projection", {
+  skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   # make more rasters (projected)
   x <- osm.raster(nsbox, projection = sp::CRS("+init=epsg:32620"), progress = "none", crop = TRUE)
   expect_s4_class(x, "Raster")
@@ -160,6 +172,8 @@ test_that("osm.raster creates raster objects with the correct projection", {
 
 test_that("osm rasters are written to disk", {
   skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   test_file <- tempfile(fileext = ".tif")
   x <- osm.raster(nsbox, progress = "none")
   osm.raster(x, filename = test_file, progress = "none", overwrite = TRUE)
@@ -178,6 +192,8 @@ test_that("osm rasters are written to disk", {
 # add test for default cachedir
 test_that("non-default cache directories are respected", {
   skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
+
   # see issue #3 and PR #4
   # start with clean cache
 
@@ -238,6 +254,7 @@ test_that("non-default cache directories are respected", {
 
 test_that("default cache directory is respected", {
   skip_on_cran()
+  nsbox <- prettymapr::makebbox(47.2, -59.7, 43.3, -66.4)
 
   default_cache <- get_default_cachedir()
   # check that default cache is the correct default
@@ -267,6 +284,8 @@ test_that("default cache directory is respected", {
 })
 
 test_that("extract bbox", {
+  skip_on_cran()
+
   sf_bbox <- setNames(
     c(-89.60465, 43.03507, -89.20378, 43.36607),
     c("xmin", "ymin", "xmax", "ymax")

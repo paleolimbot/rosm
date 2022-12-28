@@ -672,7 +672,7 @@ is.bbox <- function(x) {
 # function to extract a projection from an object
 extract_projection <- function(x) {
   if (methods::is(x, "CRS")) {
-    x
+    sf::st_crs(x)
   } else if (methods::is(x, "Spatial")) {
     if (!is.na(x@proj4string@projargs)) {
       x@proj4string
@@ -680,10 +680,10 @@ extract_projection <- function(x) {
       NA
     }
   } else if (methods::is(x, "Raster")) {
-    x@crs
+    sf::st_crs(x@crs)
   } else if (is.numeric(x) && (length(x) == 1)) {
     intx <- as.integer(x)
-    sp::CRS(paste0("EPSG:", intx))
+    sf::st_crs(intx)
   } else {
     NA
   }
@@ -1105,7 +1105,7 @@ osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload =
     raster::raster(matrix(arr[, , i] * 255, nrow = nbrow, ncol = nbcol),
       xmn = box[1, 1], xmx = box[1, 2],
       ymn = box[2, 1], ymx = box[2, 2],
-      crs = "+init=epsg:3857"
+      crs = "EPSG:3857"
     )
   }
   if (bands == 3) {
@@ -1124,7 +1124,7 @@ osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload =
     }
   } else {
     if (crop) {
-      return(osm.proj(rstack, sp::CRS("+init=epsg:3857"), crop.bbox, method = resample))
+      return(osm.proj(rstack, "EPSG:3857", crop.bbox, method = resample))
     } else {
       return(rstack)
     }
@@ -1134,7 +1134,16 @@ osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload =
 # @title Project an OSM RasterStack
 # projects a raster stack generated above
 osm.proj <- function(osm.raster, projection, crop.bbox = NULL, ...) {
-  rstackproj <- suppressWarnings(raster::projectRaster(osm.raster, crs = projection, ...))
+  projection <- sf::st_crs(projection)
+  if (sf::st_crs(osm.raster@crs) == projection) {
+    rstackproj <- osm.raster
+  } else {
+    rstackproj <- raster::projectRaster(
+      osm.raster,
+      crs = raster::crs(sf::st_crs(projection)$wkt),
+      ...
+    )
+  }
 
   # this can occur because of bilinear resampling on project
   # values outside [0, 255] cause problems (e.g., raster::plotRGB())

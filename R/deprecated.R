@@ -637,12 +637,11 @@ tile.autozoom <- function(res = 150, epsg = 4326) {
 #' @export
 extract_bbox <- function(x, tolatlon = TRUE, ...) {
   if (methods::is(x, "Spatial")) {
-    box <- sp::bbox(x)
-    if (tolatlon && !is.na(rgdal::CRSargs(x@proj4string))) {
-      requireNamespace("rgdal", quietly = TRUE)
-      box <- sp::bbox(sp::spTransform(x, sp::CRS("+init=epsg:4326")))
+    if (tolatlon && !is.na(x@proj4string@projargs)) {
+      x <- sf::as_Spatial(sf::st_transform(sf::st_as_sfc(x), 4326))
     }
-    box
+
+    sp::bbox(x)
   } else if (methods::is(x, "Raster")) {
     box <- raster::as.matrix(x@extent)
     if (tolatlon && !is.na(rgdal::CRSargs(x@crs))) {

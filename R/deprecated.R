@@ -1189,15 +1189,14 @@ osm.text <- function(x, y = NULL, labels = seq_along(x), epsg = 4326, toepsg = 3
 
 
 .projpts <- function(x, y = NULL, epsg, toepsg) {
-  rgdal::CRSargs(sp::CRS("+init=epsg:3857")) # hack to load rgdal namespace
   xy <- grDevices::xy.coords(x, y)
-  sp::coordinates(sp::spTransform(
-    sp::SpatialPoints(sp::coordinates(cbind(xy$x, xy$y)),
-      proj4string = sp::CRS(sprintf("+init=epsg:%s", epsg))
-    ),
-    sp::CRS(sprintf("+init=epsg:%s", toepsg))
-  ))
+  sf::sf_project(
+    paste0("EPSG:", epsg),
+    paste0("EPSG:", toepsg),
+    cbind(xy$x, xy$y)
+  )
 }
+
 # projection functions
 
 .tolatlon <- function(x, y, epsg = NULL, projection = NULL) {

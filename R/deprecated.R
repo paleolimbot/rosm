@@ -1379,8 +1379,10 @@ makebbox <- function(n, e, s, w) {
     c(w, s, e, n),
     byrow = FALSE,
     ncol = 2,
-    dimnames = list(c("x",
-                                                                   "y"), c("min", "max"))
+    dimnames = list(c(
+      "x",
+      "y"
+    ), c("min", "max"))
   )
 }
 
@@ -1394,13 +1396,14 @@ zoombbox <- function(bbox, factor = 1, offset = c(0, 0)) {
   if (length(factor) > 1) {
     factorx <- factor[1]
     factory <- factor[2]
-  }
-  else {
+  } else {
     factorx <- factor
     factory <- factor
   }
-  newwidth <- (lons[2] - lons[1])/factorx
-  newheight <- (lats[2] - lats[1])/factory
-  makebbox(clat + newheight/2, clon + newwidth/2, clat - newheight/2,
-           clon - newwidth/2)
+  newwidth <- (lons[2] - lons[1]) / factorx
+  newheight <- (lats[2] - lats[1]) / factory
+  makebbox(
+    clat + newheight / 2, clon + newwidth / 2, clat - newheight / 2,
+    clon - newwidth / 2
+  )
 }

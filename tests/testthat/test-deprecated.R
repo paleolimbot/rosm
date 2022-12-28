@@ -147,16 +147,16 @@ test_that("osm.raster creates raster objects with the correct projection", {
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # make more rasters (projected)
-  x <- osm.raster(nsbox, projection = sp::CRS("+init=epsg:32620"), progress = "none", crop = TRUE)
+  x <- osm.raster(nsbox, projection = 32620, progress = "none", crop = TRUE)
   expect_s4_class(x, "Raster")
-  expect_equal(x@crs@projargs, sp::CRS("+init=epsg:32620")@projargs)
+  expect_true(sf::st_crs(x) == sf::st_crs(32620))
 
   # expect_silent(raster::plotRGB(x))
 
   # make non-projected raster
   x <- osm.raster(nsbox, progress = "none")
   expect_s4_class(x, "Raster")
-  expect_equal(x@crs@projargs, sp::CRS("+init=epsg:3857")@projargs)
+  expect_true(sf::st_crs(x) == sf::st_crs(3857))
 
   # expect_null(raster::plotRGB(x))
 

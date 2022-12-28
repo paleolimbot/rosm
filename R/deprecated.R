@@ -928,7 +928,7 @@ osm.plot <- function(bbox, zoomin = 0, zoom = NULL, type = NULL, forcedownload =
   bbox <- .projectbbox(bbox, epsg)
 
   coords <- sp::coordinates(t(bbox))
-  spoints <- sp::SpatialPoints(coords, proj4string = sp::CRS(paste0("+init=epsg:", epsg)))
+  spoints <- sp::SpatialPoints(coords)
 
   plotargs <- list(...)
   if (is.null(plotargs$xlim)) {

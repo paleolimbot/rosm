@@ -1,6 +1,6 @@
 
 test_that("all named tile sources load", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # test contributed by rCarto (cartography package)
@@ -28,7 +28,7 @@ test_that("all named tile sources load", {
 })
 
 test_that("all named bing tile sources load", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # test contributed by rCarto (cartography package)
@@ -58,7 +58,7 @@ test_that("all named bing tile sources load", {
 })
 
 test_that("custom map types load tiles", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # this should throw a deprecation message but still work
@@ -111,11 +111,11 @@ test_that("custom map types load tiles", {
 # prettymap(osm.plot(makebbox(89.9, 179.9, -89.9, -179.9)))
 
 test_that("wrap around situations warn the user", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
 
   americas <- zoombbox(makebbox(89.9, 179.9, -89.9, -179.9), 2, c(-100, 0))
   # note this doesn't work with project = FALSE
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   expect_warning(osm.plot(americas, zoomin = 1, progress = "none"), "Attempting to plot wrap around tiles")
   alaska <- makebbox(71, -129, 51, 172)
   expect_warning(osm.plot(alaska, progress = "none"), "Attempting to plot wrap around tiles")
@@ -126,7 +126,7 @@ test_that("wrap around situations warn the user", {
 })
 
 test_that("osm.image returns an image with the required attrs", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   img <- osm.image(nsbox, progress = "none")
@@ -143,7 +143,7 @@ test_that("osm.image returns an image with the required attrs", {
 })
 
 test_that("osm.raster creates raster objects with the correct projection", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # make more rasters (projected)
@@ -171,7 +171,7 @@ test_that("osm.raster creates raster objects with the correct projection", {
 })
 
 test_that("osm rasters are written to disk", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   test_file <- tempfile(fileext = ".tif")
@@ -191,7 +191,7 @@ test_that("osm rasters are written to disk", {
 
 # add test for default cachedir
 test_that("non-default cache directories are respected", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # see issue #3 and PR #4
@@ -253,7 +253,7 @@ test_that("non-default cache directories are respected", {
 })
 
 test_that("default cache directory is respected", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   default_cache <- get_default_cachedir()
@@ -284,7 +284,7 @@ test_that("default cache directory is respected", {
 })
 
 test_that("extract bbox", {
-  skip_on_cran()
+  skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
 
   sf_bbox <- setNames(
     c(-89.60465, 43.03507, -89.20378, 43.36607),

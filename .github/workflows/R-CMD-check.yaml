@@ -27,3 +27,5 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
+        env:
+          R_ROSM_TEST_DEPRECATED: "true"

@@ -25,7 +25,8 @@ Suggests:
     testthat,
     withr,
     sf,
-    terra
+    terra,
+    covr
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
 RoxygenNote: 7.2.1

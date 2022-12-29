@@ -2,12 +2,11 @@ ROSM: Open Street Map tiles in R
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- badges: start -->
 
-[![](http://cranlogs.r-pkg.org/badges/rosm)](https://cran.r-project.org/package=rosm)
-[![Travis build
-status](https://travis-ci.org/paleolimbot/rosm.svg?branch=master)](https://travis-ci.org/paleolimbot/rosm)
-[![Coverage
-status](https://codecov.io/gh/paleolimbot/rosm/branch/master/graph/badge.svg)](https://codecov.io/github/paleolimbot/rosm?branch=master)
+[![Codecov test
+coverage](https://codecov.io/gh/paleolimbot/rosm/branch/master/graph/badge.svg)](https://app.codecov.io/gh/paleolimbot/rosm?branch=master)
+<!-- badges: end -->
 
 Download and plot [Open Street Map](https://www.openstreetmap.org/),
 [Bing Maps](https://www.bing.com/maps), and other tiled map sources. Use

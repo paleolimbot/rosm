@@ -462,7 +462,7 @@ bmaps.restquery <- function(bingtype, key = NULL) {
     if (inherits(lines, "try-error")) stop("  Bing REST query failed for type: ", bingtype)
 
     # convert to a list
-    result <- rjson::fromJSON(paste(lines, collapse = ""))
+    result <- jsonlite::fromJSON(paste(lines, collapse = ""), simplifyVector = FALSE)
     # cache the result
     bing_rest_queries[[bingtype]] <- result
   }
@@ -644,7 +644,7 @@ extract_bbox <- function(x, tolatlon = TRUE, ...) {
     sp::bbox(x)
   } else if (methods::is(x, "Raster")) {
     box <- raster::as.matrix(x@extent)
-    if (tolatlon && !is.na(longlake_depth_raster@crs@projargs)) {
+    if (tolatlon && !is.na(x@crs@projargs)) {
       # need a couple of points to get a decent approximation
       coords <- expand.grid(x = box[1, ], y = box[2, ])
       coords_lonlat <- .tolatlon(coords[, 1], coords[, 2], projection = x@crs)
@@ -1138,16 +1138,20 @@ osm.proj <- function(osm.raster, projection, crop.bbox = NULL, ...) {
   if (sf::st_crs(osm.raster@crs) == projection) {
     rstackproj <- osm.raster
   } else {
-    rstackproj <- raster::projectRaster(
-      osm.raster,
-      crs = raster::crs(sf::st_crs(projection)$wkt),
-      ...
+    osm.terra <- terra::rast(osm.raster)
+    terra::crs(osm.terra) <- terra::crs("EPSG:3857")
+    rstackproj <- raster::raster(
+      terra::project(
+        osm.terra,
+        terra::crs(sf::st_crs(projection)$wkt),
+        ...
+      )
     )
   }
 
   # this can occur because of bilinear resampling on project
   # values outside [0, 255] cause problems (e.g., raster::plotRGB())
-  rstackproj <- raster::clamp(rstackproj, lower = 0, upper = 255, useValues = TRUE)
+  rstackproj <- raster::clamp(rstackproj, lower = 0, upper = 255)
 
   if (!is.null(crop.bbox)) {
     k <- min(c(

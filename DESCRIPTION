@@ -16,19 +16,16 @@ Imports:
     abind,
     jpeg,
     png,
-    sp,
-    rgdal,
-    rjson,
-    methods,
-    plyr,
-    tools
+    jsonlite,
+    methods
 Suggests:
-    cartography,
+    sp,
+    plyr,
     raster,
     testthat,
-    covr,
     withr,
-    sf
+    sf,
+    terra
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
 RoxygenNote: 7.2.1

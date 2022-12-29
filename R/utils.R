@@ -1,6 +1,8 @@
 
 #' Check for Internet
 #'
+#' Used to skip tests and examples for this package when offline.
+#'
 #' @return TRUE if the internet is available, false otherwise
 #' @export
 #'

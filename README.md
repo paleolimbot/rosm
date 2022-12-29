@@ -30,14 +30,19 @@ library(rosm)
 
 # specify a bounding box
 altalake <- makebbox(50.1232, -122.9574, 50.1035, -123.0042)
-prettymap({
-  # plot tiles (see also osm.raster() and bmaps.plot())
-  osm.plot(altalake)
-  osm.points(c(-122.9841, -122.9812), c(50.11055, 50.11765), 
-             pch=15, cex=0.6, col="white")
-  osm.text(c(-122.9841, -122.9812), c(50.11055, 50.11765), 
-           labels=c("GC6", "GC2"), adj=c(-0.2, 0.5), cex=0.7, col="white")
-}, scale.label.col = "white")
+prettymap(
+  {
+    # plot tiles (see also osm.raster() and bmaps.plot())
+    osm.plot(altalake)
+    osm.points(c(-122.9841, -122.9812), c(50.11055, 50.11765),
+      pch = 15, cex = 0.6, col = "white"
+    )
+    osm.text(c(-122.9841, -122.9812), c(50.11055, 50.11765),
+      labels = c("GC6", "GC2"), adj = c(-0.2, 0.5), cex = 0.7, col = "white"
+    )
+  },
+  scale.label.col = "white"
+)
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />

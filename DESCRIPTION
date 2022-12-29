@@ -18,7 +18,7 @@ Imports:
     png,
     sp,
     rgdal,
-    rjson,
+    jsonlite,
     methods,
     plyr,
     tools

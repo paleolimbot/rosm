@@ -462,7 +462,7 @@ bmaps.restquery <- function(bingtype, key = NULL) {
     if (inherits(lines, "try-error")) stop("  Bing REST query failed for type: ", bingtype)
 
     # convert to a list
-    result <- rjson::fromJSON(paste(lines, collapse = ""))
+    result <- jsonlite::fromJSON(paste(lines, collapse = ""), simplifyVector = FALSE)
     # cache the result
     bing_rest_queries[[bingtype]] <- result
   }

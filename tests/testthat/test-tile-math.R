@@ -35,6 +35,11 @@ test_that("ensure_lnglat() works", {
   )
 
   expect_identical(
+    ensure_lnglat(wk::xy(1, 2, crs = wk::wk_crs_inherit())),
+    osm_lnglat(1, 2)
+  )
+
+  expect_identical(
     ensure_lnglat(osm_lnglat(1, 2)),
     osm_lnglat(1, 2)
   )
@@ -49,4 +54,16 @@ test_that("ensure_lnglat() works", {
     crs = "EPSG:3857"
   )
   expect_equal(ensure_lnglat(points_3857), points)
+})
+
+test_that("ensure_tile() works", {
+  expect_error(
+    ensure_tile(data.frame()),
+    "must have columns `x`, `y`, and `zoom`"
+  )
+
+  expect_error(
+    ensure_tile(data.frame(x = double(), y = double(), zoom = character())),
+    "must be numeric"
+  )
 })

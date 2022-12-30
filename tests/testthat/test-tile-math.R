@@ -27,8 +27,6 @@ test_that("osm_tile_rct() works", {
 })
 
 test_that("osm_ensure_lnglat() works", {
-  skip_if_not_installed("sf")
-
   expect_error(
     osm_ensure_lnglat(wk::xy(1, 2)),
     "Can't transform NULL"
@@ -53,12 +51,23 @@ test_that("osm_ensure_lnglat() works", {
       10018754.1713946, 7514065.62854597),
     crs = "EPSG:3857"
   )
+
+  # uses the internal formulas with no sf
   expect_equal(osm_ensure_lnglat(points_3857), points)
+
+  skip_if_not_installed("sf")
+
+  # use a crs representation that rosm can't detect as native
+  wk::wk_crs(points_3857) <- wk::wk_crs_projjson(sf::st_crs(3857))
+  expect_false(crs_is_native(wk::wk_crs(points_3857)))
+
+  expect_equal(osm_ensure_lnglat(points_3857), points)
+
 })
 
 test_that("osm_ensure_native() works", {
   expect_error(
-    osm_ensure_lnglat(wk::xy(1, 2)),
+    osm_ensure_native(wk::xy(1, 2)),
     "Can't transform NULL"
   )
 

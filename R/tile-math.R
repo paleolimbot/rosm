@@ -98,6 +98,12 @@ osm_ensure_lnglat <- function(pt) {
 
   if (inherits(crs, "wk_crs_inherit") || crs_is_lnglat(crs)) {
     wk::wk_set_crs(pt, wk::wk_crs_longlat())
+  } else if (crs_is_native(crs)) {
+    wk::xy(
+      osm_native_to_lng_degrees(wk::xy_x(pt), scale = 6378137),
+      osm_native_to_lat_degrees(wk::xy_y(pt), scale = 6378137),
+      crs = wk::wk_crs_longlat()
+    )
   } else {
     out <- sf::sf_project(
       wk::wk_crs_proj_definition(crs, verbose = TRUE),
@@ -191,5 +197,5 @@ osm_native_to_lng_degrees <- function(x, scale = 1) {
 }
 
 osm_native_to_lat_degrees <- function(y, scale = 1) {
-  2 * asin(y / pi / scale)
+  atan(sinh(y / scale)) * 180 / pi
 }

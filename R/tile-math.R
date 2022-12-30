@@ -37,9 +37,8 @@ osm_tile <- function(pt, zoom) {
 #' @export
 osm_tile_top_left <- function(tile) {
   n <- 2.0^tile$zoom
-  lon_deg <- tile$x / n * 360.0 - 180.0
-  lat_rad <- atan(sinh(pi * (1 - 2 * tile$y / n)))
-  lat_deg <- lat_rad * 180.0 / pi
+  lon_deg <- osm_native_to_lng_degrees(tile$x - n / 2, n / pi / 2)
+  lat_deg <- osm_native_to_lat_degrees(n / 2 - tile$y, n / pi / 2)
 
   wk::xy(lon_deg, lat_deg, crs = wk::wk_crs_longlat())
 }

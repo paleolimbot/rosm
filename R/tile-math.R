@@ -7,7 +7,6 @@
 #'
 #' @param pt A vector of points as coerced by [wk::as_xy()]. The CRS for these
 #'   points is considered.
-#' @param lng,lat Coordinate values for longitude/latitude in degrees.
 #' @param zoom A zoom level, generally between 0 and 21, with higher values
 #'   representing a smaller (i.e., more detailed) tile.
 #' @param tile A `data.frame()` with columns `x`, `y`, and `zoom`.
@@ -68,25 +67,44 @@ osm_tile_envelope <- function(tile) {
   )
 }
 
-#' @rdname osm_tile
+
+#' Coordinate helpers
+#'
+#' @param x,y Ordinate values in EPSG:3857 (Spherical Mercator in meters)
+#' @param lng,lat Coordinate values for longitude/latitude in degrees.
+#' @inheritParams osm_tile
+#'
+#' @return
+#'   - `osm_native()`, `osm_lnglat()`, `osm_ensure_native()`, and
+#'     `osm_ensure_lnglat()` return a [wk::xy()] with the appropriate
+#'     crs
+#'   - `osm_crs_native()` returns a value that can be used as the [wk::wk_crs()]
+#'     of a vector.
 #' @export
+#'
+#' @examples
+#' osm_lnglat(-64, 45)
+#' osm_ensure_native(osm_lnglat(-64, 45))
+#' osm_ensure_lnglat(
+#'   osm_ensure_native(osm_lnglat(-64, 45))
+#' )
 osm_native <- function(x, y) {
   wk::xy(x, y, crs = osm_crs_native())
 }
 
-#' @rdname osm_tile
+#' @rdname osm_native
 #' @export
 osm_lnglat <- function(lng, lat) {
   wk::xy(lng, lat, crs = wk::wk_crs_longlat())
 }
 
-#' @rdname osm_tile
+#' @rdname osm_native
 #' @export
 osm_crs_native <- function() {
   "EPSG:3857"
 }
 
-#' @rdname osm_tile
+#' @rdname osm_native
 #' @export
 osm_ensure_lnglat <- function(pt) {
   pt <- wk::as_xy(pt)
@@ -123,7 +141,7 @@ osm_ensure_lnglat <- function(pt) {
   }
 }
 
-#' @rdname osm_tile
+#' @rdname osm_native
 #' @export
 osm_ensure_native <- function(pt) {
   pt <- wk::as_xy(pt)

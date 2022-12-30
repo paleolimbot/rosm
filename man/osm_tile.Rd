@@ -4,11 +4,6 @@
 \alias{osm_tile}
 \alias{osm_tile_top_left}
 \alias{osm_tile_envelope}
-\alias{osm_native}
-\alias{osm_lnglat}
-\alias{osm_crs_native}
-\alias{osm_ensure_lnglat}
-\alias{osm_ensure_native}
 \title{Low-level tile math}
 \usage{
 osm_tile(pt, zoom)
@@ -16,16 +11,6 @@ osm_tile(pt, zoom)
 osm_tile_top_left(tile)
 
 osm_tile_envelope(tile)
-
-osm_native(x, y)
-
-osm_lnglat(lng, lat)
-
-osm_crs_native()
-
-osm_ensure_lnglat(pt)
-
-osm_ensure_native(pt)
 }
 \arguments{
 \item{pt}{A vector of points as coerced by [wk::as_xy()]. The CRS for these
@@ -35,8 +20,6 @@ points is considered.}
 representing a smaller (i.e., more detailed) tile.}
 
 \item{tile}{A `data.frame()` with columns `x`, `y`, and `zoom`.}
-
-\item{lng, lat}{Coordinate values for longitude/latitude in degrees.}
 }
 \value{
 - `osm_tile()`: A `data.frame()` with columns `x`, `y`, and `zoom`.

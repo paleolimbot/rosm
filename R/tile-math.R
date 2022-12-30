@@ -180,8 +180,11 @@ ensure_tile <- function(tile) {
   if (!is.numeric(tile$x) || !is.numeric(tile$y) || !is.numeric(tile$zoom)) {
     stop("`tile$x`, `tile$y`, and `tile$zoom` must be numeric")
   }
+
+  invisible(tile)
 }
 
+# Variants of projection functions whose projected range is [-pi -pi pi pi]
 osm_lng_degrees_to_native <- function(lng_deg, scale = 1) {
   lng_deg / 180.0 * pi * scale
 }

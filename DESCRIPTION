@@ -17,7 +17,8 @@ Imports:
     jpeg,
     png,
     jsonlite,
-    methods
+    methods,
+    wk
 Suggests:
     sp,
     plyr,

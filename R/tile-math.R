@@ -24,7 +24,7 @@
 #' osm_tile_envelope(tiles)
 #'
 osm_tile <- function(pt, zoom) {
-  lnglat <- unclass(ensure_lnglat(pt))
+  lnglat <- unclass(osm_ensure_lnglat(pt))
 
   lat_rad <- lnglat[[2]] * pi / 180.0
   n <- 2.0^zoom
@@ -71,6 +71,12 @@ osm_tile_envelope <- function(tile) {
 
 #' @rdname osm_tile
 #' @export
+osm_native <- function(x, y) {
+  wk::xy(x, y, crs = osm_crs_native())
+}
+
+#' @rdname osm_tile
+#' @export
 osm_lnglat <- function(lng, lat) {
   wk::xy(lng, lat, crs = wk::wk_crs_longlat())
 }
@@ -81,32 +87,45 @@ osm_crs_native <- function() {
   "EPSG:3857"
 }
 
-ensure_lnglat <- function(pt) {
+#' @rdname osm_tile
+#' @export
+osm_ensure_lnglat <- function(pt) {
+  osm_ensure_internal(pt, list(wk::wk_crs_longlat(), "EPSG:4326"))
+}
+
+#' @rdname osm_tile
+#' @export
+osm_ensure_native <- function(pt) {
+  osm_ensure_internal(pt, list(osm_crs_native()))
+}
+
+osm_ensure_internal <- function(pt, dest_crs) {
   pt <- wk::as_xy(pt)
   crs <- wk::wk_crs(pt)
   if (is.null(crs)) {
     stop("Can't transform NULL crs to lon/lat")
   }
 
+  crs_equal <- vapply(dest_crs, wk::wk_crs_equal, logical(1), crs)
+
   if (inherits(crs, "wk_crs_inherit")) {
-    wk::wk_set_crs(pt, wk::wk_crs_longlat())
-  } else if (!wk::wk_crs_equal(crs, wk::wk_crs_longlat()) &&
-             !wk::wk_crs_equal(crs, "EPSG:4326")) {
+    wk::wk_set_crs(pt, dest_crs[[1]])
+  } else if (!any(crs_equal)) {
     out <- sf::sf_project(
       wk::wk_crs_proj_definition(crs, verbose = TRUE),
-      "EPSG:4326",
+      dest_crs[[1]],
       as.matrix(pt),
       keep = TRUE,
       warn = FALSE,
       authority_compliant = FALSE
     )
 
-    pt <- wk::new_wk_xy(
+    wk::new_wk_xy(
       list(
         x = out[, 1, drop = TRUE],
         y = out[, 2, drop = TRUE]
       ),
-      crs = wk::wk_crs_longlat()
+      crs = dest_crs[[1]]
     )
   } else {
     pt
@@ -132,11 +151,10 @@ osm_lat_degrees_to_native <- function(lat_deg, scale = 1) {
   log(tan(lat_rad) + (1 / cos(lat_rad))) * scale
 }
 
-osm_native_to_lng_degrees <- function(x) {
-
+osm_native_to_lng_degrees <- function(x, scale = 1) {
+  180.0 * x / pi / scale
 }
 
-osm_native_to_lat_degrees <- function(y) {
-
+osm_native_to_lat_degrees <- function(y, scale = 1) {
+  2 * asin(y / pi / scale)
 }
-

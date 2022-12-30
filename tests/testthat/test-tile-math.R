@@ -26,21 +26,21 @@ test_that("osm_tile_rct() works", {
   )
 })
 
-test_that("ensure_lnglat() works", {
+test_that("osm_ensure_lnglat() works", {
   skip_if_not_installed("sf")
 
   expect_error(
-    ensure_lnglat(wk::xy(1, 2)),
+    osm_ensure_lnglat(wk::xy(1, 2)),
     "Can't transform NULL"
   )
 
   expect_identical(
-    ensure_lnglat(wk::xy(1, 2, crs = wk::wk_crs_inherit())),
+    osm_ensure_lnglat(wk::xy(1, 2, crs = wk::wk_crs_inherit())),
     osm_lnglat(1, 2)
   )
 
   expect_identical(
-    ensure_lnglat(osm_lnglat(1, 2)),
+    osm_ensure_lnglat(osm_lnglat(1, 2)),
     osm_lnglat(1, 2)
   )
 
@@ -53,7 +53,37 @@ test_that("ensure_lnglat() works", {
       10018754.1713946, 7514065.62854597),
     crs = "EPSG:3857"
   )
-  expect_equal(ensure_lnglat(points_3857), points)
+  expect_equal(osm_ensure_lnglat(points_3857), points)
+})
+
+test_that("osm_ensure_native() works", {
+  skip_if_not_installed("sf")
+
+  expect_error(
+    osm_ensure_lnglat(wk::xy(1, 2)),
+    "Can't transform NULL"
+  )
+
+  expect_identical(
+    osm_ensure_native(wk::xy(1, 2, crs = wk::wk_crs_inherit())),
+    osm_native(1, 2)
+  )
+
+  expect_identical(
+    osm_ensure_native(osm_native(1, 2)),
+    osm_native(1, 2)
+  )
+
+  tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
+  points <- osm_tile_top_left(tiles)
+  points_3857 <- wk::xy(
+    c(-20037508.3427892, -20037508.3427892, -10018754.1713946,
+      -10018754.1713946, -7514065.62854597),
+    c(20037508.3427892, 20037508.3427892, 10018754.1713946,
+      10018754.1713946, 7514065.62854597),
+    crs = "EPSG:3857"
+  )
+  expect_equal(osm_ensure_native(points), points_3857)
 })
 
 test_that("ensure_tile() works", {

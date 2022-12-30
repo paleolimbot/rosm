@@ -90,30 +90,18 @@ osm_crs_native <- function() {
 #' @rdname osm_tile
 #' @export
 osm_ensure_lnglat <- function(pt) {
-  osm_ensure_internal(pt, list(wk::wk_crs_longlat(), "EPSG:4326"))
-}
-
-#' @rdname osm_tile
-#' @export
-osm_ensure_native <- function(pt) {
-  osm_ensure_internal(pt, list(osm_crs_native()))
-}
-
-osm_ensure_internal <- function(pt, dest_crs) {
   pt <- wk::as_xy(pt)
   crs <- wk::wk_crs(pt)
   if (is.null(crs)) {
     stop("Can't transform NULL crs to lon/lat")
   }
 
-  crs_equal <- vapply(dest_crs, wk::wk_crs_equal, logical(1), crs)
-
   if (inherits(crs, "wk_crs_inherit")) {
-    wk::wk_set_crs(pt, dest_crs[[1]])
-  } else if (!any(crs_equal)) {
+    wk::wk_set_crs(pt, wk::wk_crs_longlat())
+  } else if (!crs_equal_any(crs, list(wk::wk_crs_longlat(), "EPSG:4326"))) {
     out <- sf::sf_project(
       wk::wk_crs_proj_definition(crs, verbose = TRUE),
-      dest_crs[[1]],
+      "EPSG:4326",
       as.matrix(pt),
       keep = TRUE,
       warn = FALSE,
@@ -125,11 +113,48 @@ osm_ensure_internal <- function(pt, dest_crs) {
         x = out[, 1, drop = TRUE],
         y = out[, 2, drop = TRUE]
       ),
-      crs = dest_crs[[1]]
+      crs = wk::wk_crs_longlat()
     )
   } else {
     pt
   }
+}
+
+#' @rdname osm_tile
+#' @export
+osm_ensure_native <- function(pt) {
+  pt <- wk::as_xy(pt)
+  crs <- wk::wk_crs(pt)
+  if (is.null(crs)) {
+    stop("Can't transform NULL crs to EPSG:3857")
+  }
+
+  if (inherits(crs, "wk_crs_inherit")) {
+    wk::wk_set_crs(pt, osm_crs_native())
+  } else if (!crs_equal_any(crs, list(osm_crs_native()))) {
+    out <- sf::sf_project(
+      wk::wk_crs_proj_definition(crs, verbose = TRUE),
+      "EPSG:3857",
+      as.matrix(pt),
+      keep = TRUE,
+      warn = FALSE,
+      authority_compliant = FALSE
+    )
+
+    wk::new_wk_xy(
+      list(
+        x = out[, 1, drop = TRUE],
+        y = out[, 2, drop = TRUE]
+      ),
+      crs = osm_crs_native()
+    )
+  } else {
+    pt
+  }
+}
+
+crs_equal_any <- function(crs, dest_crs) {
+  any(vapply(dest_crs, wk::wk_crs_equal, logical(1), crs))
 }
 
 ensure_tile <- function(tile) {

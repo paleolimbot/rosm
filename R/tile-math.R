@@ -96,9 +96,9 @@ osm_ensure_lnglat <- function(pt) {
     stop("Can't transform NULL crs to lon/lat")
   }
 
-  if (inherits(crs, "wk_crs_inherit")) {
+  if (inherits(crs, "wk_crs_inherit") || crs_is_lnglat(crs)) {
     wk::wk_set_crs(pt, wk::wk_crs_longlat())
-  } else if (!crs_equal_any(crs, list(wk::wk_crs_longlat(), "EPSG:4326"))) {
+  } else {
     out <- sf::sf_project(
       wk::wk_crs_proj_definition(crs, verbose = TRUE),
       "EPSG:4326",
@@ -115,8 +115,6 @@ osm_ensure_lnglat <- function(pt) {
       ),
       crs = wk::wk_crs_longlat()
     )
-  } else {
-    pt
   }
 }
 
@@ -129,9 +127,9 @@ osm_ensure_native <- function(pt) {
     stop("Can't transform NULL crs to EPSG:3857")
   }
 
-  if (inherits(crs, "wk_crs_inherit")) {
+  if (inherits(crs, "wk_crs_inherit") || crs_is_native(crs)) {
     wk::wk_set_crs(pt, osm_crs_native())
-  } else if (!crs_equal_any(crs, list(osm_crs_native()))) {
+  } else {
     out <- sf::sf_project(
       wk::wk_crs_proj_definition(crs, verbose = TRUE),
       "EPSG:3857",
@@ -148,13 +146,19 @@ osm_ensure_native <- function(pt) {
       ),
       crs = osm_crs_native()
     )
-  } else {
-    pt
   }
 }
 
 crs_equal_any <- function(crs, dest_crs) {
   any(vapply(dest_crs, wk::wk_crs_equal, logical(1), crs))
+}
+
+crs_is_lnglat <- function(crs) {
+  crs_equal_any(crs, list(wk::wk_crs_longlat(), "EPSG:4326"))
+}
+
+crs_is_native <- function(crs) {
+  crs_equal_any(crs, list(osm_crs_native()))
 }
 
 ensure_tile <- function(tile) {

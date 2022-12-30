@@ -129,6 +129,12 @@ osm_ensure_native <- function(pt) {
 
   if (inherits(crs, "wk_crs_inherit") || crs_is_native(crs)) {
     wk::wk_set_crs(pt, osm_crs_native())
+  } else if (crs_is_lnglat(crs)) {
+    wk::xy(
+      osm_lng_degrees_to_native(wk::xy_x(pt), scale = 6378137),
+      osm_lat_degrees_to_native(wk::xy_y(pt), scale = 6378137),
+      crs = osm_crs_native()
+    )
   } else {
     out <- sf::sf_project(
       wk::wk_crs_proj_definition(crs, verbose = TRUE),

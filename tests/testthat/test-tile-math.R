@@ -57,8 +57,6 @@ test_that("osm_ensure_lnglat() works", {
 })
 
 test_that("osm_ensure_native() works", {
-  skip_if_not_installed("sf")
-
   expect_error(
     osm_ensure_lnglat(wk::xy(1, 2)),
     "Can't transform NULL"
@@ -83,6 +81,15 @@ test_that("osm_ensure_native() works", {
       10018754.1713946, 7514065.62854597),
     crs = "EPSG:3857"
   )
+
+  # uses the internal formulas with no sf
+  expect_equal(osm_ensure_native(points), points_3857)
+
+  skip_if_not_installed("sf")
+
+  # use a crs representation that rosm can't detect as lnglat
+  wk::wk_crs(points) <- wk::wk_crs_projjson(sf::st_crs(4326))
+  expect_false(crs_is_lnglat(wk::wk_crs(points)))
   expect_equal(osm_ensure_native(points), points_3857)
 })
 

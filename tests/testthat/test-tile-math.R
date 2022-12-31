@@ -10,9 +10,9 @@ test_that("osm_tile() works", {
   )
 })
 
-test_that("osm_tile_rct() works", {
+test_that("osm_tile_rct() works for lng/lat", {
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
-  envelopes <- osm_tile_envelope(tiles)
+  envelopes <- osm_tile_envelope(tiles, wk::wk_crs_longlat())
   expect_identical(wk::wk_crs(envelopes), wk::wk_crs_longlat())
 
   expect_identical(
@@ -23,6 +23,25 @@ test_that("osm_tile_rct() works", {
   expect_identical(
     wk::rct_xmax(envelopes),
     c(180, 0, 0, -45, -45)
+  )
+})
+
+test_that("osm_tile_rct() works for native crs", {
+  tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
+  envelopes <- osm_tile_envelope(tiles, osm_crs_native())
+  expect_identical(wk::wk_crs(envelopes), osm_crs_native())
+
+  top_left_lnglat <- osm_tile_top_left(tiles, wk::wk_crs_longlat())
+  top_left_proj <- osm_ensure_native(top_left_lnglat)
+
+  expect_equal(
+    wk::rct_xmin(envelopes),
+    wk::xy_x(top_left_proj)
+  )
+
+  expect_equal(
+    wk::rct_ymax(envelopes),
+    wk::xy_y(top_left_proj)
   )
 })
 
@@ -43,7 +62,7 @@ test_that("osm_ensure_lnglat() works", {
   )
 
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
-  points <- osm_tile_top_left(tiles)
+  points <- osm_tile_top_left(tiles, crs = wk::wk_crs_longlat())
   points_3857 <- wk::xy(
     c(-20037508.3427892, -20037508.3427892, -10018754.1713946,
       -10018754.1713946, -7514065.62854597),
@@ -82,7 +101,7 @@ test_that("osm_ensure_native() works", {
   )
 
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
-  points <- osm_tile_top_left(tiles)
+  points <- osm_tile_top_left(tiles, crs = wk::wk_crs_longlat())
   points_3857 <- wk::xy(
     c(-20037508.3427892, -20037508.3427892, -10018754.1713946,
       -10018754.1713946, -7514065.62854597),

@@ -8,9 +8,9 @@
 \usage{
 osm_tile(pt, zoom)
 
-osm_tile_top_left(tile)
+osm_tile_top_left(tile, crs = osm_crs_native())
 
-osm_tile_envelope(tile)
+osm_tile_envelope(tile, crs = osm_crs_native())
 }
 \arguments{
 \item{pt}{A vector of points as coerced by [wk::as_xy()]. The CRS for these
@@ -20,6 +20,9 @@ points is considered.}
 representing a smaller (i.e., more detailed) tile.}
 
 \item{tile}{A `data.frame()` with columns `x`, `y`, and `zoom`.}
+
+\item{crs}{A target CRS. Either [wk::wk_crs_longlat()] or
+[osm_crs_native()].}
 }
 \value{
 - `osm_tile()`: A `data.frame()` with columns `x`, `y`, and `zoom`.

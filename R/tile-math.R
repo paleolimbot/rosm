@@ -9,6 +9,8 @@
 #'   points is considered.
 #' @param zoom A zoom level, generally between 0 and 21, with higher values
 #'   representing a smaller (i.e., more detailed) tile.
+#' @param crs A target CRS. Either [wk::wk_crs_longlat()] or
+#'   [osm_crs_native()].
 #' @param tile A `data.frame()` with columns `x`, `y`, and `zoom`.
 #'
 #' @return
@@ -34,25 +36,34 @@ osm_tile <- function(pt, zoom) {
 
 #' @rdname osm_tile
 #' @export
-osm_tile_top_left <- function(tile) {
+osm_tile_top_left <- function(tile, crs = osm_crs_native()) {
   n <- 2.0^tile$zoom
-  lon_deg <- osm_native_to_lng_degrees(tile$x - n / 2, n / pi / 2)
-  lat_deg <- osm_native_to_lat_degrees(n / 2 - tile$y, n / pi / 2)
 
-  wk::xy(lon_deg, lat_deg, crs = wk::wk_crs_longlat())
+  if (crs_is_lnglat(crs)) {
+    x <- osm_native_to_lng_degrees(tile$x - n / 2, n / pi / 2)
+    y <- osm_native_to_lat_degrees(n / 2 - tile$y, n / pi / 2)
+  } else if (crs_is_native(crs)) {
+    x <- (tile$x / n - 0.5) * 2 * pi * 6378137
+    y <- (0.5 - tile$y / n) * 2 * pi * 6378137
+  } else {
+    stop("Unsupported `crs`")
+  }
+
+  wk::xy(x, y, crs = crs)
 }
 
 #' @rdname osm_tile
 #' @export
-osm_tile_envelope <- function(tile) {
-  top_left <- unclass(osm_tile_top_left(tile))
+osm_tile_envelope <- function(tile, crs = osm_crs_native()) {
+  top_left <- unclass(osm_tile_top_left(tile, crs = crs))
   bottom_right <- unclass(
     osm_tile_top_left(
       list(
         x = tile$x + 1,
         y = tile$y + 1,
         zoom = tile$zoom
-      )
+      ),
+      crs = crs
     )
   )
 
@@ -63,10 +74,9 @@ osm_tile_envelope <- function(tile) {
       xmax = bottom_right$x,
       ymax = top_left$y
     ),
-    crs = wk::wk_crs_longlat()
+    crs = crs
   )
 }
-
 
 #' Coordinate helpers
 #'

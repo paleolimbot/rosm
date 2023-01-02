@@ -10,6 +10,31 @@ test_that("osm_tile() works", {
   )
 })
 
+test_that("osm_tile_covering() works for native bounds", {
+  bounds <- wk::rct(
+    -20037507, 1, -1, 20037507,
+    crs = osm_crs_native()
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 1L),
+    data.frame(
+      x = 0L,
+      y = 0L,
+      zoom = 1L
+    )
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 2L),
+    data.frame(
+      x = c(0L, 1L, 0L, 1L),
+      y = c(0L, 0L, 1L, 1L),
+      zoom = 2L
+    )
+  )
+})
+
 test_that("osm_tile_rct() works for lng/lat", {
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
   envelopes <- osm_tile_envelope(tiles, wk::wk_crs_longlat())

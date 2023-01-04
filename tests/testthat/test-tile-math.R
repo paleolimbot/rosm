@@ -60,6 +60,22 @@ test_that("osm_tile_covering() works for lnglat bounds", {
   )
 })
 
+test_that("osm_tile_covering() works for s2-style rectangle bounds", {
+  bounds <- data.frame(
+    lng_lo = 19,
+    lat_lo = 41,
+    lng_hi = -169,
+    lat_hi = 81
+  )
+
+  bounds_rct <- wk::rct(19, 41, -169, 81, crs = wk::wk_crs_longlat())
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 3L),
+    osm_tile_covering(bounds_rct, zoom = 3L)
+  )
+})
+
 test_that("osm_tile_covering() can compute a range for out of bounds lats", {
   bounds <- wk::rct(
     -179.9, -100, -0.1, 100,

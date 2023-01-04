@@ -87,18 +87,9 @@ osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
 
   crs <- wk::wk_crs(bbox)
 
-  # For non lnglat/native CRS values, transform vertices to native and then
-  # compute the bbox
-  if (!crs_is_lnglat(crs) && !crs_is_native(crs)) {
-    vertices <- osm_ensure_native(wk::wk_vertices(bbox))
-    bbox <- wk::wk_bbox(vertices)
-    crs <- osm_crs_native()
-  }
-
   if (!inherits(bbox, "wk_rct")) {
     bbox <- wk::wk_bbox(bbox)
   }
-
 
   if (crs_is_lnglat(crs)) {
     bbox <- unclass(bbox)
@@ -107,20 +98,21 @@ osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
       bbox$xmin <- bbox$xmin - 180.0
     }
 
-    # important to clamp latitude bounds or else we may get NaNs
-    if (bbox$ymax > 85.0511287798066) {
-      bbox$ymax <- 85.0511287798066
+    # important to clamp latitude bounds or else we may get NaNs which prevent
+    # us from getting a range of tile y values
+    if (bbox$ymax > 85.0511287798065) {
+      bbox$ymax <- 85.0511287798065
     }
 
-    if (bbox$ymin < -85.0511287798066) {
-      bbox$ymin <- -85.0511287798066
+    if (bbox$ymin < -85.0511287798065) {
+      bbox$ymin <- -85.0511287798065
     }
 
     top_left <- osm_tile(wk::xy(bbox$xmin, bbox$ymax, crs = crs), zoom)
     bottom_right <- osm_tile(wk::xy(bbox$xmax, bbox$ymin, crs = crs), zoom)
 
     x <- seq(top_left$x, bottom_right$x)
-    y <- seq(top_left$y, botton_right$y)
+    y <- seq(top_left$y, bottom_right$y)
 
     data.frame(
       x = rep(x, length(y)),
@@ -141,7 +133,12 @@ osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
       zoom = zoom
     )
   } else {
-    stop("osm_tile_covering() does not currently support non native/longlat crs")
+    # Make a grid along the bounding box and compute the covering of that
+    # after converting to native. This probably generates a covering that has
+    # too many tiles in most cases.
+    bbox_grd <- wk::grd(bbox, nx = 5, ny = 5, type = "corners")
+    vertices_native <- osm_ensure_native(bbox_grd)
+    osm_tile_covering(vertices_native, zoom = zoom)
   }
 }
 

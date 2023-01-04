@@ -35,6 +35,72 @@ test_that("osm_tile_covering() works for native bounds", {
   )
 })
 
+test_that("osm_tile_covering() works for lnglat bounds", {
+  bounds <- wk::rct(
+    -179.9, 0.1, -0.1, 85.05,
+    crs = wk::wk_crs_longlat()
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 1L),
+    data.frame(
+      x = 0L,
+      y = 0L,
+      zoom = 1L
+    )
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 2L),
+    data.frame(
+      x = c(0L, 1L, 0L, 1L),
+      y = c(0L, 0L, 1L, 1L),
+      zoom = 2L
+    )
+  )
+})
+
+test_that("osm_tile_covering() can compute a range for out of bounds lats", {
+  bounds <- wk::rct(
+    -179.9, -100, -0.1, 100,
+    crs = wk::wk_crs_longlat()
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 1L),
+    data.frame(
+      x = c(0L, 0L),
+      y = c(0L, 1L),
+      zoom = 1L
+    )
+  )
+})
+
+test_that("osm_tile_covering() works for arbitrary CRS bounds", {
+  bounds <- wk::rct(
+    252185, 4815826, 739729, 5210280,
+    crs = "EPSG:32620"
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 1L),
+    data.frame(
+      x = 0L,
+      y = 0L,
+      zoom = 1L
+    )
+  )
+
+  expect_identical(
+    osm_tile_covering(bounds, zoom = 6L),
+    data.frame(
+      x = c(20L, 21L, 20L, 21L),
+      y = c(22L, 22L, 23L, 23L),
+      zoom = 6L
+    )
+  )
+})
+
 test_that("osm_tile_rct() works for lng/lat", {
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
   envelopes <- osm_tile_envelope(tiles, wk::wk_crs_longlat())

@@ -78,6 +78,26 @@ osm_tile_envelope <- function(tile, crs = osm_crs_native()) {
   )
 }
 
+#' Get an OSM tile covering
+#'
+#' @param bbox A [wk::rct()] or object with a [wk::wk_bbox()] method.
+#' @param zoom A zoom level or an auto zoom specifier like
+#'   [osm_zoom_num_tiles()].
+#' @param num_tiles The minimum number of tiles to use when choosing a
+#'   zoom level.
+#'
+#' @return
+#'   - `osm_tile_covering()` returns a `data.frame()` with columns x, y, and zoom.
+#' @export
+#'
+#' @examples
+#' bounds <- wk::rct(
+#'   -7514064, 5009380, -6261722, 6261715,
+#'   crs = osm_crs_native()
+#' )
+#'
+#' osm_tile_covering(bounds, 6)
+#'
 osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
   # S2's s2_bounds_rect() gives a data.frame like this
   if (identical(names(bbox), c("lng_lo", "lat_lo", "lng_hi", "lat_hi"))) {
@@ -142,6 +162,8 @@ osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
   }
 }
 
+#' @rdname osm_tile_covering
+#' @export
 osm_zoom_num_tiles <- function(num_tiles) {
   structure(list(num_tiles = num_tiles), class = "osm_zoom_num_tiles")
 }

@@ -117,7 +117,35 @@ test_that("osm_tile_covering() works for arbitrary CRS bounds", {
   )
 })
 
-test_that("osm_tile_rct() works for lng/lat", {
+test_that("osm_tile_covering() works with zoom as a function", {
+  bounds <- wk::rct(
+    -7514064, 5009380,
+    -6261722, 6261715,
+    crs = osm_crs_native()
+  )
+
+  covr1 <- osm_tile_covering(bounds, zoom = osm_zoom_num_tiles(1))
+  expect_identical(nrow(covr1), 1L)
+
+  covr4 <- osm_tile_covering(bounds, zoom = osm_zoom_num_tiles(4))
+  expect_identical(nrow(covr4), 4L)
+
+  covr16 <- osm_tile_covering(bounds, zoom = osm_zoom_num_tiles(16))
+  expect_identical(nrow(covr16), 16L)
+
+  bounds0 <- wk::rct(
+    -6261722, 6261715,
+    -6261722, 6261715,
+    crs = osm_crs_native()
+  )
+
+  expect_error(
+    osm_tile_covering(bounds0, function(...) FALSE),
+    "`zoom` function returned FALSE for all zoom levels"
+  )
+})
+
+test_that("osm_tile_envelope() works for lng/lat", {
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
   envelopes <- osm_tile_envelope(tiles, wk::wk_crs_longlat())
   expect_identical(wk::wk_crs(envelopes), wk::wk_crs_longlat())
@@ -133,7 +161,7 @@ test_that("osm_tile_rct() works for lng/lat", {
   )
 })
 
-test_that("osm_tile_rct() works for native crs", {
+test_that("osm_tile_envelope() works for native crs", {
   tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
   envelopes <- osm_tile_envelope(tiles, osm_crs_native())
   expect_identical(wk::wk_crs(envelopes), osm_crs_native())
@@ -149,6 +177,14 @@ test_that("osm_tile_rct() works for native crs", {
   expect_equal(
     wk::rct_ymax(envelopes),
     wk::xy_y(top_left_proj)
+  )
+})
+
+test_that("osm_tile_envelope() errors for unsupported crs", {
+  tiles <- osm_tile(osm_lnglat(-64, 45), 0:4)
+  expect_error(
+    osm_tile_envelope(tiles, "EPSG:32620"),
+    "Unsupported `crs`"
   )
 })
 

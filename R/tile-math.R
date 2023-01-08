@@ -37,6 +37,7 @@ osm_tile <- function(pt, zoom) {
 #' @rdname osm_tile
 #' @export
 osm_tile_top_left <- function(tile, crs = osm_crs_native()) {
+  ensure_tile(tile)
   n <- 2.0^tile$zoom
 
   if (crs_is_lnglat(crs)) {
@@ -55,6 +56,7 @@ osm_tile_top_left <- function(tile, crs = osm_crs_native()) {
 #' @rdname osm_tile
 #' @export
 osm_tile_envelope <- function(tile, crs = osm_crs_native()) {
+  ensure_tile(tile)
   top_left <- unclass(osm_tile_top_left(tile, crs = crs))
   bottom_right <- unclass(
     osm_tile_top_left(
@@ -92,13 +94,14 @@ osm_tile_envelope <- function(tile, crs = osm_crs_native()) {
 #'
 #' @examples
 #' bounds <- wk::rct(
-#'   -7514064, 5009380, -6261722, 6261715,
+#'   -7514064, 5009380,
+#'   -6261722, 6261715,
 #'   crs = osm_crs_native()
 #' )
 #'
-#' osm_tile_covering(bounds, 6)
+#' osm_tile_covering(bounds)
 #'
-osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
+osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(6)) {
   # S2's s2_bounds_rect() gives a data.frame like this
   if (identical(names(bbox), c("lng_lo", "lat_lo", "lng_hi", "lat_hi"))) {
     names(bbox) <- c("xmin", "ymin", "xmax", "ymax")
@@ -109,6 +112,17 @@ osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
 
   if (!inherits(bbox, "wk_rct")) {
     bbox <- wk::wk_bbox(bbox)
+  }
+
+  if (is.function(zoom)) {
+    for (potential_zoom in 0:22) {
+      potential_covering <- osm_tile_covering(bbox, potential_zoom)
+      if (zoom(bbox, potential_covering)) {
+        return(potential_covering)
+      }
+    }
+
+    stop("`zoom` function returned FALSE for all zoom levels in 0:22")
   }
 
   if (crs_is_lnglat(crs)) {
@@ -165,7 +179,10 @@ osm_tile_covering <- function(bbox, zoom = osm_zoom_num_tiles(9)) {
 #' @rdname osm_tile_covering
 #' @export
 osm_zoom_num_tiles <- function(num_tiles) {
-  structure(list(num_tiles = num_tiles), class = "osm_zoom_num_tiles")
+  force(num_tiles)
+  function(bbox, result) {
+    nrow(result) >= num_tiles
+  }
 }
 
 #' Coordinate helpers

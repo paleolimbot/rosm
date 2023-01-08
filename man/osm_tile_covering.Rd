@@ -5,7 +5,7 @@
 \alias{osm_zoom_num_tiles}
 \title{Get an OSM tile covering}
 \usage{
-osm_tile_covering(bbox, zoom = osm_zoom_num_tiles(9))
+osm_tile_covering(bbox, zoom = osm_zoom_num_tiles(6))
 
 osm_zoom_num_tiles(num_tiles)
 }
@@ -26,10 +26,11 @@ Get an OSM tile covering
 }
 \examples{
 bounds <- wk::rct(
-  -7514064, 5009380, -6261722, 6261715,
+  -7514064, 5009380,
+  -6261722, 6261715,
   crs = osm_crs_native()
 )
 
-osm_tile_covering(bounds, 6)
+osm_tile_covering(bounds)
 
 }

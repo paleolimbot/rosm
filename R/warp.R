@@ -1,3 +1,12 @@
+.onLoad <- function(libname, pkgname) {
+  gdwcp <- Sys.getenv("GDAL_DEFAULT_WMS_CACHE_PATH")
+  if (is.null(gdwcp) || nchar(gdwcp) < 1) {
+
+  }
+  ## something like this ...
+  Sys.setenv(GDAL_DEFAULT_WMS_CACHE_PATH = tile.cachedir(list(name = "gdalwmscache")))
+}
+
 
 gdal_wms <- function(url_spec) {
    sprintf("<GDAL_WMS><Service name=\"TMS\"><ServerUrl>%s</ServerUrl></Service><DataWindow><UpperLeftX>-20037508.34</UpperLeftX><UpperLeftY>20037508.34</UpperLeftY><LowerRightX>20037508.34</LowerRightX><LowerRightY>-20037508.34</LowerRightY><TileLevel>18</TileLevel><TileCountX>1</TileCountX><TileCountY>1</TileCountY><YOrigin>top</YOrigin></DataWindow><Projection>EPSG:3857</Projection><BlockSizeX>256</BlockSizeX><BlockSizeY>256</BlockSizeY><BandsCount>3</BandsCount><!--<UserAgent>Please add a specific user agent text, to avoid the default one being used, and potentially blocked by OSM servers in case a too big usage of it would be seen</UserAgent>--><Cache /></GDAL_WMS>",
@@ -32,6 +41,10 @@ gdal_wms <- function(url_spec) {
 #'                  nx = 1024, ny = 1024)
 #' tif1 <- osm_warp(grd1, url_spec)
 #'
+#' ## altalake in Mercator
+#' grd2 <- wk::grd(wk::rct(-13693753, 6464083, -13686567, 6467776, crs = "EPSG:3857"),
+#'  nx = 1024, ny = 512)   #size should account for aspect ratio and match the device targeted
+#' tif2 <- osm_warp(grd2, url_spec)
 #' ## more examples: https://gist.github.com/mdsumner/91f3d00d707ce9ea25c7d70a68ec53c0
 osm_warp <- function(target, url_spec, resample = "near") {
   bb <- as.numeric(wk::wk_bbox(target))
@@ -45,6 +58,8 @@ osm_warp <- function(target, url_spec, resample = "near") {
             crsarg,
             "-ts", as.character(dim(target)[1:2]),
             "-r", resample)
+  ## WIP we could set GDAL_DEFAULT_WMS_CACHE_PATH
+  ## this otherwise results in a gdalwmscache/ folder in curdir
   res <- sf::gdal_utils("warp", source = src, destination = out,  options = opts)
   if (!res) stop("gdalwarp app lib call failed")
   out

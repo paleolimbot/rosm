@@ -18,7 +18,9 @@ Imports:
     png,
     jsonlite,
     methods,
-    wk
+    wk,
+    glue,
+    progress
 Suggests:
     sp,
     plyr,

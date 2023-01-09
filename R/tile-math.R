@@ -80,6 +80,14 @@ osm_tile_envelope <- function(tile, crs = osm_crs_native()) {
   )
 }
 
+osm_tile_normalize <- function(tile) {
+  ensure_tile(tile)
+  n <- 2^(tile$zoom)
+  tile$x <- tile$x %% n
+  tile$y <- tile$y %% n
+  tile
+}
+
 #' Get an OSM tile covering
 #'
 #' @param bbox A [wk::rct()] or object with a [wk::wk_bbox()] method.

@@ -83,8 +83,14 @@ osm_tile_envelope <- function(tile, crs = osm_crs_native()) {
 osm_tile_normalize <- function(tile) {
   ensure_tile(tile)
   n <- 2^(tile$zoom)
+
+  # In the x direction, out-of-bounds tiles can be wrapped
   tile$x <- tile$x %% n
-  tile$y <- tile$y %% n
+
+  # In the y direction, we just want these tiles to not exist
+  tile$y[tile$y < 0] <- NA_real_
+  tile$y[tile$y >= n] <- NA_real_
+
   tile
 }
 

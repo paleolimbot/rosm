@@ -8,9 +8,18 @@
 }
 
 
-gdal_wms <- function(url_spec) {
-   sprintf("<GDAL_WMS><Service name=\"TMS\"><ServerUrl>%s</ServerUrl></Service><DataWindow><UpperLeftX>-20037508.34</UpperLeftX><UpperLeftY>20037508.34</UpperLeftY><LowerRightX>20037508.34</LowerRightX><LowerRightY>-20037508.34</LowerRightY><TileLevel>18</TileLevel><TileCountX>1</TileCountX><TileCountY>1</TileCountY><YOrigin>top</YOrigin></DataWindow><Projection>EPSG:3857</Projection><BlockSizeX>256</BlockSizeX><BlockSizeY>256</BlockSizeY><BandsCount>3</BandsCount><!--<UserAgent>Please add a specific user agent text, to avoid the default one being used, and potentially blocked by OSM servers in case a too big usage of it would be seen</UserAgent>--><Cache /></GDAL_WMS>",
-           url_spec)
+gdal_wms <- function(url_spec, type = "tms") {
+
+
+  ##               osm: https://tile.openstreetmap.org/${z}/${x}/${y}.png
+  ## bing/virtualearth: http://a${server_num}.ortho.tiles.virtualearth.net/tiles/a${quadkey}.jpeg?g=90
+   switch(type,
+
+          tms = sprintf("<GDAL_WMS><Service name=\"TMS\"><ServerUrl>%s</ServerUrl></Service><DataWindow><UpperLeftX>-20037508.34</UpperLeftX><UpperLeftY>20037508.34</UpperLeftY><LowerRightX>20037508.34</LowerRightX><LowerRightY>-20037508.34</LowerRightY><TileLevel>18</TileLevel><TileCountX>1</TileCountX><TileCountY>1</TileCountY><YOrigin>top</YOrigin></DataWindow><Projection>EPSG:3857</Projection><BlockSizeX>256</BlockSizeX><BlockSizeY>256</BlockSizeY><BandsCount>3</BandsCount><!--<UserAgent>Please add a specific user agent text, to avoid the default one being used, and potentially blocked by OSM servers in case a too big usage of it would be seen</UserAgent>--><Cache /></GDAL_WMS>",
+           url_spec),
+          virtualearth = sprintf("<GDAL_WMS><Service name=\"VirtualEarth\"><ServerUrl>%s</ServerUrl></Service><MaxConnections>4</MaxConnections><Cache/></GDAL_WMS>",
+                         url_spec) )
+
 }
 #' Read directly from OSM tile sources via GDAL
 #'
@@ -18,12 +27,18 @@ gdal_wms <- function(url_spec) {
 #' as a wk grd to specify the raster pr
 #' ovided.
 #'
-#' A png source of tiles for OSM looks like 'https://tile.openstreetmap.org/${z}/${x}/${y}.png'.
+#' A png source of tiles for OSM or general TMS looks like 'https://tile.openstreetmap.org/${z}/${x}/${y}.png'.
+#'
+#' VirtualEarth tile source is of type "tms".
+#'
+#' A jpeg source of ortho tiles for VirtualEarth looks like http://a${server_num}.ortho.tiles.virtualearth.net/tiles/a${quadkey}.jpeg?g=90
+#'
+#' A jpeg source of streetmap tiles for VirtualEarth looks like http://r${server_num}.ortho.tiles.virtualearth.net/tiles/r${quadkey}.jpeg?g=90
 #'
 #' @param target wk grid specification (dimension, bbox, crs)
 #' @param resample resampling algorithm (corresponds to '-r' in gdalwarp utility)
 #' @param url_spec specification of OSM tile server (see Details)
-
+#' @param type "tms" for generic tile map server (like OSM), or "virtualearth" for the specific Bing maps quadkey (see Details)
 #' @return file path to resulting GeoTIFF
 #' @export
 #'
@@ -45,14 +60,18 @@ gdal_wms <- function(url_spec) {
 #' grd2 <- wk::grd(wk::rct(-13693753, 6464083, -13686567, 6467776, crs = "EPSG:3857"),
 #'  nx = 1024, ny = 512)   #size should account for aspect ratio and match the device targeted
 #' tif2 <- osm_warp(grd2, url_spec)
+#'
+#' u3 <- "http://r${server_num}.ortho.tiles.virtualearth.net/tiles/r${quadkey}.jpeg?g=90"
+#' tif3 <- osm_warp(grd2, u3, type = "virtualearth")
+#'
 #' ## more examples: https://gist.github.com/mdsumner/91f3d00d707ce9ea25c7d70a68ec53c0
-osm_warp <- function(target, url_spec, resample = "near") {
+osm_warp <- function(target, url_spec, resample = "near", type = "tms") {
   bb <- as.numeric(wk::wk_bbox(target))
   crs <- wk::wk_crs(target)
   crsarg <- c("-t_srs", wk::wk_crs(target))
   if (is.na(crs) || nchar(crs) < 1) crsarg <- NULL
   out <- tempfile(fileext = ".tif")
-  src <- gdal_wms(url_spec)
+  src <- gdal_wms(url_spec, type = type)
 
   opts <- c("-te", as.character(bb),
             crsarg,

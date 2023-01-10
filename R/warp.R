@@ -66,6 +66,12 @@ gdal_wms <- function(url_spec, type = "tms") {
 #'
 #' u4 <- "http://r${server_num}.ortho.tiles.virtualearth.net/tiles/a${quadkey}.jpeg?g=90"
 #' tif4 <- osm_warp(grd2, u4, type = "virtualearth")
+#'
+#' ## now we can unpack the file to get to the right orientation and colour type
+#' d <- attr(sf::gdal_read(tif4, options = c("-ot", "Byte")), "data")
+#' cl <- matrix(rgb(d[,,1], d[,,2], d[,,3], maxColorValue= 255), dim(d)[2], byrow = TRUE)
+#' grd2$data <- cl
+#' plot(grd2)
 #' ## more examples: https://gist.github.com/mdsumner/91f3d00d707ce9ea25c7d70a68ec53c0
 osm_warp <- function(target, url_spec, resample = "near", type = "tms") {
   bb <- as.numeric(wk::wk_bbox(target))

@@ -89,38 +89,60 @@ osm_url <- function(tile, spec) {
   )
 }
 
+osm_url_load_async <- function(tile, spec, cache_spec = NULL, callback = NULL) {
+  tile <- ensure_tile(tile)
+  spec <- as_osm_url_spec(spec)
+  cache_spec <- if (is.null(cache_spec)) osm_url_spec(NA_character_) else as_osm_url_spec(cache_spec)
+  callback <- if (is.null(callback)) function(...) NULL else as.function(callback)
 
+  # calculate the urls and cache values
+  tile_url <- osm_url(tile, spec)
+  tile_normalized_unique <- which(!duplicated(tile_url) & !is.na(tile_url))
 
-multi_file_download_async <- function(url, dest) {
-  stopifnot(
-    is.character(url),
-    is.character(dest)
-  )
-
-  # recycle url along dest (could want to query one url many times)
-  url <- rep_len(url, length(dest))
-
-  # create a mutable object that keeps track of success/failure
-  results <- new.env(parent = emptyenv())
-
-  if (length(url) == 0) {
-    return(invisible(character(0)))
+  if (length(tile_normalized_unique) == 0) {
+    return(invisible(tile))
   }
 
+  urls <- tile_url[tile_normalized_unique]
+  cached <- osm_url(tile[tile_normalized_unique, , drop = FALSE], cache_spec)
+  tile_url_id <- match(tile_url, urls)
+
+  # make sure urls are urls (e.g., with file://)
+  urls <- ensure_url(urls)
+
+  # make sure cache values are absolute paths
+  cached <- ensure_path(cached)
+
+  # replace urls where the cached path exists with a file:// url
+  cache_hit <- file.exists(cached)
+  cache_hit[is.na(cache_hit)] <- FALSE
+  cached_as_url <- ensure_url(cached)
+  urls_with_cache <- urls
+  urls_with_cache[cache_hit] <- cached_as_url[cache_hit]
+  cached[cache_hit] <- NA_character_
+
+  # use curl's async downloader to kick off loads for all tiles in parallel
+  # evaluating callback for each as they are completed
   pool <- curl::new_pool(total_con = 6, host_con = 6)
   pb <- progress::progress_bar$new(
-    "[:bar] :file",
-    total = length(url)
+    "[:bar]",
+    total = length(urls)
   )
   pb$tick(0)
-  key <- paste(url, dest)
+  state <- as.environment(
+    list(
+      pb = pb,
+      tile = tile,
+      tile_url = tile_url,
+      callback = callback
+    )
+  )
 
-  for (i in seq_along(url)) {
-    results[[paste(url[i], dest[i])]] <- FALSE
+  for (i in seq_along(urls)) {
     curl::curl_fetch_multi(
-      url[i],
-      multi_download_async_success(url[i], dest[i], results, pb),
-      multi_download_async_failure(url[i], dest[i], results, pb),
+      urls_with_cache[i],
+      multi_download_async_success(urls[i], cached[i], state),
+      multi_download_async_failure(urls[i], cached[i], state),
       pool = pool
     )
   }
@@ -128,50 +150,55 @@ multi_file_download_async <- function(url, dest) {
   # this will block as long as files are being downloaded
   curl::multi_run(pool = pool)
 
-  n_error <- sum(!unlist(as.list(results)))
-
-  if (n_error > 0) {
-    files <- if (n_error != 1) "files" else "file"
-    bad_urls <- paste0("'", url[!unlist(as.list(results)[key])], "'", collapse = "\n")
-    stop(
-      glue::glue("{ n_error }/{ length(url) } { files } failed to download:\n{ bad_urls }")
-    )
-  }
-
-  invisible(dest)
+  invisible(tile)
 }
 
-multi_download_async_success <- function(url, dest, results, pb) {
+is_url <- function(x) {
+  grepl("://", x)
+}
+
+ensure_url <- function(x) {
+  ifelse(
+    is_url(x),
+    x,
+    paste0("file://", normalizePath(x, winslash = "/", mustWork = FALSE))
+  )
+}
+
+ensure_path <- function(x) {
+  if (any(is_url(x))) {
+    stop("Cache results must be paths and not URLs")
+  }
+
+  x
+}
+
+multi_download_async_success <- function(url, cached, state) {
   force(url)
-  force(dest)
-  force(results)
-  force(pb)
+  force(cached)
+  force(state)
 
   function(res) {
-    pb$tick(tokens = list(file = basename(url)))
+    state$pb$tick()
+    tiles <- state$tile[!is.na(state$tile_url) & (state$tile_url == url), , drop = FALSE]
+    state$callback(tiles, res)
 
-    if (res$status_code >= 300) {
-      results[[paste(url, dest)]] <- FALSE
-      return()
+    if (!is.na(cached)) {
+      if (!dir.exists(dirname(cached))) dir.create(dirname(cached), recursive = TRUE)
+      con <- file(cached, "wb")
+      on.exit(close(con))
+      writeBin(res$content, con)
     }
-
-    if (!dir.exists(dirname(dest))) dir.create(dirname(dest), recursive = TRUE)
-    con <- file(dest, "wb")
-    on.exit(close(con))
-
-    writeBin(res$content, con)
-    results[[paste(url, dest)]] <- TRUE
   }
 }
 
-multi_download_async_failure <- function(url, dest, results, pb) {
+multi_download_async_failure <- function(url, cached, state) {
   force(url)
-  force(dest)
-  force(results)
-  force(pb)
+  force(cached)
+  force(state)
 
   function(msg) {
-    pb$tick(tokens = list(file = basename(url)))
-    results[[paste(url, dest)]] <- FALSE
+    state$pb$tick()
+    stop(glue::glue("<{url}>: {msg}"))
   }
 }

@@ -64,6 +64,8 @@ gdal_wms <- function(url_spec, type = "tms") {
 #' u3 <- "http://r${server_num}.ortho.tiles.virtualearth.net/tiles/r${quadkey}.jpeg?g=90"
 #' tif3 <- osm_warp(grd2, u3, type = "virtualearth")
 #'
+#' u4 <- "http://r${server_num}.ortho.tiles.virtualearth.net/tiles/a${quadkey}.jpeg?g=90"
+#' tif4 <- osm_warp(grd2, u4, type = "virtualearth")
 #' ## more examples: https://gist.github.com/mdsumner/91f3d00d707ce9ea25c7d70a68ec53c0
 osm_warp <- function(target, url_spec, resample = "near", type = "tms") {
   bb <- as.numeric(wk::wk_bbox(target))

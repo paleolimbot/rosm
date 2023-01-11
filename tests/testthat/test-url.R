@@ -48,3 +48,29 @@ test_that("tiles are normalized before generating URLs", {
     c(NA, "https://tile.openstreetmap.org/0/0/0.png")
   )
 })
+
+test_that("url async loader works", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21),
+    y = c(22, 22, 23, 23),
+    zoom = 6
+  )
+
+  spec <- osm_url_spec_example()
+
+  # default does nothing but should write to the cache
+  temp_cache <- tempfile()
+
+  cache_spec <- paste0(temp_cache, "/", "${z}_${x}_${y}.png")
+  expect_identical(
+    osm_url_load_async(tiles, spec, cache_spec = cache_spec),
+    tiles
+  )
+
+  expect_identical(
+    list.files(temp_cache),
+    c("6_20_22.png", "6_20_23.png", "6_21_22.png", "6_21_23.png")
+  )
+
+  unlink(temp_cache, recursive = TRUE)
+})

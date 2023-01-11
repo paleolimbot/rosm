@@ -6,6 +6,11 @@ test_that("default URL spec works", {
   expect_identical(spec$max_zoom, 18)
 })
 
+test_that("example spec works", {
+  spec <- osm_url_spec_example()
+  expect_match(spec$server_url, "extdata/osmns/${z}_${x}_${y}.png", fixed = TRUE)
+})
+
 test_that("as_osm_url_spec() works", {
   spec <- osm_url_spec()
   expect_identical(as_osm_url_spec(spec), spec)

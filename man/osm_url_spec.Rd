@@ -2,6 +2,7 @@
 % Please edit documentation in R/url.R
 \name{osm_url_spec}
 \alias{osm_url_spec}
+\alias{osm_url_spec_example}
 \alias{as_osm_url_spec}
 \title{Tile URL Specification}
 \usage{
@@ -11,6 +12,8 @@ osm_url_spec(
   min_zoom = 0,
   max_zoom = 18
 )
+
+osm_url_spec_example()
 
 as_osm_url_spec(x, ...)
 }

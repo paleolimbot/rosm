@@ -40,6 +40,13 @@ osm_url_spec <- function(server_url = "https://tile.openstreetmap.org/${z}/${x}/
 
 #' @rdname osm_url_spec
 #' @export
+osm_url_spec_example <- function() {
+  base <- system.file("extdata/osmns", package = "rosm")
+  osm_url_spec(paste0(base, "/${z}_${x}_${y}.png"))
+}
+
+#' @rdname osm_url_spec
+#' @export
 as_osm_url_spec <- function(x, ...) {
   UseMethod("as_osm_url_spec")
 }
@@ -89,7 +96,40 @@ osm_url <- function(tile, spec) {
   )
 }
 
-osm_url_load_async <- function(tile, spec, cache_spec = NULL, callback = NULL) {
+#' Load tile URLs
+#'
+#' @inheritParams osm_url
+#' @inheritParams osm_tile
+#' @param cache_spec An optional [osm_url_spec()] or character vector to be
+#'   used as the cache.
+#' @param callback A function to be run for each tile fetch or NULL
+#'   to do nothing. The callback is always called with two arguments: the first
+#'   is the subset of `tile` for which this URL applies (typically one row but
+#'   can be more than one in some corner cases); the second is the curl
+#'   response object whose useful elements are url, status_code, type, and
+#'   content.
+#'
+#' @return `tile`, invisibly.
+#' @export
+#'
+#' @examples
+#' bounds <- wk::rct(
+#'   252185, 4815826, 739729, 5210280,
+#'   crs = "EPSG:32620"
+#' )
+#'
+#' tiles <- osm_tile_covering(bounds, zoom = 5)
+#'
+#' osm_url_load_async(
+#'   tiles,
+#'   osm_url_spec_example(),
+#'   function(tile, res) {
+#'     str(tile)
+#'     str(res)
+#'   }
+#' )
+#'
+osm_url_load_async <- function(tile, spec, callback = NULL, cache_spec = NULL) {
   tile <- ensure_tile(tile)
   spec <- as_osm_url_spec(spec)
   cache_spec <- if (is.null(cache_spec)) osm_url_spec(NA_character_) else as_osm_url_spec(cache_spec)
@@ -110,7 +150,7 @@ osm_url_load_async <- function(tile, spec, cache_spec = NULL, callback = NULL) {
   # make sure urls are urls (e.g., with file://)
   urls <- ensure_url(urls)
 
-  # make sure cache values are absolute paths
+  # make sure cache values are paths
   cached <- ensure_path(cached)
 
   # replace urls where the cached path exists with a file:// url
@@ -183,6 +223,7 @@ multi_download_async_success <- function(url, cached, state) {
     tiles <- state$tile[!is.na(state$tile_url) & (state$tile_url == url), , drop = FALSE]
     state$callback(tiles, res)
 
+    # Only write to the cache if the callback succeeds
     if (!is.na(cached)) {
       if (!dir.exists(dirname(cached))) dir.create(dirname(cached), recursive = TRUE)
       con <- file(cached, "wb")

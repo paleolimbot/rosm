@@ -145,7 +145,7 @@ osm_url_load_async <- function(tile, spec, callback = NULL, cache_spec = NULL) {
 
   urls <- tile_url[tile_normalized_unique]
   cached <- osm_url(tile[tile_normalized_unique, , drop = FALSE], cache_spec)
-  tile_url_id <- match(tile_url, urls)
+  cached <- rep_len(cached, length(tile_normalized_unique))
 
   # make sure urls are urls (e.g., with file://)
   urls <- ensure_url(urls)
@@ -173,7 +173,7 @@ osm_url_load_async <- function(tile, spec, callback = NULL, cache_spec = NULL) {
     list(
       pb = pb,
       tile = tile,
-      tile_url = tile_url,
+      tile_url = ensure_url(tile_url),
       callback = callback
     )
   )

@@ -67,10 +67,87 @@ test_that("url async loader works", {
     tiles
   )
 
-  expect_identical(
+  expect_setequal(
     list.files(temp_cache),
     c("6_20_22.png", "6_20_23.png", "6_21_22.png", "6_21_23.png")
   )
 
   unlink(temp_cache, recursive = TRUE)
+})
+
+test_that("url async loader can load zero tiles", {
+  tiles <- data.frame(x = double(), y = double(), zoom = double())
+  expect_identical(osm_url_load_async(tiles, osm_url_spec_example()), tiles)
+})
+
+test_that("url async loader errors for paths that are urls", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21),
+    y = c(22, 22, 23, 23),
+    zoom = 6
+  )
+
+  expect_error(
+    osm_url_load_async(tiles, osm_url_spec_example(), cache_spec = "http://this.is.a.url"),
+    "Cache results must be paths and not URLs"
+  )
+})
+
+test_that("url async loader runs the error callback", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21),
+    y = c(22, 22, 23, 23),
+    zoom = 6
+  )
+
+  expect_error(
+    osm_url_load_async(tiles, "this_is_not_a_file_anywhere"),
+    "<file://this_is_not_a_file_anywhere>"
+  )
+})
+
+test_that("url async loader runs the success callback", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21),
+    y = c(22, 22, 23, 23),
+    zoom = 6
+  )
+
+  tiles_out <- data.frame(x = double(), y = double(), zoom = double())
+
+  callback <- function(tiles, res) {
+    expect_identical(res$status_code, 0L)
+    expect_identical(nrow(tiles), 1L)
+    tiles_out <<- rbind(tiles_out, tiles)
+  }
+
+  expect_identical(
+    osm_url_load_async(tiles, osm_url_spec_example(), callback = callback),
+    tiles
+  )
+
+  expect_identical(tiles_out[order(tiles_out$y, tiles_out$x), ], tiles)
+})
+
+test_that("url async loader stops for callback error", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21),
+    y = c(22, 22, 23, 23),
+    zoom = 6
+  )
+
+  # After a callback error, nothing should be cached
+  temp_cache <- tempfile()
+  cache_spec <- paste0(temp_cache, "/", "${z}_${x}_${y}.png")
+
+  callback <- function(tiles, res) {
+    stop("In the name of Open Street Map!")
+  }
+
+  expect_error(
+    osm_url_load_async(tiles, osm_url_spec_example(), callback = callback),
+    "In the name of Open Street Map!"
+  )
+
+  expect_false(dir.exists(temp_cache))
 })

@@ -13,14 +13,12 @@ Description: Download and plot Open Street Map <https://www.openstreetmap.org/>,
 License: GPL-2
 Imports:
     curl,
-    abind,
     jpeg,
     png,
-    jsonlite,
-    methods,
     wk,
     glue,
-    progress
+    progress,
+    rlang
 Suggests:
     sp,
     plyr,
@@ -29,7 +27,9 @@ Suggests:
     withr,
     sf,
     terra,
-    covr
+    abind,
+    methods,
+    jsonlite
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
 RoxygenNote: 7.2.1

@@ -15,6 +15,12 @@ test_that("as_osm_url_spec() works", {
   spec <- osm_url_spec()
   expect_identical(as_osm_url_spec(spec), spec)
   expect_identical(as_osm_url_spec(spec$server_url), spec)
+
+  spec_with_default_name <- as_osm_url_spec(spec$server_url, name = "another name")
+  expect_identical(
+    spec_with_default_name,
+    osm_url_spec(name = "another name")
+  )
 })
 
 test_that("urls can be generated from the default spec", {
@@ -50,6 +56,15 @@ test_that("urls with quadkeys can be generated", {
       "http://something.com/030322",
       "http://something.com/030323"
     )
+  )
+})
+
+test_that("urls with names can be generated", {
+  spec <- osm_url_spec("${name}/${z}/${x}/${y}.png", name = "the_name")
+  tiles <- data.frame(x = 1, y = 2, zoom = 3)
+  expect_identical(
+    osm_url(tiles, spec),
+    "the_name/3/1/2.png"
   )
 })
 

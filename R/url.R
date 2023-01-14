@@ -8,6 +8,8 @@
 #' @param block_size The pixel size of each image
 #' @param min_zoom,max_zoom The min/max zoom that this tile specification can handle
 #' @param x An object to convert to an osm_url_spec
+#' @param content_type A MIME type or NA to guess the type from `server_url`.
+#' @param name A name for this spec. Useful for cache specifications.
 #' @param ... Passed to S3 methods
 #'
 #' @return An object of class osm_url_spec.
@@ -19,12 +21,20 @@
 osm_url_spec <- function(server_url = "https://tile.openstreetmap.org/${z}/${x}/${y}.png",
                          block_size = c(256, 256),
                          min_zoom = 0,
-                         max_zoom = 18) {
+                         max_zoom = 18,
+                         content_type = NA_character_,
+                         name = NULL) {
+  if (is.null(name)) {
+    name <- rlang::hash(server_url)
+  }
+
   stopifnot(
     is.character(server_url), length(server_url) == 1L,
     is.numeric(block_size), length(block_size) == 2L, all(is.finite(block_size)),
     is.numeric(min_zoom), length(min_zoom) == 1L, !is.na(min_zoom),
-    is.numeric(max_zoom), length(max_zoom) == 1L, !is.na(max_zoom)
+    is.numeric(max_zoom), length(max_zoom) == 1L, !is.na(max_zoom),
+    is.character(content_type), length(content_type) == 1L,
+    is.character(name), length(name) == 1L, !is.na(name)
   )
 
   structure(
@@ -32,7 +42,9 @@ osm_url_spec <- function(server_url = "https://tile.openstreetmap.org/${z}/${x}/
       server_url = server_url,
       block_size = as.integer(block_size),
       min_zoom = as.double(min_zoom),
-      max_zoom = as.double(max_zoom)
+      max_zoom = as.double(max_zoom),
+      content_type = content_type,
+      name = name
     ),
     class = "osm_url_spec"
   )
@@ -57,8 +69,8 @@ as_osm_url_spec.osm_url_spec <- function(x, ...) {
 }
 
 #' @export
-as_osm_url_spec.character <- function(x, ...) {
-  osm_url_spec(x)
+as_osm_url_spec.character <- function(x, ..., name = NULL) {
+  osm_url_spec(x, name = name)
 }
 
 #' Resolve a tile into a URL
@@ -89,6 +101,7 @@ osm_url <- function(tile, spec) {
   tile$q <- osm_tile_quadkey(tile)
   names(tile) <- c("x", "y", "z", "q")
   glue_data <- as.environment(tile)
+  glue_data$name <- spec$name
 
   out <- glue::glue_safe(
     spec$server_url,

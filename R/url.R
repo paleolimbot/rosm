@@ -81,19 +81,24 @@ as_osm_url_spec.character <- function(x, ...) {
 #'
 osm_url <- function(tile, spec) {
   tile <- osm_tile_normalize(tile)
+  n_tile <- nrow(tile)
+
   spec <- as_osm_url_spec(spec)
 
   tile <- tile[c("x", "y", "zoom")]
-  names(tile) <- c("x", "y", "z")
-
+  tile$q <- osm_tile_quadkey(tile)
+  names(tile) <- c("x", "y", "z", "q")
   glue_data <- as.environment(tile)
-  glue::glue_safe(
+
+  out <- glue::glue_safe(
     spec$server_url,
     .open = "${",
     .close = "}",
     .na = NULL,
     .envir = glue_data
   )
+
+  rep_len(out, n_tile)
 }
 
 #' Load tile URLs

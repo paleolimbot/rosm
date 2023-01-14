@@ -25,12 +25,30 @@ test_that("urls can be generated from the default spec", {
   )
 
   expect_identical(
-    as.character(osm_url(tiles, osm_url_spec())),
+    osm_url(tiles, osm_url_spec()),
     c(
       "https://tile.openstreetmap.org/6/20/22.png",
       "https://tile.openstreetmap.org/6/21/22.png",
       "https://tile.openstreetmap.org/6/20/23.png",
       "https://tile.openstreetmap.org/6/21/23.png"
+    )
+  )
+})
+
+test_that("urls with quadkeys can be generated", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21),
+    y = c(22, 22, 23, 23),
+    zoom = 6
+  )
+
+  expect_identical(
+    osm_url(tiles, "http://something.com/${q}"),
+    c(
+      "http://something.com/030320",
+      "http://something.com/030321",
+      "http://something.com/030322",
+      "http://something.com/030323"
     )
   )
 })

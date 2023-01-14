@@ -36,6 +36,38 @@ osm_tile <- function(pt, zoom) {
 
 #' @rdname osm_tile
 #' @export
+osm_tile_quadkey <- function(tile) {
+  ensure_tile(tile)
+
+  n_tile <- nrow(tile)
+  if (n_tile == 0) {
+    return(character())
+  }
+
+  n <- 2^tile$zoom
+  max_zoom <- max(tile$zoom)
+  quadkey_blank <- strrep(" ", max_zoom)
+  out <- rep(quadkey_blank, n_tile)
+
+  keymap <- array(
+    rep(c("0", "2", "1", "3"), n_tile),
+    dim = c(2, 2, n_tile)
+  )
+
+  decx <- tile$x / n
+  decy <- tile$y / n
+  for (i in 1:max_zoom) {
+    x <- floor(decx * 2^i) - floor(decx * 2^(i - 1)) * 2
+    y <- floor(decy * 2^i) - floor(decy * 2^(i - 1)) * 2
+    keymap_indices0 <- (seq_len(n_tile) - 1) * 4 + x * 2 + y
+    substr(out, i, i) <- keymap[keymap_indices0 + 1]
+  }
+
+  substr(out, 1, tile$zoom)
+}
+
+#' @rdname osm_tile
+#' @export
 osm_tile_top_left <- function(tile, crs = osm_crs_native()) {
   ensure_tile(tile)
   n <- 2.0^tile$zoom

@@ -2,11 +2,14 @@
 % Please edit documentation in R/tile-math.R
 \name{osm_tile}
 \alias{osm_tile}
+\alias{osm_tile_quadkey}
 \alias{osm_tile_top_left}
 \alias{osm_tile_envelope}
 \title{Low-level tile math}
 \usage{
 osm_tile(pt, zoom)
+
+osm_tile_quadkey(tile)
 
 osm_tile_top_left(tile, crs = osm_crs_native())
 

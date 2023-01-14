@@ -10,6 +10,24 @@ test_that("osm_tile() works", {
   )
 })
 
+test_that("osm_tile_quadkey() works", {
+  tiles <- data.frame(
+    x = c(20, 21, 20, 21, 10, 0),
+    y = c(22, 22, 23, 23, 11, 0),
+    zoom = c(6, 6, 6, 6, 5, 0)
+  )
+
+  expect_identical(
+    osm_tile_quadkey(tiles),
+    c("030320", "030321", "030322", "030323", "03032", "")
+  )
+
+  expect_identical(
+    osm_tile_quadkey(tiles[integer(0), , drop = FALSE]),
+    character()
+  )
+})
+
 test_that("osm_tile_covering() works for native bounds", {
   bounds <- wk::rct(
     -20037507, 1, -1, 20037507,

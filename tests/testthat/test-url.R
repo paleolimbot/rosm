@@ -21,6 +21,12 @@ test_that("as_osm_url_spec() works", {
     spec_with_default_name,
     osm_url_spec(name = "another name")
   )
+
+  spec_with_default_name <- as_osm_url_spec(spec, name = "another name")
+  expect_identical(
+    spec_with_default_name,
+    osm_url_spec(name = "another name")
+  )
 })
 
 test_that("urls can be generated from the default spec", {
@@ -90,11 +96,12 @@ test_that("url async loader works", {
   )
 
   spec <- osm_url_spec_example()
+  spec$name <- "ex"
 
   # default does nothing but should write to the cache
   temp_cache <- tempfile()
 
-  cache_spec <- paste0(temp_cache, "/", "${z}_${x}_${y}.png")
+  cache_spec <- paste0(temp_cache, "/", "${name}_${z}_${x}_${y}.png")
   expect_identical(
     osm_url_load_async(tiles, spec, cache_spec = cache_spec),
     tiles
@@ -102,7 +109,7 @@ test_that("url async loader works", {
 
   expect_setequal(
     list.files(temp_cache),
-    c("6_20_22.png", "6_20_23.png", "6_21_22.png", "6_21_23.png")
+    c("ex_6_20_22.png", "ex_6_20_23.png", "ex_6_21_22.png", "ex_6_21_23.png")
   )
 
   unlink(temp_cache, recursive = TRUE)

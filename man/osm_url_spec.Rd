@@ -17,7 +17,7 @@ osm_url_spec(
 
 osm_url_spec_example()
 
-as_osm_url_spec(x, ...)
+as_osm_url_spec(x, ..., name = NULL)
 }
 \arguments{
 \item{server_url}{A url using `${x}`, `${y}`, and `${z}` for the x, y, and

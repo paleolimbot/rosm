@@ -59,12 +59,17 @@ osm_url_spec_example <- function() {
 
 #' @rdname osm_url_spec
 #' @export
-as_osm_url_spec <- function(x, ...) {
+as_osm_url_spec <- function(x, ..., name = NULL) {
   UseMethod("as_osm_url_spec")
 }
 
 #' @export
-as_osm_url_spec.osm_url_spec <- function(x, ...) {
+as_osm_url_spec.osm_url_spec <- function(x, ..., name = NULL) {
+  if (!is.null(name)) {
+    stopifnot(is.character(name), length(name) == 1L, !is.na(name))
+    x$name <- name
+  }
+
   x
 }
 
@@ -150,7 +155,13 @@ osm_url <- function(tile, spec) {
 osm_url_load_async <- function(tile, spec, callback = NULL, cache_spec = NULL) {
   tile <- ensure_tile(tile)
   spec <- as_osm_url_spec(spec)
-  cache_spec <- if (is.null(cache_spec)) osm_url_spec(NA_character_) else as_osm_url_spec(cache_spec)
+
+  if (is.null(cache_spec)) {
+    cache_spec <- osm_url_spec(NA_character_)
+  } else {
+    cache_spec <- as_osm_url_spec(cache_spec, name = spec$name)
+  }
+
   callback <- if (is.null(callback)) function(...) NULL else as.function(callback)
 
   # calculate the urls and cache values

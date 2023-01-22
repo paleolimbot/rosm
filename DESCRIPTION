@@ -29,7 +29,8 @@ Suggests:
     terra,
     abind,
     methods,
-    jsonlite
+    jsonlite,
+    tiff
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3

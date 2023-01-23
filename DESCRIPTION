@@ -30,7 +30,8 @@ Suggests:
     abind,
     methods,
     jsonlite,
-    tiff
+    tiff,
+    vdiffr
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
 RoxygenNote: 7.2.3

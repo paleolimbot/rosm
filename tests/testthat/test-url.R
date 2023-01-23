@@ -140,8 +140,13 @@ test_that("url async loader runs the error callback", {
     zoom = 6
   )
 
+  callback <- function(tiles, res) {
+    expect_equal(res$status_code, 500)
+    stop(glue::glue("<{res$url}> {res$msg}"))
+  }
+
   expect_error(
-    osm_url_load_async(tiles, "this_is_not_a_file_anywhere"),
+    osm_url_load_async(tiles, "this_is_not_a_file_anywhere", callback),
     "<file://this_is_not_a_file_anywhere>"
   )
 })

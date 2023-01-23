@@ -250,10 +250,11 @@ multi_download_async_success <- function(url, cached, state) {
   function(res) {
     state$pb$tick()
     tiles <- state$tile[!is.na(state$tile_url) & (state$tile_url == url), , drop = FALSE]
-    state$callback(tiles, res)
+    result <- state$callback(tiles, res)
 
-    # Only write to the cache if the callback succeeds
-    if (!is.na(cached)) {
+    # Only write to the cache if the callback succeeds and
+    # the callback didn't return FALSE
+    if (!is.na(cached) && !identical(result, FALSE)) {
       if (!dir.exists(dirname(cached))) dir.create(dirname(cached), recursive = TRUE)
       con <- file(cached, "wb")
       on.exit(close(con))
@@ -269,6 +270,17 @@ multi_download_async_failure <- function(url, cached, state) {
 
   function(msg) {
     state$pb$tick()
-    stop(glue::glue("<{url}>: {msg}"))
+
+    res <- structure(
+      list(
+        url = url,
+        status_code = 500,
+        msg = msg
+      ),
+      class = "osm_url_error"
+    )
+
+    tiles <- state$tile[!is.na(state$tile_url) & (state$tile_url == url), , drop = FALSE]
+    state$callback(tiles, res)
   }
 }

@@ -1,4 +1,23 @@
 
+#' Load an Open Street Map image
+#'
+#' @inheritParams osm_url_load_async
+#' @inheritParams osm_tile_covering
+#' @param quiet Use `TRUE` for fewer messages or `FALSE` for more messages.
+#'
+#' @return A [wk::grd_rct()] whose data member is a nativeRaster.
+#' @export
+#'
+#' @examples
+#' bounds <- wk::rct(
+#'   -7476083, 5349058,
+#'   -6594103, 6243203,
+#'   crs = osm_crs_native()
+#' )
+#'
+#' (grd <- osm_raster(bounds, osm_url_spec_example()))
+#' plot(grd)
+#'
 osm_raster <- function(bbox, spec, zoom = osm_zoom_num_tiles(6),
                        cache_spec = NULL, quiet = NA) {
   spec <- as_osm_url_spec(spec)

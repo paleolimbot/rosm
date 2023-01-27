@@ -11,7 +11,7 @@ for (zoom in 0:7) {
   osm_url_load_async(
     tiles,
     osm_url_spec(),
-    cache_spec = osm_url_spec("inst/extdata/osmns/${z}_${x}_${y}.png"),
+    cache_spec = osm_url_spec("inst/extdata/osmns/{z}_{x}_{y}.png"),
   )
 }
 

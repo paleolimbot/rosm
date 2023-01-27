@@ -7,7 +7,7 @@
 \title{Tile URL Specification}
 \usage{
 osm_url_spec(
-  server_url = "https://tile.openstreetmap.org/${z}/${x}/${y}.png",
+  server_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   block_size = c(256, 256),
   min_zoom = 0,
   max_zoom = 18,
@@ -20,7 +20,7 @@ osm_url_spec_example()
 as_osm_url_spec(x, ..., name = NULL)
 }
 \arguments{
-\item{server_url}{A url using `${x}`, `${y}`, and `${z}` for the x, y, and
+\item{server_url}{A url using `{x}`, `{y}`, and `{z}` for the x, y, and
 zoom level to be replaced. This can be any URL; non-URLs are assumed to be
 local file paths relative to the current working directory at the time of
 the download.}
@@ -41,7 +41,8 @@ the download.}
 An object of class osm_url_spec.
 }
 \description{
-Tile URL Specification
+See <https://github.com/roblabs/xyz-raster-sources> for a number of useful
+values to use for `server_url`.
 }
 \examples{
 osm_url_spec()

@@ -1,7 +1,10 @@
 
 #' Tile URL Specification
 #'
-#' @param server_url A url using `${x}`, `${y}`, and `${z}` for the x, y, and
+#' See <https://github.com/roblabs/xyz-raster-sources> for a number of useful
+#' values to use for `server_url`.
+#'
+#' @param server_url A url using `{x}`, `{y}`, and `{z}` for the x, y, and
 #'   zoom level to be replaced. This can be any URL; non-URLs are assumed to be
 #'   local file paths relative to the current working directory at the time of
 #'   the download.
@@ -18,7 +21,7 @@
 #' @examples
 #' osm_url_spec()
 #'
-osm_url_spec <- function(server_url = "https://tile.openstreetmap.org/${z}/${x}/${y}.png",
+osm_url_spec <- function(server_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                          block_size = c(256, 256),
                          min_zoom = 0,
                          max_zoom = 18,
@@ -54,7 +57,7 @@ osm_url_spec <- function(server_url = "https://tile.openstreetmap.org/${z}/${x}/
 #' @export
 osm_url_spec_example <- function() {
   base <- system.file("extdata/osmns", package = "rosm")
-  osm_url_spec(paste0(base, "/${z}_${x}_${y}.png"))
+  osm_url_spec(paste0(base, "/{z}_{x}_{y}.png"))
 }
 
 #' @rdname osm_url_spec
@@ -110,7 +113,7 @@ osm_url <- function(tile, spec) {
 
   out <- glue::glue_safe(
     spec$server_url,
-    .open = "${",
+    .open = "{",
     .close = "}",
     .na = NULL,
     .envir = glue_data

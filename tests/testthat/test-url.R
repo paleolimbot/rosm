@@ -8,7 +8,7 @@ test_that("default URL spec works", {
 
 test_that("example spec works", {
   spec <- osm_url_spec_example()
-  expect_match(spec$server_url, "extdata/osmns/${z}_${x}_${y}.png", fixed = TRUE)
+  expect_match(spec$server_url, "extdata/osmns/{z}_{x}_{y}.png", fixed = TRUE)
 })
 
 test_that("as_osm_url_spec() works", {
@@ -55,7 +55,7 @@ test_that("urls with quadkeys can be generated", {
   )
 
   expect_identical(
-    osm_url(tiles, "http://something.com/${q}"),
+    osm_url(tiles, "http://something.com/{q}"),
     c(
       "http://something.com/030320",
       "http://something.com/030321",
@@ -66,7 +66,7 @@ test_that("urls with quadkeys can be generated", {
 })
 
 test_that("urls with names can be generated", {
-  spec <- osm_url_spec("${name}/${z}/${x}/${y}.png", name = "the_name")
+  spec <- osm_url_spec("{name}/{z}/{x}/{y}.png", name = "the_name")
   tiles <- data.frame(x = 1, y = 2, zoom = 3)
   expect_identical(
     osm_url(tiles, spec),
@@ -101,7 +101,7 @@ test_that("url async loader works", {
   # default does nothing but should write to the cache
   temp_cache <- tempfile()
 
-  cache_spec <- paste0(temp_cache, "/", "${name}_${z}_${x}_${y}.png")
+  cache_spec <- paste0(temp_cache, "/", "{name}_{z}_{x}_{y}.png")
   expect_identical(
     osm_url_load_async(tiles, spec, cache_spec = cache_spec),
     tiles
@@ -183,7 +183,7 @@ test_that("url async loader stops for callback error", {
 
   # After a callback error, nothing should be cached
   temp_cache <- tempfile()
-  cache_spec <- paste0(temp_cache, "/", "${z}_${x}_${y}.png")
+  cache_spec <- paste0(temp_cache, "/", "{z}_{x}_{y}.png")
 
   callback <- function(tiles, res) {
     stop("In the name of Open Street Map!")

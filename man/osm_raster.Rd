@@ -38,7 +38,7 @@ bounds <- wk::rct(
   crs = osm_crs_native()
 )
 
-(grd <- osm_raster(bounds, osm_url_spec_example()))
+(grd <- osm_raster(bounds, osm_url_spec()))
 plot(grd)
 
 }

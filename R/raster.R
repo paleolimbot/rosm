@@ -15,7 +15,7 @@
 #'   crs = osm_crs_native()
 #' )
 #'
-#' (grd <- osm_raster(bounds, osm_url_spec_example()))
+#' (grd <- osm_raster(bounds, osm_url_spec()))
 #' plot(grd)
 #'
 osm_raster <- function(bbox, spec, zoom = osm_zoom_num_tiles(6),

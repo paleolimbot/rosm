@@ -18,7 +18,9 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/paleolimbot/rosm/branch/master/graph/badge.svg)](https://app.codecov.io/gh/paleolimbot/rosm?branch=master)
 <!-- badges: end -->
 
-Download and plot [Open Street Map](https://www.openstreetmap.org/), [Bing Maps](https://www.bing.com/maps), and other tiled map sources. Use to create high-resolution basemaps and add hillshade to vector based maps. Note that rosm uses base plotting and not ggplot2: for mapping in ggplot2, use [ggspatial](https://github.com/paleolimbot/ggspatial)::annotation_map_tile().
+Download and plot [Open Street Map](https://www.openstreetmap.org/), [Bing Maps](https://www.bing.com/maps), and other tiled map sources. A previous version
+of this package provided an API for plotting base maps; the new API is more
+low-level and covers tile math, URL generation, and fetching tiles in parallel.
 
 ## Installation
 
@@ -26,28 +28,15 @@ The **rosm** package is [available on CRAN](https://cran.r-project.org/package=r
 
 ## Example
 
-```{r example, message=FALSE, warning=FALSE, results='hide', fig.show='hold'}
-library(prettymapr)
+```{r example}
 library(rosm)
 
-# specify a bounding box
-altalake <- makebbox(50.1232, -122.9574, 50.1035, -123.0042)
-prettymap(
-  {
-    # plot tiles (see also osm.raster() and bmaps.plot())
-    osm.plot(altalake)
-    osm.points(c(-122.9841, -122.9812), c(50.11055, 50.11765),
-      pch = 15, cex = 0.6, col = "white"
-    )
-    osm.text(c(-122.9841, -122.9812), c(50.11055, 50.11765),
-      labels = c("GC6", "GC2"), adj = c(-0.2, 0.5), cex = 0.7, col = "white"
-    )
-  },
-  scale.label.col = "white"
+bounds <- wk::rct(
+  -7476083, 5349058,
+  -6594103, 6243203,
+  crs = osm_crs_native()
 )
+
+(grd <- osm_raster(bounds, osm_url_spec_example()))
+plot(grd)
 ```
-
-
-## The Future?
-
-Some other great projects have popped up in the last few years, such that **rosm** will probably be retired in the next year. Packages that depend on will continue to work, but it is likely that a new API will pop up under a different name.

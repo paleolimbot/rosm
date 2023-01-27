@@ -9,11 +9,10 @@ coverage](https://codecov.io/gh/paleolimbot/rosm/branch/master/graph/badge.svg)]
 <!-- badges: end -->
 
 Download and plot [Open Street Map](https://www.openstreetmap.org/),
-[Bing Maps](https://www.bing.com/maps), and other tiled map sources. Use
-to create high-resolution basemaps and add hillshade to vector based
-maps. Note that rosm uses base plotting and not ggplot2: for mapping in
-ggplot2, use
-[ggspatial](https://github.com/paleolimbot/ggspatial)::annotation_map_tile().
+[Bing Maps](https://www.bing.com/maps), and other tiled map sources. A
+previous version of this package provided an API for plotting base maps;
+the new API is more low-level and covers tile math, URL generation, and
+fetching tiles in parallel.
 
 ## Installation
 
@@ -24,31 +23,21 @@ using `install.packages("rosm")`.
 ## Example
 
 ``` r
-library(prettymapr)
 library(rosm)
 
-# specify a bounding box
-altalake <- makebbox(50.1232, -122.9574, 50.1035, -123.0042)
-prettymap(
-  {
-    # plot tiles (see also osm.raster() and bmaps.plot())
-    osm.plot(altalake)
-    osm.points(c(-122.9841, -122.9812), c(50.11055, 50.11765),
-      pch = 15, cex = 0.6, col = "white"
-    )
-    osm.text(c(-122.9841, -122.9812), c(50.11055, 50.11765),
-      labels = c("GC6", "GC2"), adj = c(-0.2, 0.5), cex = 0.7, col = "white"
-    )
-  },
-  scale.label.col = "white"
+bounds <- wk::rct(
+  -7476083, 5349058,
+  -6594103, 6243203,
+  crs = osm_crs_native()
 )
+
+(grd <- osm_raster(bounds, osm_url_spec_example()))
+#> <wk_grd_rct [768 x 768] => [-7514066 5322463 -6574807 6261721] with crs=EPSG:3857>
+#> List of 2
+#>  $ data: 'nativeRaster' int [1:768, 1:768] -2108502 -2108502 -2108502 -2108502 -2108502 -2108502 -2108502 -2108502 -2108502 -2108502 ...
+#>  $ bbox: wk_rct[1:1] [-7514066 5322463 -6574807 6261721]
+#>  - attr(*, "class")= chr [1:2] "wk_grd_rct" "wk_grd"
+plot(grd)
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
-
-## The Future?
-
-Some other great projects have popped up in the last few years, such
-that **rosm** will probably be retired in the next year. Packages that
-depend on will continue to work, but it is likely that a new API will
-pop up under a different name.

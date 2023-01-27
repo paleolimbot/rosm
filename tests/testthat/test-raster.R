@@ -49,8 +49,6 @@ test_that("osm_raster() produces the correct raster image", {
   expect_s3_class(grd, "wk_grd")
   expect_identical(wk::wk_crs(grd), osm_crs_native())
 
-  local_edition(3)
-  # Not sure why this print()s
   vdiffr::expect_doppelganger("basic-osm-raster", plot(grd))
 })
 

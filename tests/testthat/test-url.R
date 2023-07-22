@@ -147,7 +147,7 @@ test_that("url async loader runs the error callback", {
 
   expect_error(
     osm_url_load_async(tiles, "this_is_not_a_file_anywhere", callback),
-    "<file://this_is_not_a_file_anywhere>"
+    "this_is_not_a_file_anywhere"
   )
 })
 

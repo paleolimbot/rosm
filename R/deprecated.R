@@ -1140,7 +1140,7 @@ osm.proj <- function(osm.raster, projection, crop.bbox = NULL, ...) {
   } else {
     osm.terra <- terra::rast(osm.raster)
     terra::crs(osm.terra) <- terra::crs("EPSG:3857")
-    rstackproj <- raster::raster(
+    rstackproj <- raster::stack(
       terra::project(
         osm.terra,
         terra::crs(sf::st_crs(projection)$wkt),

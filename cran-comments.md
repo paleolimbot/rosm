@@ -1,6 +1,5 @@
 
-This release corrects the check issues noted and also ensures that the package 
-will pass CMD check offline.
+This release removes a dependency on rgdal as requested by its maintainer.
 
 ## R CMD check results
 

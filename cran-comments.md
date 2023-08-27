@@ -1,5 +1,5 @@
 
-This release removes a dependency on rgdal as requested by its maintainer.
+This release removes a dependency on rgdal as requested.
 
 ## R CMD check results
 

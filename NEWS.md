@@ -1,4 +1,4 @@
-# rosm (development version)
+# rosm 0.3.0
 
 * Silent deprecation the entire previous API (#20).
 * Drop rgdal dependency (#21).

@@ -4,7 +4,7 @@
 #' See <https://github.com/roblabs/xyz-raster-sources> for a number of useful
 #' values to use for `server_url`.
 #'
-#' @param server_url A url using `{x}`, `{y}`, and `{z}` for the x, y, and
+#' @param server_url A url using `\{x\}`, `\{y\}`, and `\{z\}` for the x, y, and
 #'   zoom level to be replaced. This can be any URL; non-URLs are assumed to be
 #'   local file paths relative to the current working directory at the time of
 #'   the download.

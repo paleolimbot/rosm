@@ -20,7 +20,7 @@ osm_url_spec_example()
 as_osm_url_spec(x, ..., name = NULL)
 }
 \arguments{
-\item{server_url}{A url using `{x}`, `{y}`, and `{z}` for the x, y, and
+\item{server_url}{A url using `\{x\}`, `\{y\}`, and `\{z\}` for the x, y, and
 zoom level to be replaced. This can be any URL; non-URLs are assumed to be
 local file paths relative to the current working directory at the time of
 the download.}

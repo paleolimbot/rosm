@@ -1,5 +1,5 @@
 
-This release removes a dependency on rgdal as requested.
+This release resolves outdated documentation syntax as requested.
 
 ## R CMD check results
 

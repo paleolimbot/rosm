@@ -1,3 +1,10 @@
+# rosm 0.3.1
+
+* Fix outdated documentation syntax (#110)
+* Update GitHub Actions testing
+* Skip tests for built-in URLs for Bing Maps and Stamen maps as the
+  hard-coded URLs no longer load.
+
 # rosm 0.3.0
 
 * Silent deprecation the entire previous API (#20).

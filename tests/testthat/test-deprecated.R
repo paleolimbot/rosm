@@ -5,7 +5,12 @@ test_that("all named tile sources load", {
 
   # test contributed by rCarto (cartography package)
 
-  tiles <- data.frame(types = osm.types(), status = NA, stringsAsFactors = FALSE)
+  tiles <- data.frame(
+    # As of 2026-01-20, stamen maps no longer load
+    types = setdiff(osm.types(), c("stamenbw", "stamenwatercolor")),
+    status = NA,
+    stringsAsFactors = FALSE
+  )
 
   # helpful to run this on travis builds, since they are not often
   expect_message({
@@ -29,6 +34,7 @@ test_that("all named tile sources load", {
 
 test_that("all named bing tile sources load", {
   skip_if_not(identical(Sys.getenv("R_ROSM_TEST_DEPRECATED"), "true"))
+  skip("As of 2026-01-20 all Bing map types fail to load")
   nsbox <- makebbox(47.2, -59.7, 43.3, -66.4)
 
   # test contributed by rCarto (cartography package)

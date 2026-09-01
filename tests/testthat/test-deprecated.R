@@ -5,9 +5,14 @@ test_that("all named tile sources load", {
 
   # test contributed by rCarto (cartography package)
 
+  unavailable <- c("stamenbw", "stamenwatercolor")
+  if (!nzchar(Sys.getenv("CARTO_API_KEY"))) {
+    unavailable <- c(unavailable, "cartodark", "cartolight")
+  }
+
   tiles <- data.frame(
-    # As of 2026-01-20, stamen maps no longer load
-    types = setdiff(osm.types(), c("stamenbw", "stamenwatercolor")),
+    # Stamen maps no longer load; CARTO requires a user-supplied API key.
+    types = setdiff(osm.types(), unavailable),
     status = NA,
     stringsAsFactors = FALSE
   )
@@ -109,6 +114,29 @@ test_that("custom map types load tiles", {
   expect_message(osm.plot(nsbox, progress = "none"))
   # reset tile source
   set_default_tile_source("osm")
+})
+
+test_that("CARTO map types require and use an API key", {
+  withr::local_envvar(CARTO_API_KEY = NA)
+
+  expect_error(
+    as.tile_source("cartolight"),
+    "Supply `api_key` or set the CARTO_API_KEY environment variable",
+    fixed = TRUE
+  )
+
+  light <- as.tile_source("cartolight", api_key = "explicit key")
+  expect_identical(
+    light$get_tile_url(2, 1, 3),
+    "https://a.basemaps.cartocdn.com/light_all/3/2/1.png?key=explicit%20key"
+  )
+
+  withr::local_envvar(CARTO_API_KEY = "environment key")
+  dark <- as.tile_source("cartodark")
+  expect_identical(
+    dark$get_tile_url(2, 1, 3),
+    "https://a.basemaps.cartocdn.com/dark_all/3/2/1.png?key=environment%20key"
+  )
 })
 
 

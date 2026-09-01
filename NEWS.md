@@ -1,5 +1,8 @@
 # rosm 0.3.1
 
+* Built-in CARTO map types now accept an `api_key` argument or use the
+  `CARTO_API_KEY` environment variable, as required by CARTO's basemap service.
+
 * Fix outdated documentation syntax (#110)
 * Update GitHub Actions testing
 * Skip tests for built-in URLs for Bing Maps and Stamen maps as the

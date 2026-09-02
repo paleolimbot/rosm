@@ -1,3 +1,8 @@
+# rosm 0.3.2
+
+* Built-in CARTO map types now accept an `api_key` argument or use the
+  `CARTO_API_KEY` environment variable, as required by CARTO's basemap service.
+
 # rosm 0.3.1
 
 * Fix outdated documentation syntax (#110)

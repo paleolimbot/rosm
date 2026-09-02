@@ -44,11 +44,13 @@
 #'   GeoTIFF.
 #' @param resample One of "ngb" (nearest neighbour) or "bilinear". Passed to
 #'   \link[raster]{projectRaster}.
+#' @param api_key API key used for CARTO map types. If `NULL`, the value of
+#'   the `CARTO_API_KEY` environment variable is used.
 #' @param ... Arguments passed to other methods
 #'
 #' @rdname deprecated
 #' @export
-as.tile_source <- function(x, ...) {
+as.tile_source <- function(x, ..., api_key = NULL) {
   # first check if x is a tile source
   if (is.tile_source(x)) {
     return(x)
@@ -61,6 +63,25 @@ as.tile_source <- function(x, ...) {
     src
   } else if ((length(x) == 1) && (x %in% names(tile_sources))) {
     src <- tile_sources[[x]]
+    if (x %in% c("cartodark", "cartolight")) {
+      if (is.null(api_key)) {
+        api_key <- Sys.getenv("CARTO_API_KEY", unset = NA_character_)
+      }
+
+      if (!is.character(api_key) || length(api_key) != 1 || is.na(api_key) || !nzchar(api_key)) {
+        stop(
+          "CARTO map types require an API key. Supply `api_key` or set ",
+          "the CARTO_API_KEY environment variable.",
+          call. = FALSE
+        )
+      }
+
+      src <- source_from_url_format(
+        paste0(src$url_formats, "?key=", curl::curl_escape(api_key)),
+        attribution = src$get_attribution(),
+        extension = src$get_extension()
+      )
+    }
     src$name <- x
     src
   } else if ((length(x) == 1) && is.character(x)) {
@@ -905,7 +926,8 @@ tile.plotfused <- function(tiles, zoom, type, epsg = 4326, cachedir = NULL, quie
 #' @export
 osm.plot <- function(bbox, zoomin = 0, zoom = NULL, type = NULL, forcedownload = FALSE,
                      stoponlargerequest = TRUE, fusetiles = TRUE, cachedir = NULL, res = 150,
-                     project = TRUE, progress = c("text", "none"), quiet = TRUE, ...) {
+                     project = TRUE, progress = c("text", "none"), quiet = TRUE,
+                     api_key = NULL, ...) {
   # validate progress arg
   progress <- match.arg(progress)
 
@@ -916,7 +938,7 @@ osm.plot <- function(bbox, zoomin = 0, zoom = NULL, type = NULL, forcedownload =
   if (is.null(type)) {
     type <- get_default_tile_source()
   } else {
-    type <- as.tile_source(type)
+    type <- as.tile_source(type, api_key = api_key)
   }
 
   if (project) {
@@ -990,7 +1012,7 @@ tile.raster.autozoom <- function(bbox, epsg, minnumtiles = 12) {
 #' @rdname deprecated
 #' @export
 osm.image <- function(x, zoomin = 0, zoom = NULL, type = NULL, forcedownload = FALSE, cachedir = NULL,
-                      progress = c("text", "none"), quiet = TRUE) {
+                      progress = c("text", "none"), quiet = TRUE, api_key = NULL) {
   # verify progress input
   progress <- match.arg(progress)
 
@@ -998,7 +1020,7 @@ osm.image <- function(x, zoomin = 0, zoom = NULL, type = NULL, forcedownload = F
   if (is.null(type)) {
     type <- get_default_tile_source()
   } else {
-    type <- as.tile_source(type)
+    type <- as.tile_source(type, api_key = api_key)
   }
 
   # get lookup information from input
@@ -1029,7 +1051,7 @@ osm.image <- function(x, zoomin = 0, zoom = NULL, type = NULL, forcedownload = F
 osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload = FALSE, cachedir = NULL,
                        progress = c("text", "none"), quiet = TRUE,
                        projection = NULL, crop = FALSE, filename = NULL, resample = "bilinear",
-                       ...) {
+                       api_key = NULL, ...) {
   # verify inputs
   if (!requireNamespace("raster")) stop("Package 'raster' is required for osm.raster()")
 
@@ -1040,7 +1062,7 @@ osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload =
   if (is.null(type)) {
     type <- get_default_tile_source()
   } else {
-    type <- as.tile_source(type)
+    type <- as.tile_source(type, api_key = api_key)
   }
 
   # if filename is specified, write output of osm.raster() to filename
@@ -1054,7 +1076,7 @@ osm.raster <- function(x, zoomin = 0, zoom = NULL, type = "osm", forcedownload =
           type = type, forcedownload = forcedownload,
           progress = progress, quiet = quiet,
           cachedir = cachedir, projection = projection,
-          crop = crop, filename = NULL
+          crop = crop, filename = NULL, api_key = api_key
         ),
         filename = filename, datatype = "INT1U", ...
       )))
@@ -1381,11 +1403,11 @@ tile_sources <- list(
     attribution = "More on Thunderforest at http://www.thunderforest.com/"
   ),
   cartodark = source_from_url_format(
-    url_format = "http://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
+    url_format = "https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png",
     attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
   ),
   cartolight = source_from_url_format(
-    url_format = "http://a.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png",
+    url_format = "https://a.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png",
     attribution = "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL."
   )
 )

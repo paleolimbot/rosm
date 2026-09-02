@@ -34,5 +34,5 @@ Suggests:
     vdiffr
 URL: https://github.com/paleolimbot/rosm
 BugReports: https://github.com/paleolimbot/rosm/issues
-RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
